@@ -18,7 +18,7 @@ void ingresarDatos(Tipo1 &variable) {
         cin >> variable;
         if (cin.fail()) {
             cin.clear();
-            cin.ignore(std::edaderic_limits<std::streamsize>::max(), '\n');
+            cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             cout << "\nError tipo de dato incoreccto" << endl;
             flag = true;
         }
@@ -31,12 +31,19 @@ Tipo2 cambiarVar(Tipo2 var) {
     return var;
 }
 
+struct Persona {
+    string nom;
+    string edad;
+    string cedula;
+};
+
 struct Transporte {
     string nom;
     short velocidadMAX = 0;
     short numPersonas = 0;
     bool estaLleno = false;
     short maxCapacidad = 0;
+    vector<Personas> Personas;
 
     void lleno() {
         if (estaLleno) {
@@ -45,39 +52,25 @@ struct Transporte {
     }
 };
 
-struct Persona {
-    string nom;
-    string edad;
-    string profesion;
-    string estadoCivil;
-};
+// Usamos un puntero para ahorrar memoria ya que solo le pasamos al direccion
+void añadirConPtr(Transporte *Trans) {
+    Persona p;
+    cout << "Bienvenido al " << Trans->nom << endl;
+    cout << "Usted se ha montado con exito en el transporte, por favor espere su parada" << endl;
+    cout << "Introduzca los siguientes datos para poder registralo: ";
+    cout << "-----NOMBRE-----" << endl;
+    ingresarDatos(p.nom);
 
-void añadirConPtr(Transporte Trans) { cout << "Bienvenido al " << Trans.nom << endl; }
+    cout << "-----EDAD-----" << endl;
+    ingresarDatos(p.edad);
+
+    cout << "-----CEDULA-----" << endl;
+    ingresarDatos(p.cedula);
+}
 
 int main() {
-    // variables auxiliares
-    int varI;
-    float varF;
-    string varS;
-
-    // Variables y punteros de tipo 'int'
-    int edad = 10;
-    int *edadPtr = &edad;
-
-    // Variables y punteros de tipo 'float'
-    float estatura = 2.5;
-    float *estaturaPtr = &estatura;
-
-    // Variables y punteros de tipo 'string'
-    string nombre = "GitHub.com";
-    string *nombrePtr = &nombre;
-
-    // Un arreglo de caracteres de tipo puntero que puede apuntar a un string
-    char *cadenaPtr = &(nombre[0]);
-
-    //!------------------------------------------------------------------------------------------------------
     // nombre, edad, profesion , estadocivil
-    Persona Chofer = {"Jhon", "54", "Chofer", "Divorciado"};
+    Persona Chofer = {"Jhon", "54", "12854674"};
 
     // Nombre, velocidad, numdePersonasABordo, estalleno?, capacidadMAX
     Transporte Bus = {"Bus", 60, 0, false, 30};
@@ -86,7 +79,22 @@ int main() {
     Transporte Avion = {"Avion", 500, 0, false, 80};
     Transporte Barco = {"Barco", 250, 0, false, 250};
 
-    vector<Persona> cantPersonas = {Chofer};
-    vector<Transporte> Transportes = {Bus, Moto, Carrito, Avion, Barco};
+    // Punteros de transportes
+    Transporte *BusPtr = &Bus;
+    Transporte *MotoPtr = &Moto;
+    Transporte *CarritoPtr = &Carrito;
+    Transporte *AvionPtr = &Avion;
+    Transporte *BarcoPtr = &Barco;
+
+    // vectores normales
+
+    // vectores de punteros
+    vector<Transporte *> TransportesPtr = {BusPtr, MotoPtr, CarritoPtr, AvionPtr, BarcoPtr};
+
+    cout << endl << "Tamanio del objeto Bus: " << sizeof(Bus) << " bytes" << endl;
+    cout << "Tamanio del objeto Moto: " << sizeof(Moto) << " bytes" << endl;
+    cout << "Tamanio del objeto Avion: " << sizeof(Avion) << " bytes" << endl;
+    cout << "Tamanio del objeto Barco: " << sizeof(Barco) << " bytes" << endl;
+    cout << "Tamanio del objeto Carrito: " << sizeof(Carrito) << " bytes" << endl;
     return 0;
 }
