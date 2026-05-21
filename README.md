@@ -1,4 +1,4 @@
-﻿# Programacion 2 - Sebastian Gutierrez 💻
+# Programacion 2 - Sebastian Gutierrez 💻
 
 Les doy la bienvenida al repositorio de **Sebastian Gutierrez** para la materia de Programacion 2.
 
@@ -106,8 +106,6 @@ Aquí se almacenan todos los archivos de código fuente (.cpp) donde se programa
 2. **Lee la documentacion del proyecto**: Indaga y lee toda la documentacion del proyecto para que comprendas como funciona y cual es la lógica detrás de todo ese código.
 
 3. **Compila y Ejecuta**: Ahora sí, es momento de ejecutar y probar ese código. Nos vemos en la defensa del proyecto.
-
-# About Me 💻⚡
 
 ## Información personal 🔍
 
