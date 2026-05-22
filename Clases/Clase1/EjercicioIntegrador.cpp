@@ -55,7 +55,7 @@ using std::cin;
 using std::cout;
 using std::string;
 
-void ingresarDatos(int num) {
+void ingresarDatos(int &num) {
     bool flag;
     do {
         flag = false;
@@ -72,12 +72,32 @@ void ingresarDatos(int num) {
 int *crearArrayDinamico(int tamanio) {
     // creamos el array dinamico
     int *ptr = new int[tamanio];
+
+    // retornamos el array dinamico
     return ptr;
 }
 
 int main() {
     // variables
+    int tamanio;
+    bool flagTamanio = false;
 
     // punteros
-    // int numPtr;
+    int *ArrayPtr;
+
+    //* Comienzo del programa
+
+    // Bucle que ejecuta la accion de ingresar el tamaño hasta que el usuario ingrese un tamaño correcto
+    do {
+        // inicializamos la variable en false a cada vuelta de bucle
+        flagTamanio = false;
+        cout << "Ingresa el tamaño del array dinamico: ";
+        ingresarDatos(tamanio);
+
+        // si ingresa un tamaño incorrecto se activa la bandera
+        if (tamanio <= 0) {
+            flagTamanio = true;
+            cout << "ERROR\nIngrese un numero positivo";
+        }
+    } while (flagTamanio)
 }
