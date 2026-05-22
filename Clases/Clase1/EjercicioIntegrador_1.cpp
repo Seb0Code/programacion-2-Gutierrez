@@ -81,13 +81,28 @@ int *crearArrayDinamico(int tamanio) {
     return nuevoArray;
 }
 
+void verficarPositivo(int &variable) {
+    bool flag = false;
+
+    do {
+        limpiarPantalla();
+        flag = false;
+        ingresarDatos(variable);
+        if (variable <= 0) {
+            cout << "ERROR ingresa solo numero positivos\n";
+            flag = true; // activamos la bandera
+            esperarSegundos();
+        }
+    } while (flag);
+}
+
 // Pasamos como parametros el tamaño y la direccion al primer elemento del array dinamico
 void llenarArrayDinamico(int tamanio, int *ptr) {
     int num;
 
     // bucle que recorre todo el array
     for (size_t e = 0; e < tamanio; e++) {
-        ingresarDatos(num);
+        verficarPositivo(num);
         *(ptr + e) = num;
     }
 }
@@ -155,7 +170,7 @@ int main() {
     do {
         limpiarPantalla(); // Limpiamos la Pantal
         cout << "\n-------MENU-------\n\n";
-        cout << "1. Crear y llenar arreglo\n2. Mostrar arreglo\n";
+        cout << "1. Crear y llenar arreglo de numero Positivos\n2. Mostrar arreglo\n";
         cout << "3. Encontrar numero mayor\n4. Calcular promedio\n5. Salir\n\n";
         ingresarDatos(opcion);
 
@@ -194,8 +209,7 @@ int main() {
                 cout << "Array creado con exito\n";
                 esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                 limpiarPantalla(); // Limpiamos la Pantalla
-
-                cout << "-------LLENAR ARRAY DINAMICO-------\n\n";
+                cout << "\n\n-------LLENAR ARRAY DINAMICO-------\n\n";
                 llenarArrayDinamico(tamanio, ArrayPtr);
                 cout << "Array llenado con exito";
                 flagArrayCreado = true;
@@ -263,7 +277,7 @@ int main() {
 
             default:
                 limpiarPantalla(); // Limpiamos la Pantalla
-                cout << "ERROR\n Ingresaste una opcion no disponible Por favor intente nuevamente\n";
+                cout << "ERROR opcion no disponible\n";
                 esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                 limpiarPantalla(); // Limpiamos la Pantalla
         }
