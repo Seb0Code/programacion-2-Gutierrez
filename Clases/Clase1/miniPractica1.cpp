@@ -1,6 +1,8 @@
+#include <chrono>
 #include <iostream>
 #include <limits>
 #include <string>
+#include <thread>
 #include <vector>
 
 using std::cin;
@@ -43,34 +45,39 @@ struct Transporte {
     short numPersonas = 0;
     bool estaLleno = false;
     short maxCapacidad = 0;
-    vector<Personas> Personas;
+    vector<Persona> Personas;
 
-    void lleno() {
-        if (estaLleno) {
-            cout << "no se pueden montar mas personas";
-        }
+    Persona var;
+
+    void añadirPersonas(Transporte *Trans) {
+        Persona p;
+        cout << "Bienvenido a " << Trans->nom << endl;
+        cout << "Introduzca los siguientes datos para poder registralo: ";
+        cout << "\n-----NOMBRE-----" << endl;
+        ingresarDatos(p.nom);
+
+        cout << "-----EDAD-----" << endl;
+        ingresarDatos(p.edad);
+
+        cout << "-----CEDULA-----" << endl;
+        ingresarDatos(p.cedula);
+        Personas.push_back(p);
+        numPersonas++;
+        cout << "Usted se ha montado con exito en el transporte, por favor espere su parada" << endl;
+    }
+
+    bool lleno() {
+        if (numPersonas == maxCapacidad) {
+            return true;
+        } else
+            return false;
     }
 };
-
-// Usamos un puntero para ahorrar memoria ya que solo le pasamos al direccion
-void añadirConPtr(Transporte *Trans) {
-    Persona p;
-    cout << "Bienvenido al " << Trans->nom << endl;
-    cout << "Usted se ha montado con exito en el transporte, por favor espere su parada" << endl;
-    cout << "Introduzca los siguientes datos para poder registralo: ";
-    cout << "-----NOMBRE-----" << endl;
-    ingresarDatos(p.nom);
-
-    cout << "-----EDAD-----" << endl;
-    ingresarDatos(p.edad);
-
-    cout << "-----CEDULA-----" << endl;
-    ingresarDatos(p.cedula);
-}
 
 int main() {
     // nombre, edad, profesion , estadocivil
     Persona Chofer = {"Jhon", "54", "12854674"};
+    Persona p;
 
     // Nombre, velocidad, numdePersonasABordo, estalleno?, capacidadMAX
     Transporte Bus = {"Bus", 60, 0, false, 30};
@@ -96,5 +103,58 @@ int main() {
     cout << "Tamanio del objeto Avion: " << sizeof(Avion) << " bytes" << endl;
     cout << "Tamanio del objeto Barco: " << sizeof(Barco) << " bytes" << endl;
     cout << "Tamanio del objeto Carrito: " << sizeof(Carrito) << " bytes" << endl;
+
+    int opcion = 0;
+
+    do {
+        cout << "En que transporte desea viajar?\n1. Bus\n2. Carrito\n3. Avion\n4. Barco\n5. Moto" << endl;
+        opcion = 0;
+        ingresarDatos(opcion);
+        switch (opcion) {
+            case 1:
+                if (!Bus.lleno()) {
+                    Bus.añadirPersonas(BusPtr);
+                } else
+                    cout << "El bus esta lleno" << endl;
+                break;
+
+            case 2:
+                if (!Carrito.lleno()) {
+                    Carrito.añadirPersonas(CarritoPtr);
+                } else
+                    cout << "El Carrito esta lleno" << endl;
+                break;
+
+            case 3:
+                if (!Avion.lleno()) {
+                    Avion.añadirPersonas(AvionPtr);
+                } else
+                    cout << "El Avion esta lleno" << endl;
+                break;
+
+            case 4:
+                if (!Barco.lleno()) {
+                    Barco.añadirPersonas(BarcoPtr);
+                } else
+                    cout << "El Barco esta lleno" << endl;
+                break;
+
+            case 5:
+                if (!Moto.lleno()) {
+                    Moto.añadirPersonas(MotoPtr);
+                } else
+                    cout << "La Moto esta llena" << endl;
+                break;
+
+            case 6:
+                cout << "Saliendo..." << endl;
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+                break;
+
+            default:
+                cout << "ERROR opcion invalida" << endl;
+        }
+    } while (opcion != 6);
+
     return 0;
 }
