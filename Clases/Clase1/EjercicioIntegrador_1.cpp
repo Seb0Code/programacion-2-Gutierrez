@@ -122,19 +122,27 @@ void llenarArrayDinamico(int tamanio, int *ptr) {
     }
 }
 
+void mostrarArrayDinamico(int *arrayDinamico, int tamanio) {
+    // bucle que recorre e imprime todo lo que hay en el array
+    for (size_t e = 0; e < tamanio; e++) {
+        cout << "Posicion " << e << ": " << *(arrayDinamico + e) << endl;
+    }
+}
+
 int main() {
     // variables
     int tamanio;
     bool flagTamanio = false;
     int opcion = 0;
-    int num = 0;
+    bool flagArrayCreado = false;
 
     // punteros
-    int *ArrayPtr;
+    int *ArrayPtr = nullptr;
 
     //* Comienzo del programa
 
     do {
+        limpiarPantalla();
         cout << "\n\n-------MENU-------\n\n";
         cout << "1. Crear y llenar arreglo\n2. Mostrar arreglo\n";
         cout << "3. Encontrar número mayor\n4. Calcular promedio\n5. Salir\n";
@@ -145,31 +153,56 @@ int main() {
                 limpiarPantalla();
                 cout << "\n\n-------CREAR ARRAY DINAMICO-------\n\n";
                 ingresarTamanio(tamanio);
-                crearArrayDinamico(tamanio);
+                ArrayPtr = crearArrayDinamico(tamanio);
                 cout << "Array creado con exito\n";
+                esperarSegundos();
                 limpiarPantalla();
                 cout << "-------LLENAR ARRAY DINAMICO-------\n\n";
                 llenarArrayDinamico(tamanio, ArrayPtr);
                 cout << "Array llenado con exito";
+                flagArrayCreado = true;
+                esperarSegundos();
                 break;
 
             case 2:
+                if (!flagArrayCreado) {
+                    cout << "ADVERTENCIA: Aun no has creado el array dinamico\n";
+                    cout << "Crea primero el array para usar estas funciones\n";
+                    break;
+                }
+                esperarSegundos();
                 limpiarPantalla();
                 break;
 
             case 3:
+                if (!flagArrayCreado) {
+                    cout << "ADVERTENCIA: Aun no has creado el array dinamico\n";
+                    cout << "Crea primero el array para usar estas funciones\n";
+                    break;
+                }
+                esperarSegundos();
                 limpiarPantalla();
                 break;
 
             case 4:
+                if (!flagArrayCreado) {
+                    cout << "ADVERTENCIA: Aun no has creado el array dinamico\n";
+                    cout << "Crea primero el array para usar estas funciones\n";
+                    break;
+                }
+                esperarSegundos();
                 limpiarPantalla();
                 break;
 
             case 5:
+                cout << "Saliendo...";
+                esperarSegundos();
                 limpiarPantalla();
                 break;
 
             default:
+                cout << "ERROR\n Ingresaste una opcion no disponible Por favor intente nuevamente\n";
+                esperarSegundos();
                 limpiarPantalla();
         }
     } while (opcion != 5);
