@@ -99,5 +99,5 @@ int main() {
             flagTamanio = true;
             cout << "ERROR\nIngrese un numero positivo";
         }
-    } while (flagTamanio)
+    } while (flagTamanio);
 }
