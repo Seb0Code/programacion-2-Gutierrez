@@ -49,6 +49,7 @@
  */
 
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <new> // Incluimos la libreria para usar std::nothrow
@@ -149,6 +150,20 @@ int hallarNumeroMayor(int *arrayDinamico, int tamanio) {
     return numeroReferencia;
 }
 
+float calcularPromedio(int *arrayDinamico, int tamanio) {
+    float suma = 0, promedio = 0;
+
+    for (size_t e = 0; e < tamanio; e++) {
+        // sumamos todos los valores
+        suma += *(arrayDinamico + e);
+    }
+    // Calculamos el promedio
+    promedio = suma / tamanio;
+
+    // retornamos el valor
+    return promedio;
+}
+
 int main() {
     // variables
     int tamanio;
@@ -156,13 +171,15 @@ int main() {
     int opcion = 0;
     bool flagArrayCreado = false;
     int numeroMayor = 0;
+    int promedio = 0;
+
     // punteros
     int *ArrayPtr = nullptr;
 
     //* Comienzo del programa
 
     do {
-        limpiarPantalla();
+        limpiarPantalla(); // Limpiamos la Pantal
         cout << "\n\n-------MENU-------\n\n";
         cout << "1. Crear y llenar arreglo\n2. Mostrar arreglo\n";
         cout << "3. Encontrar numero mayor\n4. Calcular promedio\n5. Salir\n\n";
@@ -170,75 +187,80 @@ int main() {
 
         switch (opcion) {
             case 1:
-                limpiarPantalla();
+                limpiarPantalla(); // Limpiamos la Pantalla
                 cout << "\n\n-------CREAR ARRAY DINAMICO-------\n\n";
                 ingresarTamanio(tamanio);
                 ArrayPtr = crearArrayDinamico(tamanio);
                 cout << "Array creado con exito\n";
-                esperarSegundos();
-                limpiarPantalla();
+                esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
+                limpiarPantalla(); // Limpiamos la Pantalla
 
                 cout << "-------LLENAR ARRAY DINAMICO-------\n\n";
                 llenarArrayDinamico(tamanio, ArrayPtr);
                 cout << "Array llenado con exito";
                 flagArrayCreado = true;
-                esperarSegundos();
+                esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                 break;
 
             case 2:
                 if (!flagArrayCreado) {
-                    limpiarPantalla();
+                    limpiarPantalla(); // Limpiamos la Pantalla
                     cout << "ADVERTENCIA: Aun no has creado el array dinamico\n";
                     cout << "Crea primero el array para usar estas funciones\n";
-                    esperarSegundos();
+                    esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                     break;
                 } else {
                     cout << "-------CONTENIDO DEL ARRAY DINAMICO-------\n\n";
                     mostrarArrayDinamico(ArrayPtr, tamanio);
+                    presionarTecla(); // Esperamos que el usuario presione la tecla enter para continuar
                 }
-                esperarSegundos();
-                limpiarPantalla();
+                limpiarPantalla(); // Limpiamos la Pantalla
                 break;
 
             case 3:
                 if (!flagArrayCreado) {
-                    limpiarPantalla();
+                    limpiarPantalla(); // Limpiamos la Pantalla
                     cout << "ADVERTENCIA: Aun no has creado el array dinamico\n";
                     cout << "Crea primero el array para usar estas funciones\n";
-                    esperarSegundos();
+                    esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                     break;
                 } else {
                     numeroMayor = hallarNumeroMayor(ArrayPtr, tamanio);
                     cout << "Numero mayor: " << numeroMayor;
+                    presionarTecla(); // Esperamos que el usuario presione la tecla enter para continuar
                 }
-                esperarSegundos();
-                limpiarPantalla();
+                limpiarPantalla(); // Limpiamos la Pantalla
                 break;
 
             case 4:
                 if (!flagArrayCreado) {
-                    limpiarPantalla();
+                    limpiarPantalla(); // Limpiamos la Pantalla
                     cout << "ADVERTENCIA: Aun no has creado el array dinamico\n";
                     cout << "Crea primero el array para usar estas funciones\n";
-                    esperarSegundos();
+                    esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                     break;
+                } else {
+                    cout << "-------CALCULAR PROMEDIO-------\n\n";
+                    promedio = calcularPromedio(ArrayPtr, tamanio);
+                    // fijamos el resultado a solo decimales y obligamos a que use 3 decimales
+                    cout << "Promedio: " << std::fixed << std::setprecision(3) << promedio;
+                    presionarTecla(); // Esperamos que el usuario presione la tecla enter para continuar
                 }
-                esperarSegundos();
-                limpiarPantalla();
+                limpiarPantalla(); // Limpiamos la Pantalla
                 break;
 
             case 5:
-                limpiarPantalla();
+                limpiarPantalla(); // Limpiamos la Pantalla
                 cout << "Saliendo...";
-                esperarSegundos();
-                limpiarPantalla();
+                esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
+                limpiarPantalla(); // Limpiamos la Pantalla
                 break;
 
             default:
-                limpiarPantalla();
+                limpiarPantalla(); // Limpiamos la Pantalla
                 cout << "ERROR\n Ingresaste una opcion no disponible Por favor intente nuevamente\n";
-                esperarSegundos();
-                limpiarPantalla();
+                esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
+                limpiarPantalla(); // Limpiamos la Pantalla
         }
     } while (opcion != 5);
 
