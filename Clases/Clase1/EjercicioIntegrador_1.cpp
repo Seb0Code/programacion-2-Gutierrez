@@ -61,6 +61,11 @@ using std::string;
 
 void esperarSegundos() { std::this_thread::sleep_for(std::chrono::milliseconds(3500)); }
 
+void presionarTecla() {
+    cout << "Presione la tecla Enter para continuar...";
+    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
 void limpiarPantalla() {
     cout << "\033[2J\033[1;1H" << std::flush; // Secuencia de escape ANSI para limpiar pantalla
     cout << endl << endl;
@@ -100,7 +105,6 @@ void ingresarTamanio(int &tamanio) {
 
 int *crearArrayDinamico(int tamanio) {
     // creamos el array dinamico usando std::nothrow
-
     // El 'std::nothrow' hace que si falla la memoria, retorne nullptr
     int *nuevoArray = new (std::nothrow) int[tamanio];
 
@@ -130,13 +134,28 @@ void mostrarArrayDinamico(int *arrayDinamico, int tamanio) {
     }
 }
 
+// funcion que devuelve el numero mayor dentro del array
+int hallarNumeroMayor(int *arrayDinamico, int tamanio) {
+    int numeroReferencia = 0, numeroAnterior = 0;
+
+    // bucle que recorre el array
+    for (size_t e = 0; e < tamanio; e++) {
+        numeroAnterior = *(arrayDinamico + e);
+        if (numeroAnterior > numeroReferencia) {
+            numeroReferencia = numeroAnterior;
+        }
+    }
+
+    return numeroReferencia;
+}
+
 int main() {
     // variables
     int tamanio;
     bool flagTamanio = false;
     int opcion = 0;
     bool flagArrayCreado = false;
-
+    int numeroMayor = 0;
     // punteros
     int *ArrayPtr = nullptr;
 
@@ -188,6 +207,9 @@ int main() {
                     cout << "Crea primero el array para usar estas funciones\n";
                     esperarSegundos();
                     break;
+                } else {
+                    numeroMayor = hallarNumeroMayor(ArrayPtr, tamanio);
+                    cout << "Numero mayor: " << numeroMayor;
                 }
                 esperarSegundos();
                 limpiarPantalla();
@@ -219,12 +241,6 @@ int main() {
                 limpiarPantalla();
         }
     } while (opcion != 5);
-
-
-
-    // Guardamos la direccion del arrayDinamico en nuestra variable dentro del main
-    ArrayPtr = crearArrayDinamico(tamanio);
-
 
     // limpiamos lo que hay en ArrayPtr
     delete ArrayPtr;
