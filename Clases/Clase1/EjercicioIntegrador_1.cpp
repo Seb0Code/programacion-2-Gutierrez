@@ -1,52 +1,6 @@
 /*
  * EJERCICIO CLASE 1 - PUNTEROS Y MEMORIA DINÁMICA
- * ================================================
- *
- * ENUNCIADO SIMPLIFICADO:
- * Implementar un programa que permita:
- * 1. Crear un arreglo dinámico de números enteros
- * 2. Llenar el arreglo con valores ingresados por el usuario
- * 3. Mostrar todos los números del arreglo
- * 4. Encontrar el número mayor en el arreglo
- * 5. Calcular el promedio de todos los números
- * 6. Liberar la memoria correctamente
- *
- * REQUISITOS OBLIGATORIOS:
- * - Usar punteros y memoria dinámica (new/delete)
- * - Usar paso por referencia donde sea apropiado
- * - Validar entrada del usuario (tamaño del arreglo)
- * - Liberar toda la memoria asignada
- * - Asignar nullptr después de delete
- *
- * FUNCIONES QUE DEBE IMPLEMENTAR:
- * 1. int* crearArreglo(int tamanio)
- * 2. void llenarArreglo(int* arreglo, int tamanio)
- * 3. void mostrarArreglo(int* arreglo, int tamanio)
- * 4. int encontrarMayor(int* arreglo, int tamanio)
- * 5. float calcularPromedio(int* arreglo, int tamanio)
- * 6. void liberarArreglo(int*& arreglo)
- *
- * MENÚ SIMPLE:
- * 1. Crear y llenar arreglo
- * 2. Mostrar arreglo
- * 3. Encontrar número mayor
- * 4. Calcular promedio
- * 5. Salir
- *
- * NOTAS IMPORTANTES:
- * - Validar que el tamaño del arreglo sea positivo
- * - Verificar que new no retorne nullptr
- * - Usar buenas prácticas de programación
- * - Comentar el código apropiadamente
- *
- * CRITERIOS DE EVALUACIÓN:
- * - Correcta implementación de punteros (50%)
- * - Manejo correcto de memoria (30%)
- * - Funcionalidad del programa (20%)
- *
- * TIEMPO ESTIMADO: 1-2 horas
- * DIFICULTAD: Básica-Medio
- */
+ * ================================================ */
 
 #include <algorithm> // para hacer uso de transform y implmentar una transformacion de texto mas eficiente
 #include <cctype>    // para el uso de std::toupper y tolower
@@ -109,6 +63,7 @@ void ingresarTamanio(int &tamanio) {
         if (tamanio <= 0) {
             flagTamanio = true;
             cout << "ERROR\nIngrese un numero positivo";
+            presionarTecla();
         }
     } while (flagTamanio);
 }
@@ -214,7 +169,7 @@ int main() {
                         repetir = false;
                         crearArrayNuevamente = true;
 
-                        cout << "Ya hay un array creado ¿quieres remplazarlo? (S/N)\n";
+                        cout << "Ya hay un array creado quieres remplazarlo? (S/N)\n";
                         ingresarDatos(crearNuevamente);
                         crearNuevamente = convertirMayus(crearNuevamente);
                         if (crearNuevamente == "S") {
@@ -264,6 +219,7 @@ int main() {
                 break;
 
             case 3:
+                numeroMayor = 0;
                 if (!flagArrayCreado) {
                     limpiarPantalla(); // Limpiamos la Pantalla
                     cout << "ADVERTENCIA: Aun no has creado el array dinamico\n";
@@ -272,13 +228,14 @@ int main() {
                     break;
                 } else {
                     numeroMayor = hallarNumeroMayor(ArrayPtr, tamanio);
-                    cout << "Numero mayor: " << numeroMayor;
+                    cout << "Numero mayor: " << numeroMayor << endl;
                     presionarTecla(); // Esperamos que el usuario presione la tecla enter para continuar
                 }
                 limpiarPantalla(); // Limpiamos la Pantalla
                 break;
 
             case 4:
+                promedio = 0;
                 if (!flagArrayCreado) {
                     limpiarPantalla(); // Limpiamos la Pantalla
                     cout << "ADVERTENCIA: Aun no has creado el array dinamico\n";
@@ -289,7 +246,7 @@ int main() {
                     cout << "-------CALCULAR PROMEDIO-------\n\n";
                     promedio = calcularPromedio(ArrayPtr, tamanio);
                     // fijamos el resultado a solo decimales y obligamos a que use 3 decimales
-                    cout << "Promedio: " << std::fixed << std::setprecision(3) << promedio;
+                    cout << "Promedio: " << std::fixed << std::setprecision(3) << promedio << endl;
                     presionarTecla(); // Esperamos que el usuario presione la tecla enter para continuar
                 }
                 limpiarPantalla(); // Limpiamos la Pantalla
