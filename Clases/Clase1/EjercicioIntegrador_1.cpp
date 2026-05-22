@@ -48,6 +48,8 @@
  * DIFICULTAD: Básica-Medio
  */
 
+#include <algorithm> // para hacer uso de transform y implmentar una transformacion de texto mas eficiente
+#include <cctype>    // para el uso de std::toupper y tolower
 #include <chrono>
 #include <iomanip>
 #include <iostream>
@@ -65,6 +67,7 @@ void esperarSegundos() { std::this_thread::sleep_for(std::chrono::milliseconds(3
 void presionarTecla() {
     cout << "Presione la tecla Enter para continuar...";
     cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    cin.get();
 }
 
 void limpiarPantalla() {
@@ -72,7 +75,12 @@ void limpiarPantalla() {
     cout << endl << endl;
 }
 
-void ingresarDatos(int &num) {
+string convertirMayus(string texto) {
+    std::transform(texto.begin(), texto.end(), texto.begin(), ::toupper);
+    return texto;
+}
+
+template <class Tipo> void ingresarDatos(Tipo &num) {
     bool flag;
     do {
         flag = false;
@@ -91,9 +99,10 @@ void ingresarTamanio(int &tamanio) {
     bool flagTamanio;
     // Bucle que ejecuta la accion de ingresar el tamaño hasta que el usuario ingrese un tamaño correcto
     do {
+        limpiarPantalla();
         // inicializamos la variable en false a cada vuelta de bucle
         flagTamanio = false;
-        cout << "-----TAMANIO DEL ARRAY DINAMICO-------\n";
+        cout << "\n-----TAMANIO DEL ARRAY DINAMICO-------\n";
         ingresarDatos(tamanio);
 
         // si ingresa un tamaño incorrecto se activa la bandera
@@ -164,6 +173,13 @@ float calcularPromedio(int *arrayDinamico, int tamanio) {
     return promedio;
 }
 
+void liberarMemoria(int *&arrayDinamico) {
+    // limpiamos lo que hay en ArrayPtr
+    delete arrayDinamico;
+    // Hacemos que no apunte a ningun lado para evitar un puntero colgante
+    arrayDinamico = nullptr;
+}
+
 int main() {
     // variables
     int tamanio;
@@ -172,6 +188,9 @@ int main() {
     bool flagArrayCreado = false;
     int numeroMayor = 0;
     int promedio = 0;
+    string crearNuevamente;
+    bool crearArrayNuevamente = true;
+    bool repetir = false;
 
     // punteros
     int *ArrayPtr = nullptr;
@@ -188,6 +207,33 @@ int main() {
         switch (opcion) {
             case 1:
                 limpiarPantalla(); // Limpiamos la Pantalla
+
+                if (flagArrayCreado) {
+                    do {
+                        // inicializamos las variables
+                        repetir = false;
+                        crearArrayNuevamente = true;
+
+                        cout << "Ya hay un array creado ¿quieres remplazarlo? (S/N)\n";
+                        ingresarDatos(crearNuevamente);
+                        crearNuevamente = convertirMayus(crearNuevamente);
+                        if (crearNuevamente == "S") {
+                            liberarMemoria(ArrayPtr);
+                            break;
+                        } else if (crearNuevamente == "N") {
+                            crearArrayNuevamente = false;
+                        } else {
+                            repetir = true;
+                        }
+                    } while (repetir);
+                }
+
+                if (!crearArrayNuevamente) {
+                    cout << "Si no vas a modificar el array seras redirigido al menu principal\n";
+                    esperarSegundos();
+                    break;
+                }
+
                 cout << "\n\n-------CREAR ARRAY DINAMICO-------\n\n";
                 ingresarTamanio(tamanio);
                 ArrayPtr = crearArrayDinamico(tamanio);
@@ -264,10 +310,7 @@ int main() {
         }
     } while (opcion != 5);
 
-    // limpiamos lo que hay en ArrayPtr
-    delete ArrayPtr;
-    // Hacemos que no apunte a ningun lado para evitar un puntero colgante
-    ArrayPtr = nullptr;
+    liberarMemoria(ArrayPtr);
 
     return 0;
 }
