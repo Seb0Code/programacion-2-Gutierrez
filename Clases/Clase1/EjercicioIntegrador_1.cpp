@@ -48,12 +48,18 @@
  * DIFICULTAD: Básica-Medio
  */
 
+#include <chrono>
 #include <iostream>
 #include <limits>
+#include <new> // Incluimos la libreria para usar std::nothrow
+#include <thread>
 
 using std::cin;
 using std::cout;
+using std::endl;
 using std::string;
+
+void esperarSegundos() { std::this_thread::sleep_for(std::chrono::milliseconds(2500)); }
 
 void ingresarDatos(int &num) {
     bool flag;
@@ -70,11 +76,17 @@ void ingresarDatos(int &num) {
 }
 
 int *crearArrayDinamico(int tamanio) {
-    // creamos el array dinamico
-    int *ptr = new int[tamanio];
+    // creamos el array dinamico usando std::nothrow
 
+    // El 'std::nothrow' hace que si falla la memoria, retorne nullptr
+    int *nuevoArray = new (std::nothrow) int[tamanio];
+
+    // si devolvio nullptr notificamos el error al usuario
+    if (nuevoArray == nullptr) {
+        cout << "Error al crear el arreglo dinamico por falta de memoria RAM" << endl;
+    }
     // retornamos el array dinamico
-    return ptr;
+    return nuevoArray;
 }
 
 int main() {
