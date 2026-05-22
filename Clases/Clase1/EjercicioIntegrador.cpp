@@ -69,6 +69,12 @@ void ingresarDatos(int num) {
     } while (flag);
 }
 
+int *crearArrayDinamico(int tamanio) {
+    // creamos el array dinamico
+    int *ptr = new int[tamanio];
+    return ptr;
+}
+
 int main() {
     // variables
 
