@@ -142,7 +142,7 @@ int main() {
     int opcion = 0;
     bool flagArrayCreado = false;
     int numeroMayor = 0;
-    int promedio = 0;
+    float promedio = 0;
     string crearNuevamente;
     bool crearArrayNuevamente = true;
     bool repetir = false;
@@ -154,17 +154,16 @@ int main() {
 
     do {
         limpiarPantalla(); // Limpiamos la Pantal
-        cout << "\n\n-------MENU-------\n\n";
+        cout << "\n-------MENU-------\n\n";
         cout << "1. Crear y llenar arreglo\n2. Mostrar arreglo\n";
         cout << "3. Encontrar numero mayor\n4. Calcular promedio\n5. Salir\n\n";
         ingresarDatos(opcion);
 
         switch (opcion) {
             case 1:
-                limpiarPantalla(); // Limpiamos la Pantalla
-
                 if (flagArrayCreado) {
                     do {
+                        limpiarPantalla(); // Limpiamos la Pantalla
                         // inicializamos las variables
                         repetir = false;
                         crearArrayNuevamente = true;
@@ -211,6 +210,7 @@ int main() {
                     esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                     break;
                 } else {
+                    limpiarPantalla();
                     cout << "-------CONTENIDO DEL ARRAY DINAMICO-------\n\n";
                     mostrarArrayDinamico(ArrayPtr, tamanio);
                     presionarTecla(); // Esperamos que el usuario presione la tecla enter para continuar
@@ -227,6 +227,7 @@ int main() {
                     esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                     break;
                 } else {
+                    limpiarPantalla();
                     numeroMayor = hallarNumeroMayor(ArrayPtr, tamanio);
                     cout << "Numero mayor: " << numeroMayor << endl;
                     presionarTecla(); // Esperamos que el usuario presione la tecla enter para continuar
@@ -243,6 +244,7 @@ int main() {
                     esperarSegundos(); // Esperamos un tiempo de 3.5 segundos
                     break;
                 } else {
+                    limpiarPantalla();
                     cout << "-------CALCULAR PROMEDIO-------\n\n";
                     promedio = calcularPromedio(ArrayPtr, tamanio);
                     // fijamos el resultado a solo decimales y obligamos a que use 3 decimales
