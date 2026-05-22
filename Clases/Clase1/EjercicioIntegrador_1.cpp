@@ -114,7 +114,6 @@ int *crearArrayDinamico(int tamanio) {
 // Pasamos como parametros el tamaño y la direccion al primer elemento del array dinamico
 void llenarArrayDinamico(int tamanio, int *ptr) {
     int num;
-    cout << "-------LLENAR ARRAY DINAMICO-------\n\n";
 
     // bucle que recorre todo el array
     for (size_t e = 0; e < tamanio; e++) {
@@ -138,7 +137,7 @@ int main() {
     do {
         cout << "\n\n-------MENU-------\n\n";
         cout << "1. Crear y llenar arreglo\n2. Mostrar arreglo\n";
-        cout << "3. Encontrar número mayor\n4. Calcular promedio\n5. Salir";
+        cout << "3. Encontrar número mayor\n4. Calcular promedio\n5. Salir\n";
         ingresarDatos(opcion);
 
         switch (opcion) {
@@ -149,6 +148,7 @@ int main() {
                 crearArrayDinamico(tamanio);
                 cout << "Array creado con exito\n";
                 limpiarPantalla();
+                cout << "-------LLENAR ARRAY DINAMICO-------\n\n";
                 llenarArrayDinamico(tamanio, ArrayPtr);
                 cout << "Array llenado con exito";
                 break;
