@@ -100,4 +100,15 @@ int main() {
             cout << "ERROR\nIngrese un numero positivo";
         }
     } while (flagTamanio);
+
+    // Guardamos la direccion del arrayDinamico en nuestra variable dentro del main
+    ArrayPtr = crearArrayDinamico(tamanio);
+
+
+    // limpiamos lo que hay en ArrayPtr
+    delete ArrayPtr;
+    // Hacemos que no apunte a ningun lado para evitar un puntero colgante
+    ArrayPtr = nullptr;
+
+    return 0;
 }
