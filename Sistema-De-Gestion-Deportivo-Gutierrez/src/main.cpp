@@ -133,28 +133,85 @@ namespace Auxiliares {
 } // namespace Auxiliares
 
 struct Jugador {
-    //
+    unsigned int ID;                 // Id del jugador
+    char nombre[100];                // nombre completo del jugador
+    unsigned int edad;               // edad del jugador
+    char cedula[15];                 // cedula del jugador
+    unsigned int IDequipo;           // Id del equipo al que pertenece
+    unsigned int dorsal;             // dorsal del jugador
+    char posicion[25];               // posicion del jugador segun el deporte
+    char fechaRegistro[11];          // fecha de registro del jugador en formato YYYY-MM-DD
+    unsigned int puntosAnotados = 0; // puntos que anotó el jugador
 };
 
-struct Arbitro {
-    //
+struct ArbitroCentral {
+    char nombre[100];       // nombre completo del arbitro
+    unsigned int edad;      // edad del arbitro
+    char cedula[20];        // cedula del arbitro
+    unsigned int ID;        // Id del arbitro
+    char fechaRegistro[11]; // fecha de registro del arbitro en formato YYYY-MM-DD
 };
 
 struct Equipo {
-    //
+    unsigned int ID;                 // Id del equipo
+    char nombre[100];                // nombre completo del equipo
+    char ciudad[100];                // ciudad de origen del equipo
+    char entrenador[100];            // nombre completo del entrenador
+    char fechaRegistro[11];          // fecha de registro del equipo en Formato: YYYY-MM-DD
+    unsigned int puntos = 0;         // puntos del equipo
+    unsigned int victorias = 0;      // victorias conseguidas
+    unsigned int derrotas = 0;       // derrotas conseguidas
+    unsigned int empates = 0;        // empates conseguidos
+    unsigned int puntosAFavor = 0;   // Total de puntos a favor
+    unsigned int puntosEnContra = 0; // Total de puntos en contra
 };
 
 struct Partido {
-    //
+    int id;                  // Id del partido
+    int idEquipoLocal;       // ID del equipo local
+    int idEquipoVisitante;   // ID del equipo visitante
+    int puntosLocal = 0;     // puntos del equipo local
+    int puntosVisitante = 0; // puntos del equipo visitante
+    char fecha[11];          // fecha en la que se jugó el partido en Formato YYYY-MM-DD
+    char estado[12];         // "PROGRAMADO", "JUGADO" o "CANCELADO"
+    char descripcion[200];   // Notas adicionales (opcional)
 };
 
 struct Torneo {
-    //
+    char nombre[100];     // Nombre del torneo
+    char deporte[50];     // Deporte
+    char formato[25];     // "GRUPOS" o "ELIMINATORIA"
+    char fechaInicio[11]; // fecha de inicio en Formato YYYY-MM-DD
+    char fechaFin[11];    // fecha de finalizacion en Formato: YYYY-MM-DD
 };
 
 struct SistemaDeportivo {
-    //
+    Torneo torneo; // Un objeto torneo
+
+    Partido *arrayPartidos;
+    int numPartidosActuales;
+    int totalPartidos;
+
+    Equipo *arrayEquipos;
+    int numEquiposActuales;
+    int totalEquipos;
+
+    Jugador *arrayJugadores;
+    int numJugadoresActuales;
+    int totalJugadores;
+
+    int siguienteIdEquipo;
+    int siguienteIdJugador;
+    int siguienteIdPartido;
 };
+
+namespace logica {
+    template <typename T> //
+    T crearArray(int tamanio) {
+        T *nuevoArray = new T[tamanio];
+        return nuevoArray;
+    }
+} // namespace logica
 
 int main() {
     // Llamamos a la función de configuración de Idioma al inicio
