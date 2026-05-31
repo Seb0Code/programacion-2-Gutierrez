@@ -7,9 +7,11 @@
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <limits>
 #include <locale>
+#include <sstream> // para el validador de fechas
 #include <string>
 #include <thread>
 
@@ -32,7 +34,7 @@ struct Jugador {
     unsigned int edad;               // edad del jugador
     char cedula[15];                 // cedula del jugador
     unsigned int IDequipo;           // Id del equipo al que pertenece
-    unsigned int dorsal;             // dorsal del jugador
+    unsigned short dorsal;           // dorsal del jugador
     char posicion[25];               // posicion del jugador segun el deporte
     char fechaRegistro[11];          // fecha de registro del jugador en formato YYYY-MM-DD
     unsigned int puntosAnotados = 0; // puntos que anotó el jugador
@@ -56,8 +58,8 @@ struct Equipo {
     unsigned int victorias = 0;      // victorias conseguidas
     unsigned int derrotas = 0;       // derrotas conseguidas
     unsigned int empates = 0;        // empates conseguidos
-    unsigned int puntosAFavor = 0;   // Total de puntos a favor
-    unsigned int puntosEnContra = 0; // Total de puntos en contra
+    unsigned int puntosAFavor = 0;   // capacidad de puntos a favor
+    unsigned int puntosEnContra = 0; // capacidad de puntos en contra
 };
 
 struct Partido {
@@ -82,17 +84,17 @@ struct Torneo {
 struct SistemaDeportivo {
     Torneo torneo; // Un objeto torneo
 
-    Partido *arrayPartidos;
+    Partido *Partidos;
     int numPartidosActuales;
-    int totalPartidos;
+    int capacidadPartidos;
 
-    Equipo *arrayEquipos;
+    Equipo *Equipos;
     int numEquiposActuales;
-    int totalEquipos;
+    int capacidadEquipos;
 
-    Jugador *arrayJugadores;
+    Jugador *Jugadores;
     int numJugadoresActuales;
-    int totalJugadores;
+    int capacidadJugadores;
 
     int siguienteIdEquipo;
     int siguienteIdJugador;
@@ -100,7 +102,211 @@ struct SistemaDeportivo {
 };
 
 // ============================================//
-//   3. FUNCIONES AUXILIARES                   //
+//   3. VALIDADORES                            //
+// ============================================//
+
+namespace Validadores {
+
+    // =======================================================================================//
+    //  Validaciones auxiliares (no se debe poder acceder a ellas desde fuera del namespace)  //
+    // =======================================================================================//
+
+    // encapsula todas las funciones que solo funcionan como auxiliares a otras funciones Validadores principales
+    namespace {
+        // funcion para hallar el tamaño de un char que no tiene permitido modificar el char ni el parametro tamaño
+        bool TamañoValido(const char *texto, const int tamañoCorrecto) {
+            int tamañoAux = 0;
+            for (size_t e = 0; texto[e] != '\0'; e++) {
+                tamañoAux++;
+            }
+            return tamañoAux == tamañoCorrecto; // si son iguales devuelve true, es decir cumple el tamaño, sino false
+        }
+
+        inline bool charVacio(const char *texto) { return (texto == nullptr || *texto == '\0'); }
+
+        bool soloNumeros(const char *texto) {
+            size_t e = 0;
+            // validamos que no esté vacío
+            if (charVacio(texto)) {
+                return false; // si esta vacio devolvemos que la fecha no es válida
+            }
+            bool esNum = true;
+            while (*(texto + e) != '\0') {
+                esNum = std::isdigit(*(texto + e));
+                if (!esNum) {
+                    return false;
+                }
+                e++;
+            }
+            return true;
+        }
+
+        bool soloLetras(const char *texto) {
+            size_t e = 0;
+            // validamos que no esté vacío
+            if (charVacio(texto)) {
+                return false; // si esta vacio devolvemos que la fecha no es válida
+            }
+            bool esLetra = true;
+            bool esEspacio = true;
+            while (*(texto + e) != '\0') {
+                esLetra = std::isalpha(*(texto + e));
+                esEspacio = std::isspace(*(texto + e));
+                if (!esLetra && !esEspacio) {
+                    return false;
+                }
+                e++;
+            }
+            return true;
+        }
+
+        bool tamañoMaximoValido(const char *cadena, size_t tamMaximo) {
+            size_t e = 0;
+            while (*(cadena + e) != '\0') {
+                e++;
+            }
+            return (e <= tamMaximo); // devuelve false si 'e' es mayor que el tamaño maximo o true si 'e' es menor
+        }
+
+        bool esBisiesto(int anio) {
+            // 1. Un año no puede ser bisiesto si es 0 o negativo
+            if (anio <= 0) {
+                return false;
+            }
+            // 2. Aplicar la regla de divisibilidad del año bisiesto
+            return (anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0);
+        }
+    } // namespace
+
+    // ====================================================================================//
+    //  Validaciones principales                                                           //
+    // ====================================================================================//
+
+    bool Edad(const short edad, char *mensajeError) {
+        // la edad no puede ser negativa ni igual a 0, tampoco puede ser mayor a 120
+        if (edad < 14 || edad > 50) {
+            // asignamos la siguiente cadena de texto a el array de char
+            std::strcpy(mensajeError, "La edad debe esta entre un rango de 14-50");
+            return false;
+        }
+        return true;
+    }
+
+    bool Dorsal(const short dorsal, char *mensajeError) {
+        if (dorsal < 1 || dorsal > 99) {
+            std::strcpy(mensajeError, "El dorsal debe esta entre un rango de 1-99");
+            return false;
+        }
+        return true;
+    }
+
+    bool Fechas(const char *fecha, char *mensajeError) {
+        short dia = 0, mes = 0, año = 0;
+        // array de los dias de cada mes
+        int diasPorMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+        // validamos que no esté vacío
+        if (charVacio(fecha)) {
+            std::strcpy(mensajeError, "La fecha no debe estar vacía");
+            return false; // si esta vacio devolvemos que la fecha no es válida
+        }
+
+        // si no cumple con el tamaño de 11 caracteres (DD/MM/AAAA)
+        if (!TamañoValido(fecha, 10)) {
+            std::strcpy(mensajeError, "La fecha debe tener un tamaño de 10 caracteres siguiendo el formato DD/MM/AAAA");
+            return false;
+        }
+
+        // Validación de tamaño y guiones (YYYY-MM-DD)
+        if (!TamañoValido(fecha, 10) || fecha[4] != '-' || fecha[7] != '-') {
+            std::strcpy(mensajeError, "Formato incorrecto. Debe usar YYYY-MM-DD (Ej: 2026-05-31).");
+            return false;
+        }
+
+        // Verificamos que los demás caracteres sean numéricos
+        for (size_t e = 0; e < 10; e++) {
+            if (e == 4 || e == 7)
+                continue;
+            if (!std::isdigit(fecha[e])) {
+                std::strcpy(mensajeError, "La fecha no debe contener caracteres no numericos.");
+                return false;
+            }
+        }
+
+        // Extracción numérica basada en el formato YYYY-MM-DD
+        año = (fecha[0] - '0') * 1000 + (fecha[1] - '0') * 100 + (fecha[2] - '0') * 10 + (fecha[3] - '0');
+        mes = (fecha[5] - '0') * 10 + (fecha[6] - '0');
+        dia = (fecha[8] - '0') * 10 + (fecha[9] - '0');
+
+        // si es año bisiesto febrero pasa a tener 29 dias
+        if (mes == 2 && esBisiesto(año)) {
+            diasPorMes[1] = 29;
+        }
+
+        // validar que los meses esten en el rango y que los años no sean negativos
+        if (mes < 1 || mes > 12 || año < 1) {
+            std::strcpy(mensajeError, "Los meses deben estar entre el rango de 1-12 o año inválido");
+            return false;
+        }
+
+        // validar que el dia
+        if (dia < 1 || dia > diasPorMes[mes - 1]) {
+            std::strcpy(mensajeError, "El dia ingresado no existe para ese mes.");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Cedulas(const char *cedula, char *mensajeError) {
+        int tamañoMin = 7, tamañomax = 10;
+
+        // validamos que no esté vacío
+        if (charVacio(cedula)) {
+            std::strcpy(mensajeError, "La cedula no puede estar vacía.");
+            return false; // si esta vacio devolvemos que la fecha no es válida
+        }
+
+        // verificamos que solo tenga numeros
+        if (!soloNumeros(cedula)) {
+            std::strcpy(mensajeError, "La cedula no puede contener caracteres no númericos.");
+            return false;
+        }
+
+        // medimos la longitud
+        int longitud = 0;
+        while (cedula[longitud] != '\0') {
+            longitud++;
+        }
+
+        // si la longitud esta fuera del rando
+        if (longitud < tamañoMin || longitud > tamañomax) {
+            std::strcpy(mensajeError, "Longitud de cedula invalida (Debe tener entre 7 y 10 digitos).");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Nombres(const char *nombre, char *mensajeError) {
+        // validamos que no esté vacío
+        if (charVacio(nombre)) {
+            std::strcpy(mensajeError, "El nombre no puede estar vacío");
+            return false; // si esta vacio devolvemos que la fecha no es válida
+        }
+
+        // validamos que solo contenga letras
+        if (!soloLetras(nombre)) {
+            std::strcpy(mensajeError, "El nombre solo debe contener letras y espacios");
+            return false;
+        }
+        // ! Nota: No se válida el tamaño ya que la funcion ingresarCadena ya valida que no supere el tamaño max
+        return true;
+    }
+} // namespace Validadores
+
+// ============================================//
+//   4. FUNCIONES AUXILIARES                   //
 // ============================================//
 
 // grupo de funciones que no inciden como tal en el sistema pero que mejoran su funcionamiento
@@ -145,6 +351,8 @@ namespace Auxiliares {
 #endif
     }
 
+    // stringToChar
+
     // esta funcion transforma el texto a mayuscula
     string toMayus(string texto) {
         std::transform(texto.begin(), texto.end(), texto.begin(), ::toupper);
@@ -159,14 +367,17 @@ namespace Auxiliares {
 
     // funcion para ingresar cualquier tipo de dato
     template <typename Tipo1> //
-    void ingresarDatos(Tipo1 &texto) {
+    void ingresarDatos(Tipo1 &variable, const char *mensaje, bool (*ptrValidador)(Tipo1, char *)) {
         // bandera que se activa si el usuario ingresa un tipo de dato incorrecto
         bool flag = false;
+        char mensajeError[tamConst];
         do {
-            limpiarPantalla();
+            const tamConst = 150;
+            mensajeError[0] = '\0'; // Limpieza preventiva del error
             flag = false;
-            cout << "Ingresa aqui: ";
-            cin >> texto;
+            cout << mensaje;
+            cin >> variable;
+
             if (cin.fail()) {
                 cin.clear();
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -174,6 +385,11 @@ namespace Auxiliares {
                 cout << "Error Tipo de Dato Incorrecto\n";
                 waitfor(3000);
             } else {
+                // si el puntero no contiene la direccion de ninguna direccion se omite este bloque
+                if (ptrValidador != nullptr) {
+                    flag = !ptrValidador(variable, mensajeError); // si no es valido se activa la bandera
+                    cout << mensajeError << endl;
+                }
                 // Si la lectura fue exitosa, limpiamos el enter residual
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             }
@@ -181,21 +397,40 @@ namespace Auxiliares {
     }
 
     // funcion para ingresar cadenas de texto
-    void ingresarCadena(string &cadena) {
-        // bandera que se activa si el usuario ingresa un tipo de dato incorrecto
+    void ingresarCadena(char *texto, int tamañoMaximo, const char *mensaje, bool (*ptrValidador)(const char *, char *) = nullptr) {
+        const int tamconst = 150;
         bool flag = false;
+        char mensajeError[tamconst];
+        // Nos aseguramos de limpiar cualquier ENTER basura que haya quedado en el búfer
+        if (std::cin.peek() == '\n') {
+            std::cin.ignore();
+        }
+
         do {
-            limpiarPantalla();
+            mensajeError[0] = '\0'; // Limpieza preventiva del error
             flag = false;
-            cout << "Ingresa aqui: ";
-            // cin >> std::ws extrae cualquier ENTER basura que haya quedado en el búfer antes de leer la cadena.
-            getline(cin >> std::ws, cadena);
-            if (cin.fail()) {
-                cin.clear();
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                flag = true; // activamos la bandera
-                cout << "Error Tipo de Dato Incorrecto\n";
-                waitfor(3000);
+            std::cout << mensaje;
+
+            // Se lee toda la linea
+            std::cin.getline(texto, tamañoMaximo);
+
+            // 3. Verificamos si la lectura falló
+            if (std::cin.fail()) {
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                flag = true;
+                std::cout << "ERROR: Excediste el limite de caracteres permitido (" << tamañoMaximo - 1 << "). Intente de nuevo.\n";
+                Auxiliares::waitfor(3000);
+                continue; // Saltamos directo a la siguiente iteración ya que no es necesario el validador
+            }
+
+            // Si la lectura no tuvo errores, pasamos el texto por el validador
+            if (ptrValidador != nullptr) {
+                if (!ptrValidador(texto, mensajeError)) {
+                    flag = true; // Si el validador retorna false, la bandera se activa para repetir
+                    cout << mensajeError << endl;
+                    waitfor(3500);
+                }
             }
         } while (flag);
     }
@@ -218,23 +453,62 @@ namespace Auxiliares {
 } // namespace Auxiliares
 
 // ============================================//
-//   4. VALIDADORES                            //
-// ============================================//
-
-namespace Validadores {
-    //
-}
-
-// ============================================//
 //   5. CAPA DE LOGICA                         //
 // ============================================//
 
 namespace Logica {
 
-    template <typename T> //
-    T crearArray(int tamanio) {
-        T *nuevoArray = new T[tamanio];
-        return nuevoArray;
+    void inicializarSistemaDeportivo(SistemaDeportivo *MiSistema, Torneo torneo) {
+        // Inicializamos el Torneo
+        MiSistema->torneo = torneo;
+
+        // inicializar la capacidad total de las variables
+        MiSistema->capacidadEquipos = 4;
+        MiSistema->capacidadJugadores = 4;
+        MiSistema->capacidadPartidos = 4;
+
+        // inicializar los arrays
+        MiSistema->Equipos = new Equipo[4];    // se deben inicializar con tamaño de 4
+        MiSistema->Jugadores = new Jugador[4]; // se deben inicializar con tamaño de 4
+        MiSistema->Partidos = new Partido[4];  // se deben inicializar con tamaño de 4
+
+        // inicializar los contadores
+        MiSistema->numEquiposActuales = 0;
+        MiSistema->numJugadoresActuales = 0;
+        MiSistema->numPartidosActuales = 0;
+
+        // inicializar los IDs
+        MiSistema->siguienteIdEquipo = 1;
+        MiSistema->siguienteIdJugador = 1;
+        MiSistema->siguienteIdPartido = 1;
+    }
+
+    void liberarSistema(SistemaDeportivo *MiSistema) {
+        // Inicializamos el Torneo
+        MiSistema->torneo = {};
+
+        // inicializar la capacidad total de las variables
+        MiSistema->capacidadEquipos = 0;
+        MiSistema->capacidadJugadores = 0;
+        MiSistema->capacidadPartidos = 0;
+
+        // se liberan los arrays y los apuntamos a nullptr
+        delete[] MiSistema->Equipos;
+        MiSistema->Equipos = nullptr;
+        delete[] MiSistema->Jugadores;
+        MiSistema->Jugadores = nullptr;
+        delete[] MiSistema->Partidos;
+        MiSistema->Partidos = nullptr;
+
+        // contadores en 0
+        MiSistema->numEquiposActuales = 0;
+        MiSistema->numJugadoresActuales = 0;
+        MiSistema->numPartidosActuales = 0;
+
+        // IDs a 0
+        MiSistema->siguienteIdEquipo = 0;
+        MiSistema->siguienteIdJugador = 0;
+        MiSistema->siguienteIdPartido = 0;
     }
 
     namespace redimensionar {
@@ -251,9 +525,63 @@ namespace Logica {
 // ============================================//
 
 namespace Presentacion {
-    namespace MENUS {
+
+    namespace menu {
+        void datosInicialesTorneo(SistemaDeportivo *MiSistema) {
+            // variables auxiliares
+            Torneo torneoAux;
+
+            // Aqui se recopilan los datos iniciales del torneo
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(torneoAux.nombre, 100, "Nombre del Torneo: ", Validadores::Nombres);
+
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(torneoAux.deporte, 50, "Deporte del Torneo:"); // !Falta el validador
+
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(torneoAux.formato, 25, "Formato del Torneo (ELIMINATORIA O GRUPOS): ");
+            // ! falta el validador
+
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(torneoAux.fechaInicio, 11, "Fecha De Inicio del Torneo: ", Validadores::Fechas);
+
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::Fechas);
+
+            // enviamos los datos
+            Logica::inicializarSistemaDeportivo(MiSistema, torneoAux);
+        }
+
+
+    } // namespace menu
+
+    namespace equipos {
         //
     }
+
+    namespace partidos {
+        //
+    }
+
+    namespace jugadores {
+        //
+    }
+
 } // namespace Presentacion
 
 // ============================================//
@@ -263,4 +591,26 @@ namespace Presentacion {
 int main() {
     // Llamamos a la función de configuración de Idioma al inicio
     Auxiliares::configurarIdioma();
+
+    // ? ----------------------------------------------//
+    // ? DECLARACION DE VARIABLES                      //
+    // ? ----------------------------------------------//
+
+    // Estructuras
+    SistemaDeportivo MiSistema;
+    Torneo MiTorneo;
+
+    // Punteros
+    SistemaDeportivo *PtrMiSistema = &MiSistema;
+    Torneo *PtrMiTorneo = &MiTorneo;
+
+    // Variables Estaticas
+
+
+    // Inicio del Programa
+    Presentacion::menu::datosInicialesTorneo(PtrMiSistema);
+
+
+    // liberar memoria y cierre del programa
+    Logica::liberarSistema(PtrMiSistema);
 }
