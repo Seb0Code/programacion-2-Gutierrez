@@ -585,4 +585,29 @@ namespace Presentacion {
 //   7. MAIN                                   //
 // ============================================//
 
-int main() {}
+int main() {
+    // Llamamos a la función de configuración de Idioma al inicio
+    Auxiliares::configurarIdioma();
+
+    // ? ----------------------------------------------//
+    // ? DECLARACION DE VARIABLES                      //
+    // ? ----------------------------------------------//
+
+    // Estructuras
+    SistemaDeportivo MiSistema;
+    Torneo MiTorneo;
+
+    // Punteros
+    SistemaDeportivo *PtrMiSistema = &MiSistema;
+    Torneo *PtrMiTorneo = &MiTorneo;
+
+    // Variables Estaticas
+
+
+    // Inicio del Programa
+    Presentacion::menu::datosInicialesTorneo(PtrMiSistema);
+
+
+    // liberar memoria y cierre del programa
+    Logica::liberarSistema(PtrMiSistema);
+}
