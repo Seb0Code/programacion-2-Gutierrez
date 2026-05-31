@@ -7,11 +7,11 @@
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
-#include <cstring>
+#include <cstring> //para el uso de strcpy
 #include <iostream>
 #include <limits>
 #include <locale>
-#include <sstream> // para el validador de fechas
+// #include <sstream> // para el validador de fechas dinamico //! no lo implementé
 #include <string>
 #include <thread>
 
@@ -106,7 +106,6 @@ struct SistemaDeportivo {
 // ============================================//
 
 namespace Validadores {
-
     // =======================================================================================//
     //  Validaciones auxiliares (no se debe poder acceder a ellas desde fuera del namespace)  //
     // =======================================================================================//
@@ -351,8 +350,6 @@ namespace Auxiliares {
 #endif
     }
 
-    // stringToChar
-
     // esta funcion transforma el texto a mayuscula
     string toMayus(string texto) {
         std::transform(texto.begin(), texto.end(), texto.begin(), ::toupper);
@@ -370,10 +367,10 @@ namespace Auxiliares {
     void ingresarDatos(Tipo1 &variable, const char *mensaje, bool (*ptrValidador)(Tipo1, char *)) {
         // bandera que se activa si el usuario ingresa un tipo de dato incorrecto
         bool flag = false;
+        const tamConst = 150;
         char mensajeError[tamConst];
         do {
-            const tamConst = 150;
-            mensajeError[0] = '\0'; // Limpieza preventiva del error
+            mensajeError[0] = '\0'; // Limpieza preventiva del error anterior
             flag = false;
             cout << mensaje;
             cin >> variable;
@@ -458,59 +455,6 @@ namespace Auxiliares {
 
 namespace Logica {
 
-    void inicializarSistemaDeportivo(SistemaDeportivo *MiSistema, Torneo torneo) {
-        // Inicializamos el Torneo
-        MiSistema->torneo = torneo;
-
-        // inicializar la capacidad total de las variables
-        MiSistema->capacidadEquipos = 4;
-        MiSistema->capacidadJugadores = 4;
-        MiSistema->capacidadPartidos = 4;
-
-        // inicializar los arrays
-        MiSistema->Equipos = new Equipo[4];    // se deben inicializar con tamaño de 4
-        MiSistema->Jugadores = new Jugador[4]; // se deben inicializar con tamaño de 4
-        MiSistema->Partidos = new Partido[4];  // se deben inicializar con tamaño de 4
-
-        // inicializar los contadores
-        MiSistema->numEquiposActuales = 0;
-        MiSistema->numJugadoresActuales = 0;
-        MiSistema->numPartidosActuales = 0;
-
-        // inicializar los IDs
-        MiSistema->siguienteIdEquipo = 1;
-        MiSistema->siguienteIdJugador = 1;
-        MiSistema->siguienteIdPartido = 1;
-    }
-
-    void liberarSistema(SistemaDeportivo *MiSistema) {
-        // Inicializamos el Torneo
-        MiSistema->torneo = {};
-
-        // inicializar la capacidad total de las variables
-        MiSistema->capacidadEquipos = 0;
-        MiSistema->capacidadJugadores = 0;
-        MiSistema->capacidadPartidos = 0;
-
-        // se liberan los arrays y los apuntamos a nullptr
-        delete[] MiSistema->Equipos;
-        MiSistema->Equipos = nullptr;
-        delete[] MiSistema->Jugadores;
-        MiSistema->Jugadores = nullptr;
-        delete[] MiSistema->Partidos;
-        MiSistema->Partidos = nullptr;
-
-        // contadores en 0
-        MiSistema->numEquiposActuales = 0;
-        MiSistema->numJugadoresActuales = 0;
-        MiSistema->numPartidosActuales = 0;
-
-        // IDs a 0
-        MiSistema->siguienteIdEquipo = 0;
-        MiSistema->siguienteIdJugador = 0;
-        MiSistema->siguienteIdPartido = 0;
-    }
-
     namespace redimensionar {
         //
     }
@@ -526,91 +470,10 @@ namespace Logica {
 
 namespace Presentacion {
 
-    namespace menu {
-        void datosInicialesTorneo(SistemaDeportivo *MiSistema) {
-            // variables auxiliares
-            Torneo torneoAux;
+    namespace menu {} // namespace Presentacion
 
-            // Aqui se recopilan los datos iniciales del torneo
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.nombre, 100, "Nombre del Torneo: ", Validadores::Nombres);
+    // ============================================//
+    //   7. MAIN                                   //
+    // ============================================//
 
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.deporte, 50, "Deporte del Torneo:"); // !Falta el validador
-
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.formato, 25, "Formato del Torneo (ELIMINATORIA O GRUPOS): ");
-            // ! falta el validador
-
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.fechaInicio, 11, "Fecha De Inicio del Torneo: ", Validadores::Fechas);
-
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::Fechas);
-
-            // enviamos los datos
-            Logica::inicializarSistemaDeportivo(MiSistema, torneoAux);
-        }
-
-
-    } // namespace menu
-
-    namespace equipos {
-        //
-    }
-
-    namespace partidos {
-        //
-    }
-
-    namespace jugadores {
-        //
-    }
-
-} // namespace Presentacion
-
-// ============================================//
-//   7. MAIN                                   //
-// ============================================//
-
-int main() {
-    // Llamamos a la función de configuración de Idioma al inicio
-    Auxiliares::configurarIdioma();
-
-    // ? ----------------------------------------------//
-    // ? DECLARACION DE VARIABLES                      //
-    // ? ----------------------------------------------//
-
-    // Estructuras
-    SistemaDeportivo MiSistema;
-    Torneo MiTorneo;
-
-    // Punteros
-    SistemaDeportivo *PtrMiSistema = &MiSistema;
-    Torneo *PtrMiTorneo = &MiTorneo;
-
-    // Variables Estaticas
-
-
-    // Inicio del Programa
-    Presentacion::menu::datosInicialesTorneo(PtrMiSistema);
-
-
-    // liberar memoria y cierre del programa
-    Logica::liberarSistema(PtrMiSistema);
-}
+    int main() {}
