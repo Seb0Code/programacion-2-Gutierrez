@@ -367,7 +367,7 @@ namespace Auxiliares {
     void ingresarDatos(Tipo1 &variable, const char *mensaje, bool (*ptrValidador)(Tipo1, char *)) {
         // bandera que se activa si el usuario ingresa un tipo de dato incorrecto
         bool flag = false;
-        const tamConst = 150;
+        const int tamConst = 150;
         char mensajeError[tamConst];
         do {
             mensajeError[0] = '\0'; // Limpieza preventiva del error anterior
@@ -399,24 +399,26 @@ namespace Auxiliares {
         bool flag = false;
         char mensajeError[tamconst];
         // Nos aseguramos de limpiar cualquier ENTER basura que haya quedado en el búfer
-        if (std::cin.peek() == '\n') {
-            std::cin.ignore();
-        }
+        /*if (cin.peek() == '\n') {
+            cin.ignore();
+        }*/
 
         do {
             mensajeError[0] = '\0'; // Limpieza preventiva del error
             flag = false;
-            std::cout << mensaje;
+
+            // usamos std::flush para obligar a la pantalla a mostrar el mensaje
+            cout << mensaje << std::flush;
 
             // Se lee toda la linea
-            std::cin.getline(texto, tamañoMaximo);
+            cin.getline(texto, tamañoMaximo);
 
             // 3. Verificamos si la lectura falló
-            if (std::cin.fail()) {
-                std::cin.clear();
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 flag = true;
-                std::cout << "ERROR: Excediste el limite de caracteres permitido (" << tamañoMaximo - 1 << "). Intente de nuevo.\n";
+                cout << "ERROR: Excediste el limite de caracteres permitido (" << tamañoMaximo - 1 << "). Intente de nuevo.\n";
                 Auxiliares::waitfor(3000);
                 continue; // Saltamos directo a la siguiente iteración ya que no es necesario el validador
             }
