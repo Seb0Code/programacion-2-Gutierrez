@@ -107,6 +107,16 @@ struct SistemaDeportivo {
 
 namespace Validadores {
     // =======================================================================================//
+    // Declaracion de arrays que serán usados para algunas validaciones                       //
+    // =======================================================================================//
+
+    const char *Deportes[] = {"FUTBOL", "BALONCESTO", "TENIS",     "NATACION", "ATLETISMO", "CICLISMO",      "VOLEIBOL", "RUGBY",         "BEISBOL",   "BOXEO",
+                              "LUCHA",  "JUDO",       "TAEKWONDO", "KARATE",   "ESGRIMA",   "GIMNASIA",      "SURF",     "SKATEBOARDING", "HOCKEY",    "HANDBALL",
+                              "ESQUI",  "SNOWBOARD",  "ESCALADA",  "REMO",     "CANOTAJE",  "TIRO CON ARCO", "GOLF",     "BADMINTON",     "PING PONG", "SOFTBOL"};
+
+    const char *estadoPartidos[] = {"PROGRAMADO", "JUGADO", "CANCELADO"};
+
+    // =======================================================================================//
     //  Validaciones auxiliares (no se debe poder acceder a ellas desde fuera del namespace)  //
     // =======================================================================================//
 
@@ -114,10 +124,11 @@ namespace Validadores {
     namespace {
         // funcion para hallar el tamaño de un char que no tiene permitido modificar el char ni el parametro tamaño
         bool TamañoValido(const char *texto, const int tamañoCorrecto) {
-            int tamañoAux = 0;
+            /*int tamañoAux = 0;
             for (size_t e = 0; texto[e] != '\0'; e++) {
                 tamañoAux++;
-            }
+            }*/
+            size_t tamañoAux = strlen(texto);
             return tamañoAux == tamañoCorrecto; // si son iguales devuelve true, es decir cumple el tamaño, sino false
         }
 
@@ -193,6 +204,7 @@ namespace Validadores {
 
     bool Dorsal(const short dorsal, char *mensajeError) {
         if (dorsal < 1 || dorsal > 99) {
+            // std:strcpy copia el mensaje del segundo parametro dentro de un const char*
             std::strcpy(mensajeError, "El dorsal debe esta entre un rango de 1-99");
             return false;
         }
@@ -208,12 +220,6 @@ namespace Validadores {
         if (charVacio(fecha)) {
             std::strcpy(mensajeError, "La fecha no debe estar vacía");
             return false; // si esta vacio devolvemos que la fecha no es válida
-        }
-
-        // si no cumple con el tamaño de 11 caracteres (DD/MM/AAAA)
-        if (!TamañoValido(fecha, 10)) {
-            std::strcpy(mensajeError, "La fecha debe tener un tamaño de 10 caracteres siguiendo el formato DD/MM/AAAA");
-            return false;
         }
 
         // Validación de tamaño y guiones (YYYY-MM-DD)
@@ -302,6 +308,47 @@ namespace Validadores {
         // ! Nota: No se válida el tamaño ya que la funcion ingresarCadena ya valida que no supere el tamaño max
         return true;
     }
+
+    // nos permite dividir el tamaño de un array de punteros basicamente, entre el tamaño de un puntero y hallar el tamaño de datos de esta forma
+    const size_t numDeportes = sizeof(Deportes) / sizeof(Deportes[0]);
+
+    // Función para validar si un deporte está en la lista
+    bool existeDeporte(const char *deporte, char *mensajeError) {
+        if (charVacio(deporte)) {
+            strcpy(mensajeError, "El Deporte ingresado no puede estar Vacio");
+            return false;
+        }
+        for (size_t e = 0; e < numDeportes; e++) {
+            // std::strcmp compara las dos cadenas caracter a caracter mediante su codigo ASCI, si son iguales retorna 0
+            if (strcmp(deporte, Deportes[e]) == 0) {
+                return true;
+            }
+        }
+        std::strcpy(mensajeError, "El deporte ingresado no está en la lista deportes validos.");
+        return false;
+    }
+
+    // nos permite dividir el tamaño de un array de punteros basicamente, entre el tamaño de un puntero y hallar el tamaño de datos de esta forma
+    const size_t cantDeEstados = sizeof(estadoPartidos) / sizeof(estadoPartidos[0]);
+
+    // Función para validar si un estado ingresado (Jugado por ejemplo) está en la lista
+    bool estPartidoValido(const char *estPartido, char *mensajeError) {
+        if (charVacio(estPartido)) {
+            strcpy(mensajeError, "El estado del partido no puede estar Vacio");
+            return false;
+        }
+        for (size_t e = 0; e < cantDeEstados; e++) {
+
+            // std::strcmp compara las dos cadenas caracter a caracter mediante su codigo ASCI, si son iguales retorna 0
+            if (strcmp(estPartido, estadoPartidos[e]) == 0) {
+                return true;
+            }
+        }
+        strcpy(mensajeError, "El estado del partido no puede estar Vacio");
+
+        return false;
+    }
+
 } // namespace Validadores
 
 // ============================================//
