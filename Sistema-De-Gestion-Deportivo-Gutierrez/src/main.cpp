@@ -102,7 +102,152 @@ struct SistemaDeportivo {
 };
 
 // ============================================//
-//   3. VALIDADORES                            //
+//   3. FUNCIONES AUXILIARES                   //
+// ============================================//
+
+// grupo de funciones que no inciden como tal en el sistema pero que mejoran su funcionamiento
+namespace Auxiliares {
+
+    // funcion que se encarga de configurar el idioma para aceptar caracteres del lenguaje español
+    void configurarIdioma() {
+        // Intentamos configurar el locale de forma segura
+        try {
+            std::locale::global(std::locale(""));
+            std::cout.imbue(std::locale());
+        } catch (const std::exception &e) {
+            // Si Windows/MinGW da error con el locale vacío, forzamos el locale por defecto "C"
+            std::locale::global(std::locale("C"));
+            std::cout.imbue(std::locale());
+        }
+
+// Código específico para Windows (esto es lo que realmente arregla los acentos en tu terminal)
+#ifdef _WIN32
+        SetConsoleOutputCP(CP_UTF8);
+        SetConsoleCP(CP_UTF8);
+#endif
+    }
+
+    // funcion que pausa el programa por un tiempo determinado
+    void waitfor(int tiempo = 2500) { std::this_thread::sleep_for(std::chrono::milliseconds(tiempo)); }
+
+    // funcion que limpia la consola
+    void limpiarPantalla() {
+        // INTENTO 1: Usar códigos de escape ASCII/ANSI (El método más rápido y moderno)
+        // Enviamos el comando de borrado. Si la terminal lo soporta, se limpiará al instante.
+        std::cout << "\x1B[2J\x1B[H" << std::flush;
+
+        // INTENTO 2: Fallback tradicional mediante comandos del Sistema Operativo
+        // Si la terminal es antigua o no procesó el código ANSI, ejecutamos el comando nativo.
+#ifdef _WIN32
+        // Si estamos en Windows
+        std::system("cls");
+#else
+        /**/ // Si estamos en Linux o macOS
+        /**/ std::system("clear");
+#endif
+    }
+
+    // esta funcion transforma el texto a mayuscula
+    char *toMayus(char *texto) {
+        int longitud = std::strlen(texto);
+        std::transform(texto, texto + longitud, texto, ::toupper);
+        return texto;
+    }
+
+    // esta funcion transforma el texto a minuscula
+    char *toMinus(char *texto) {
+        int longitud = std::strlen(texto);
+        std::transform(texto, texto + longitud, texto, ::tolower);
+        return texto;
+    }
+
+    // funcion para ingresar cualquier tipo de dato
+    template <typename Tipo1> //
+    void ingresarDatos(Tipo1 &variable, const char *mensaje, bool (*ptrValidador)(Tipo1, char *) = nullptr) {
+        // bandera que se activa si el usuario ingresa un tipo de dato incorrecto
+        bool flag = false;
+        const int tamConst = 150;
+        char mensajeError[tamConst];
+        do {
+            mensajeError[0] = '\0'; // Limpieza preventiva del error anterior
+            flag = false;
+            cout << mensaje << std::flush;
+            cin >> variable;
+
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                flag = true; // activamos la bandera
+                cout << "Error Tipo de Dato Incorrecto\n";
+                waitfor(3000);
+            } else {
+                // si el puntero no contiene la direccion de ninguna direccion se omite este bloque
+                if (ptrValidador != nullptr) {
+                    flag = !ptrValidador(variable, mensajeError); // si no es valido se activa la bandera
+                    cout << mensajeError << endl;
+                }
+                // Si la lectura fue exitosa, limpiamos el enter residual
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            }
+        } while (flag);
+    }
+
+    // funcion para ingresar cadenas de texto
+    void ingresarCadena(char *texto, int tamañoMaximo, const char *mensaje, bool (*ptrValidador)(const char *, char *) = nullptr) {
+        const int tamconst = 150;
+        bool flag = false;
+        char mensajeError[tamconst];
+
+        do {
+            mensajeError[0] = '\0'; // Limpieza preventiva del error
+            flag = false;
+
+            // usamos std::flush para obligar a la pantalla a mostrar el mensaje
+            cout << mensaje << std::flush;
+
+            // Se lee toda la linea
+            cin.getline(texto, tamañoMaximo);
+
+            // 3. Verificamos si la lectura falló
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                flag = true;
+                cout << "ERROR: Excediste el limite de caracteres permitido (" << tamañoMaximo - 1 << "). Intente de nuevo.\n";
+                Auxiliares::waitfor(3000);
+                continue; // Saltamos directo a la siguiente iteración ya que no es necesario el validador
+            }
+
+            // Si la lectura no tuvo errores, pasamos el texto por el validador
+            if (ptrValidador != nullptr) {
+                if (!ptrValidador(texto, mensajeError)) {
+                    flag = true; // Si el validador retorna false, la bandera se activa para repetir
+                    cout << mensajeError << endl;
+                    waitfor(3500);
+                }
+            }
+        } while (flag);
+    }
+
+    // funcion que se encarga de pausar el programa hasta que el usuario ingrese enter por la consola
+    void pausarPrograma() {
+        // Limpia el búfer de entrada por si  quedaron caracteres (como '\n')
+        std::cin.clear(); // Restablece los flags de error por si std::cin estaba en estado de fallo
+
+        // Ignora cualquier carácter sobrante en el búfer hasta encontrar el salto de línea
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        // Mostramos el mensaje
+        std::cout << "\nPresione Enter para continuar...";
+
+        // Esperaa a que el usuario presione la tecla Enter
+        std::cin.get();
+    }
+
+} // namespace Auxiliares
+
+// ============================================//
+//   4. VALIDADORES                            //
 // ============================================//
 
 namespace Validadores {
@@ -110,11 +255,32 @@ namespace Validadores {
     // Declaracion de arrays que serán usados para algunas validaciones                       //
     // =======================================================================================//
 
-    const char *Deportes[] = {"FUTBOL", "BALONCESTO", "TENIS",     "NATACION", "ATLETISMO", "CICLISMO",      "VOLEIBOL", "RUGBY",         "BEISBOL",   "BOXEO",
-                              "LUCHA",  "JUDO",       "TAEKWONDO", "KARATE",   "ESGRIMA",   "GIMNASIA",      "SURF",     "SKATEBOARDING", "HOCKEY",    "HANDBALL",
-                              "ESQUI",  "SNOWBOARD",  "ESCALADA",  "REMO",     "CANOTAJE",  "TIRO CON ARCO", "GOLF",     "BADMINTON",     "PING PONG", "SOFTBOL"};
+    const char *Deportes[] = {"FUTBOL", "BALONCESTO", "TENIS", "VOLEIBOL", "RUGBY", "BEISBOL", "HOCKEY", "HANDBALL", "SOFTBOL"};
 
-    const char *estadoPartidos[] = {"PROGRAMADO", "JUGADO", "CANCELADO"};
+    // Definimos nuestros punteros a arrays de literales para cada deporte iniciando con el nombre del deporte
+    const char *MatrizFutbol[] = {"FUTBOL", "PORTERO", "DEFENSA", "MEDIOCAMPISTA", "DELANTERO", nullptr};
+    const char *MatrizBasket[] = {"BALONCESTO", "BASE", "ESCOLTA", "ALERO", "ALA-PIVOT", "PIVOT", nullptr};
+    const char *MatrizVoleibol[] = {"VOLEIBOL", "COLOCADOR", "PUNTA", "CENTRAL", "LIBERO", "OPUESTO", nullptr};
+    const char *MatrizBeisbol[] = {"BEISBOL", "LANZADOR", "RECEPTOR", "INFIELDER", "OUTFIELDER", nullptr};
+    const char *MatrizSoftbol[] = {"SOFTBOL", "LANZADOR", "RECEPTOR", "INFIELDER", "OUTFIELDER", nullptr};
+    const char *MatrizHandball[] = {"HANDBALL", "PORTERO", "CENTRAL", "LATERAL", "EXTREMO", "PIVOTE", nullptr};
+    const char *MatrizHockey[] = {"HOCKEY", "PORTERO", "DEFENSA", "MEDIOCAMPISTA", "DELANTERO", nullptr};
+    const char *MatrizRugby[] = {"RUGBY", "DELANTERO", "RETAGUARDIA", "MEDIO", nullptr};
+    const char *MatrizTenis[] = {"TENIS", "INDIVIDUAL", "DOBLES", nullptr};
+
+    // ahora mediante ptrs dobles creamos puntero doble que apunta a un array de punteros
+    const char **MapaDeportes[] = {MatrizFutbol, MatrizBasket, MatrizVoleibol, MatrizBeisbol, MatrizSoftbol, MatrizHandball, MatrizHockey, MatrizRugby, MatrizTenis};
+
+    const size_t totalDeportes = sizeof(MapaDeportes) / sizeof(MapaDeportes[0]);
+
+    char deporteActual[50] = "";
+
+    // Función que se llamará una sola vez al crear el torneo
+    void setDeporteActual(const char *deporte) {
+        std::strcpy(deporteActual, deporte);
+        // La aseguramos en mayúsculas de una vez
+        Auxiliares::toMayus(deporteActual);
+    }
 
     // =======================================================================================//
     //  Validaciones auxiliares (no se debe poder acceder a ellas desde fuera del namespace)  //
@@ -279,10 +445,7 @@ namespace Validadores {
         }
 
         // medimos la longitud
-        int longitud = 0;
-        while (cedula[longitud] != '\0') {
-            longitud++;
-        }
+        size_t longitud = strlen(cedula);
 
         // si la longitud esta fuera del rando
         if (longitud < tamañoMin || longitud > tamañomax) {
@@ -318,185 +481,68 @@ namespace Validadores {
             strcpy(mensajeError, "El Deporte ingresado no puede estar Vacio");
             return false;
         }
+
+        // Creamos una copia porque no se puede modificar la original y la convertimos a mayuscula
+        char copiaDeporte[50];
+        strcpy(copiaDeporte, deporte);
+        Auxiliares::toMayus(copiaDeporte);
+
         for (size_t e = 0; e < numDeportes; e++) {
-            // std::strcmp compara las dos cadenas caracter a caracter mediante su codigo ASCI, si son iguales retorna 0
-            if (strcmp(deporte, Deportes[e]) == 0) {
+            // comparamos letra a letra cada literal con el deporte ingresado
+            if (strcmp(copiaDeporte, Deportes[e]) == 0) {
                 return true;
             }
         }
-        std::strcpy(mensajeError, "El deporte ingresado no está en la lista deportes validos.");
+        strcpy(mensajeError, "El deporte ingresado no esta en la lista de deportes validos.");
         return false;
     }
 
-    // nos permite dividir el tamaño de un array de punteros basicamente, entre el tamaño de un puntero y hallar el tamaño de datos de esta forma
-    const size_t cantDeEstados = sizeof(estadoPartidos) / sizeof(estadoPartidos[0]);
-
-    // Función para validar si un estado ingresado (Jugado por ejemplo) está en la lista
-    bool estPartidoValido(const char *estPartido, char *mensajeError) {
-        if (charVacio(estPartido)) {
-            strcpy(mensajeError, "El estado del partido no puede estar Vacio");
+    // Función para validar la posición del jugador según el deporte del torneo
+    bool Posicion(const char *posicion, char *mensajeError) {
+        if (charVacio(posicion)) {
+            std::strcpy(mensajeError, "La posición no puede estar vacía.");
             return false;
         }
-        for (size_t e = 0; e < cantDeEstados; e++) {
 
-            // std::strcmp compara las dos cadenas caracter a caracter mediante su codigo ASCI, si son iguales retorna 0
-            if (strcmp(estPartido, estadoPartidos[e]) == 0) {
-                return true;
+        if (charVacio(deporteActual)) {
+            std::strcpy(mensajeError, "Error: No se ha definido el deporte del torneo todavía.");
+            return false;
+        }
+
+        // creamos una copia de la posicion ingresada ya que no podemos modificar la original (y la colocamos en mayus)
+        char copiaPosicion[50];
+        std::strcpy(copiaPosicion, posicion);
+        Auxiliares::toMayus(copiaPosicion);
+
+        // Buscamos la fila de nuestro deporte actual en la matriz
+        for (size_t i = 0; i < totalDeportes; i++) {
+            // El elemento [0] de cada fila es el nombre del deporte
+            if (std::strcmp(deporteActual, MapaDeportes[i][0]) == 0) {
+
+                // Si encontramos el deporte recorremos lo recorremos
+                size_t j = 1; // Empezamos en 1 para saltarnos el nombre del deporte
+                while (MapaDeportes[i][j] != nullptr) {
+                    if (std::strcmp(copiaPosicion, MapaDeportes[i][j]) == 0) {
+                        return true;
+                    }
+                    j++;
+                }
+                // Si no lo encontró
+                std::strcpy(mensajeError, "Posición inválida para el deporte de este torneo.");
+                return false;
             }
         }
-        strcpy(mensajeError, "El estado del partido no puede estar Vacio");
-
         return false;
     }
 
-} // namespace Validadores
-
-// ============================================//
-//   4. FUNCIONES AUXILIARES                   //
-// ============================================//
-
-// grupo de funciones que no inciden como tal en el sistema pero que mejoran su funcionamiento
-namespace Auxiliares {
-
-    // funcion que se encarga de configurar el idioma para aceptar caracteres del lenguaje español
-    void configurarIdioma() {
-        // Intentamos configurar el locale de forma segura
-        try {
-            std::locale::global(std::locale(""));
-            std::cout.imbue(std::locale());
-        } catch (const std::exception &e) {
-            // Si Windows/MinGW da error con el locale vacío, forzamos el locale por defecto "C"
-            std::locale::global(std::locale("C"));
-            std::cout.imbue(std::locale());
+    /*bool tipoTorneo (const char* tipotorneo, char* mensajeError) {
+        if (charVacio(tipotorneo)) {
+            std::strcpy(mensajeError, "El tipo de Torneo no puede estar vacio, ")
+            return false;
         }
+    }*/
 
-// Código específico para Windows (esto es lo que realmente arregla los acentos en tu terminal)
-#ifdef _WIN32
-        SetConsoleOutputCP(CP_UTF8);
-        SetConsoleCP(CP_UTF8);
-#endif
-    }
-
-    // funcion que pausa el programa por un tiempo determinado
-    void waitfor(int tiempo = 2500) { std::this_thread::sleep_for(std::chrono::milliseconds(tiempo)); }
-
-    // funcion que limpia la consola
-    void limpiarPantalla() {
-        // INTENTO 1: Usar códigos de escape ASCII/ANSI (El método más rápido y moderno)
-        // Enviamos el comando de borrado. Si la terminal lo soporta, se limpiará al instante.
-        std::cout << "\x1B[2J\x1B[H" << std::flush;
-
-        // INTENTO 2: Fallback tradicional mediante comandos del Sistema Operativo
-        // Si la terminal es antigua o no procesó el código ANSI, ejecutamos el comando nativo.
-#ifdef _WIN32
-        // Si estamos en Windows
-        std::system("cls");
-#else
-        /**/ // Si estamos en Linux o macOS
-        /**/ std::system("clear");
-#endif
-    }
-
-    // esta funcion transforma el texto a mayuscula
-    string toMayus(string texto) {
-        std::transform(texto.begin(), texto.end(), texto.begin(), ::toupper);
-        return texto;
-    }
-
-    // esta funcion transforma el texto a minuscula
-    string toMinus(string texto) {
-        std::transform(texto.begin(), texto.end(), texto.begin(), ::tolower);
-        return texto;
-    }
-
-    // funcion para ingresar cualquier tipo de dato
-    template <typename Tipo1> //
-    void ingresarDatos(Tipo1 &variable, const char *mensaje, bool (*ptrValidador)(Tipo1, char *)) {
-        // bandera que se activa si el usuario ingresa un tipo de dato incorrecto
-        bool flag = false;
-        const int tamConst = 150;
-        char mensajeError[tamConst];
-        do {
-            mensajeError[0] = '\0'; // Limpieza preventiva del error anterior
-            flag = false;
-            cout << mensaje;
-            cin >> variable;
-
-            if (cin.fail()) {
-                cin.clear();
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                flag = true; // activamos la bandera
-                cout << "Error Tipo de Dato Incorrecto\n";
-                waitfor(3000);
-            } else {
-                // si el puntero no contiene la direccion de ninguna direccion se omite este bloque
-                if (ptrValidador != nullptr) {
-                    flag = !ptrValidador(variable, mensajeError); // si no es valido se activa la bandera
-                    cout << mensajeError << endl;
-                }
-                // Si la lectura fue exitosa, limpiamos el enter residual
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            }
-        } while (flag);
-    }
-
-    // funcion para ingresar cadenas de texto
-    void ingresarCadena(char *texto, int tamañoMaximo, const char *mensaje, bool (*ptrValidador)(const char *, char *) = nullptr) {
-        const int tamconst = 150;
-        bool flag = false;
-        char mensajeError[tamconst];
-        // Nos aseguramos de limpiar cualquier ENTER basura que haya quedado en el búfer
-        /*if (cin.peek() == '\n') {
-            cin.ignore();
-        }*/
-
-        do {
-            mensajeError[0] = '\0'; // Limpieza preventiva del error
-            flag = false;
-
-            // usamos std::flush para obligar a la pantalla a mostrar el mensaje
-            cout << mensaje << std::flush;
-
-            // Se lee toda la linea
-            cin.getline(texto, tamañoMaximo);
-
-            // 3. Verificamos si la lectura falló
-            if (cin.fail()) {
-                cin.clear();
-                cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-                flag = true;
-                cout << "ERROR: Excediste el limite de caracteres permitido (" << tamañoMaximo - 1 << "). Intente de nuevo.\n";
-                Auxiliares::waitfor(3000);
-                continue; // Saltamos directo a la siguiente iteración ya que no es necesario el validador
-            }
-
-            // Si la lectura no tuvo errores, pasamos el texto por el validador
-            if (ptrValidador != nullptr) {
-                if (!ptrValidador(texto, mensajeError)) {
-                    flag = true; // Si el validador retorna false, la bandera se activa para repetir
-                    cout << mensajeError << endl;
-                    waitfor(3500);
-                }
-            }
-        } while (flag);
-    }
-
-    // funcion que se encarga de pausar el programa hasta que el usuario ingrese enter por la consola
-    void pausarPrograma() {
-        // Limpia el búfer de entrada por si  quedaron caracteres (como '\n')
-        std::cin.clear(); // Restablece los flags de error por si std::cin estaba en estado de fallo
-
-        // Ignora cualquier carácter sobrante en el búfer hasta encontrar el salto de línea
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-        // Mostramos el mensaje
-        std::cout << "\nPresione Enter para continuar...";
-
-        // Esperaa a que el usuario presione la tecla Enter
-        std::cin.get();
-    }
-
-} // namespace Auxiliares
+} // namespace Validadores
 
 // ============================================//
 //   5. CAPA DE LOGICA                         //
@@ -557,6 +603,14 @@ namespace Logica {
         MiSistema->siguienteIdPartido = 0;
     }
 
+    void definirFormato(Torneo &torneoAux, int opcion) {
+        if (opcion == 1) {
+            std::strcpy(torneoAux.formato, "GRUPOS");
+        } else if (opcion == 2) {
+            std::strcpy(torneoAux.formato, "ELIIMINATORIA");
+        }
+    }
+
     namespace equipos {
         //
     }
@@ -589,6 +643,8 @@ namespace Presentacion {
         void datosInicialesTorneo(SistemaDeportivo *MiSistema) {
             // variables auxiliares
             Torneo torneoAux;
+            int opcionFormato = 0;
+            bool error = 0;
 
             // Aqui se recopilan los datos iniciales del torneo
             Auxiliares::limpiarPantalla();
@@ -601,14 +657,29 @@ namespace Presentacion {
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.deporte, 50, "Deporte del Torneo:"); // !Falta el validador
+            Auxiliares::ingresarCadena(torneoAux.deporte, 50, "Deporte del Torneo: ", Validadores::existeDeporte);
+            // Le indicamos cual va a ser el deporte a nuestro namespace de validadores
+            Validadores::setDeporteActual(torneoAux.deporte);
 
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.formato, 25, "Formato del Torneo (ELIMINATORIA O GRUPOS): ");
-            // ! falta el validador
+            cout << "1. Formato de Grupos (Todos contra todos)\n";
+            cout << "2. Formato de Eliminatoria Directa\n";
+            cout << "--------------------------------------------------\n";
+            do {
+                error = false;
+                Auxiliares::ingresarDatos(opcionFormato, "Seleccione el formato (1 o 2): ");
+                if (opcionFormato != 1 && opcionFormato != 2) {
+                    cout << "Opcion invalida. Intente de nuevo.\n";
+                    error = true;
+                }
+            } while (error);
+            // desde la logica definimos el tipo de torneo en base a la opcion ingresada
+            Logica::definirFormato(torneoAux, opcionFormato);
+            cout << "\nFormato seleccionado: " << torneoAux.formato << endl;
+            Auxiliares::waitfor(1000);
 
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
@@ -656,6 +727,8 @@ int main() {
     // Inicio del Programa
     Presentacion::menu::datosInicialesTorneo(PtrMiSistema);
 
+    cout << "\nDatos del torneo cargados correctamente.\n";
+    Auxiliares::pausarPrograma();
 
     // liberar memoria y cierre del programa
     Logica::liberarSistema(PtrMiSistema);
