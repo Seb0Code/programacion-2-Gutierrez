@@ -811,12 +811,11 @@ namespace Presentacion {
         }
 
         void Principal(SistemaDeportivo *MiSistema) {
-            int opcion = -1; // declaramos en -1 para evitar que coincida con una de las opciones
             Auxiliares::limpiarPantalla();
             cout << "\n   ╔═══════════════════════════════════════════╗\n";
             cout << "   ║            Sport G&C Tournaments          ║\n";
-            cout << "   ║    Torneo: " << MiSistema->torneo.nombre << endl;
-            cout << "   ║    Deporte: " << MiSistema->torneo.deporte << "  | Formato: " << MiSistema->torneo.formato << endl;
+            cout << "   ║   Torneo: " << MiSistema->torneo.nombre << endl;
+            cout << "   ║   Deporte: " << MiSistema->torneo.deporte << "  | Formato: " << MiSistema->torneo.formato << endl;
             cout << "   ╠═══════════════════════════════════════════╣\n";
             cout << "   ║  1. Gestión de Equipos                    ║\n";
             cout << "   ║  2. Gestión de Jugadores                  ║\n";
@@ -824,16 +823,68 @@ namespace Presentacion {
             cout << "   ║  4. Tabla de Posiciones                   ║\n";
             cout << "   ║  0. Salir                                 ║\n";
             cout << "   ╚═══════════════════════════════════════════╝\n";
-
             cout << endl;
         }
+
+        void GestionDeEquipos() {
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║          GESTIÓN DE EQUIPOS               ║\n";
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Registrar equipo                      ║\n";
+            cout << "   ║  2. Buscar equipo                         ║\n";
+            cout << "   ║  3. Actualizar equipo                     ║\n";
+            cout << "   ║  4. Listar equipos                        ║\n";
+            cout << "   ║  5. Eliminar equipo                       ║\n";
+            cout << "   ║  0. Volver al menú principal              ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+        void GestionDePartidos() {
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║        GESTIÓN DE PARTIDOS                ║\n";
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Programar partido                     ║\n";
+            cout << "   ║  2. Registrar resultado                   ║\n";
+            cout << "   ║  3. Buscar partido                        ║\n";
+            cout << "   ║  4. Listar partidos                       ║\n";
+            cout << "   ║  5. Cancelar partido                      ║\n";
+            cout << "   ║  0. Volver al menú principal              ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+        void GestionDeJugadores() {
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║        GESTIÓN DE JUGADORES               ║\n";
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Registrar jugador                     ║\n";
+            cout << "   ║  2. Buscar jugador                        ║\n";
+            cout << "   ║  3. Actualizar jugador                    ║\n";
+            cout << "   ║  4. Listar jugadores (todos)              ║\n";
+            cout << "   ║  5. Listar jugadores por equipo           ║\n";
+            cout << "   ║  6. Eliminar jugador                      ║\n";
+            cout << "   ║  0. Volver al menú principal              ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+        void TablaDePosiciones();
 
     } // namespace menu
 
     void mensajeSalida() {
         cout << "Saliendo...";
         Auxiliares::waitfor(3500);
+    }
+
+    void mensajeDefault() {
         Auxiliares::limpiarPantalla();
+        cout << "ERROR has ingresado una opcion inválida. Intentalo nuevamnete.\n";
+        Auxiliares::waitfor(3500);
     }
 } // namespace Presentacion
 
@@ -858,8 +909,9 @@ int main() {
     Torneo *PtrMiTorneo = &MiTorneo;
 
     // Variables Estaticas
-    int opcionP = -1;
-    bool login = false;
+    int opcionMenu = -1;    // declaramos en -1 para evitar que coincida con una de las opciones
+    int opcionSubMenu = -1; // declaramos en -1 para evitar que coincida con una de las opciones
+    bool loginMenu = false;
 
     // Inicio del Programa
     Presentacion::menu::datosInicialesTorneo(PtrMiSistema);
@@ -867,56 +919,78 @@ int main() {
     cout << "\nDatos del torneo cargados correctamente." << endl;
     Auxiliares::pausarPrograma();
 
-    // Presentamos el menu principal
-    Presentacion::menu::Principal(PtrMiSistema);
-    Auxiliares::ingresarDatos(opcionP, "Seleccione una opcion: ", Validadores::Positivo);
+
 
     // Estructura del switch
     do {
-        login = false;
-        switch (opcionP) {
+        // inicializamos las variables para evitar conflictos
+        loginMenu = false;
+        opcionMenu = -1;
+        opcionSubMenu = -1;
+        Auxiliares::limpiarPantalla();
+
+        // Presentamos el menu principal
+        Presentacion::menu::Principal(PtrMiSistema);
+        Auxiliares::ingresarDatos(opcionMenu, "Seleccione una opcion: ", Validadores::Positivo);
+
+        switch (opcionMenu) {
+
+            // Salida del Programa
             case 0:
                 Presentacion::mensajeSalida();
                 break;
 
+            // Gestión de Equipos
             case 1:
-                cout << "Opcion ingresada: " << opcionP << endl;
+                cout << "Opcion ingresada: " << opcionMenu << endl;
                 Auxiliares::waitfor(2000);
                 Auxiliares::limpiarPantalla;
                 cout << "Ingresando al apartado de Gestión de Equipos..." << endl;
                 Auxiliares::waitfor(3000);
                 Auxiliares::limpiarPantalla;
+                Presentacion::menu::GestionDeEquipos();
+                Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
                 break;
 
+            // Gestión de Jugadores
             case 2:
-                cout << "Opcion ingresada: " << opcionP << endl;
+                cout << "Opcion ingresada: " << opcionMenu << endl;
                 Auxiliares::waitfor(2000);
                 Auxiliares::limpiarPantalla;
                 cout << "Ingresando al apartado de Gestión de Jugadores..." << endl;
                 Auxiliares::waitfor(3000);
                 Auxiliares::limpiarPantalla;
+                Presentacion::menu::GestionDeJugadores();
+                Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
                 break;
 
+            // Gestión de Partidos
             case 3:
-                cout << "Opcion ingresada: " << opcionP << endl;
+                cout << "Opcion ingresada: " << opcionMenu << endl;
                 Auxiliares::waitfor(2000);
                 Auxiliares::limpiarPantalla;
                 cout << "Ingresando al apartado de Gestión de Partidos..." << endl;
                 Auxiliares::waitfor(3000);
                 Auxiliares::limpiarPantalla;
+                Presentacion::menu::GestionDePartidos();
+                Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
                 break;
 
+            // Tabla de Posiciones
             case 4:
-                cout << "Opcion ingresada: " << opcionP << endl;
+                cout << "Opcion ingresada: " << opcionMenu << endl;
                 Auxiliares::waitfor(2000);
                 Auxiliares::limpiarPantalla;
                 cout << "Ingresando al apartado de Tabla de Posiciones..." << endl;
                 Auxiliares::waitfor(3000);
                 Auxiliares::limpiarPantalla;
                 break;
-        }
-    } while (opcionP == 0 && !login);
 
+            // Si no se selecciona una opcion correcta enviamos un mensaje de aviso
+            default:
+        }
+        // El bucle se repite si el usuario no eligió la opcion de salir en el menu Principal
+    } while (opcionMenu != 0);
 
     // liberar memoria y cierre del programa
     Logica::liberarSistema(PtrMiSistema);
