@@ -814,8 +814,8 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
             cout << "\n   ╔═══════════════════════════════════════════╗\n";
             cout << "   ║            Sport G&C Tournaments          ║\n";
-            cout << "   ║   Torneo: " << MiSistema->torneo.nombre << endl;
-            cout << "   ║   Deporte: " << MiSistema->torneo.deporte << "  | Formato: " << MiSistema->torneo.formato << endl;
+            cout << "   ║  Torneo: " << MiSistema->torneo.nombre << endl;
+            cout << "   ║  Deporte: " << MiSistema->torneo.deporte << " | Formato: " << MiSistema->torneo.formato << endl;
             cout << "   ╠═══════════════════════════════════════════╣\n";
             cout << "   ║  1. Gestión de Equipos                    ║\n";
             cout << "   ║  2. Gestión de Jugadores                  ║\n";
@@ -944,10 +944,10 @@ int main() {
             case 1:
                 cout << "Opcion ingresada: " << opcionMenu << endl;
                 Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla;
+                Auxiliares::limpiarPantalla();
                 cout << "Ingresando al apartado de Gestión de Equipos..." << endl;
                 Auxiliares::waitfor(3000);
-                Auxiliares::limpiarPantalla;
+                Auxiliares::limpiarPantalla();
                 Presentacion::menu::GestionDeEquipos();
                 Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
                 break;
@@ -956,10 +956,10 @@ int main() {
             case 2:
                 cout << "Opcion ingresada: " << opcionMenu << endl;
                 Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla;
+                Auxiliares::limpiarPantalla();
                 cout << "Ingresando al apartado de Gestión de Jugadores..." << endl;
                 Auxiliares::waitfor(3000);
-                Auxiliares::limpiarPantalla;
+                Auxiliares::limpiarPantalla();
                 Presentacion::menu::GestionDeJugadores();
                 Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
                 break;
@@ -968,10 +968,10 @@ int main() {
             case 3:
                 cout << "Opcion ingresada: " << opcionMenu << endl;
                 Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla;
+                Auxiliares::limpiarPantalla();
                 cout << "Ingresando al apartado de Gestión de Partidos..." << endl;
                 Auxiliares::waitfor(3000);
-                Auxiliares::limpiarPantalla;
+                Auxiliares::limpiarPantalla();
                 Presentacion::menu::GestionDePartidos();
                 Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
                 break;
@@ -980,14 +980,15 @@ int main() {
             case 4:
                 cout << "Opcion ingresada: " << opcionMenu << endl;
                 Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla;
+                Auxiliares::limpiarPantalla();
                 cout << "Ingresando al apartado de Tabla de Posiciones..." << endl;
                 Auxiliares::waitfor(3000);
-                Auxiliares::limpiarPantalla;
+                Auxiliares::limpiarPantalla();
                 break;
 
             // Si no se selecciona una opcion correcta enviamos un mensaje de aviso
             default:
+                Presentacion::mensajeDefault();
         }
         // El bucle se repite si el usuario no eligió la opcion de salir en el menu Principal
     } while (opcionMenu != 0);
