@@ -358,6 +358,14 @@ namespace Validadores {
     //  Validaciones principales                                                           //
     // ====================================================================================//
 
+    bool Positivo(const int variable, char *mensajeError) {
+        if (variable < 0) {
+            std::strcpy(mensajeError, "El dato ingresado no puede ser negativo");
+            return false;
+        }
+        return true;
+    }
+
     bool Edad(const short edad, char *mensajeError) {
         // la edad no puede ser negativa ni igual a 0, tampoco puede ser mayor a 120
         if (edad < 14 || edad > 50) {
@@ -786,7 +794,7 @@ namespace Presentacion {
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
             Auxiliares::ingresarCadena(torneoAux.fechaInicio, 11, "Fecha De Inicio del Torneo: ", Validadores::Fechas);
-            cout << "\nFecha de inicio seleccionada: " << torneoAux.fechaInicio << endl;
+            cout << "\nFecha de inicio del torneo seleccionada: " << torneoAux.fechaInicio << endl;
             Auxiliares::waitfor(2500);
 
 
@@ -795,15 +803,38 @@ namespace Presentacion {
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
             Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::Fechas);
-            cout << "\nFecha de fin seleccionada: " << torneoAux.fechaFin << endl;
+            cout << "\nFecha de Finalizacion del Torneo seleccionada: " << torneoAux.fechaFin << endl;
             Auxiliares::waitfor(2500);
 
             // enviamos los datos
             Logica::inicializarSistemaDeportivo(MiSistema, torneoAux);
         }
 
+        void Principal(SistemaDeportivo *MiSistema) {
+            int opcion = -1; // declaramos en -1 para evitar que coincida con una de las opciones
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║            Sport G&C Tournaments          ║\n";
+            cout << "   ║    Torneo: " << MiSistema->torneo.nombre << endl;
+            cout << "   ║    Deporte: " << MiSistema->torneo.deporte << "  | Formato: " << MiSistema->torneo.formato << endl;
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Gestión de Equipos                    ║\n";
+            cout << "   ║  2. Gestión de Jugadores                  ║\n";
+            cout << "   ║  3. Gestión de Partidos                   ║\n";
+            cout << "   ║  4. Tabla de Posiciones                   ║\n";
+            cout << "   ║  0. Salir                                 ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+
+            cout << endl;
+        }
 
     } // namespace menu
+
+    void mensajeSalida() {
+        cout << "Saliendo...";
+        Auxiliares::waitfor(3500);
+        Auxiliares::limpiarPantalla();
+    }
 } // namespace Presentacion
 
 // ============================================//
@@ -827,13 +858,65 @@ int main() {
     Torneo *PtrMiTorneo = &MiTorneo;
 
     // Variables Estaticas
-
+    int opcionP = -1;
+    bool login = false;
 
     // Inicio del Programa
     Presentacion::menu::datosInicialesTorneo(PtrMiSistema);
 
-    cout << "\nDatos del torneo cargados correctamente.\n";
+    cout << "\nDatos del torneo cargados correctamente." << endl;
     Auxiliares::pausarPrograma();
+
+    // Presentamos el menu principal
+    Presentacion::menu::Principal(PtrMiSistema);
+    Auxiliares::ingresarDatos(opcionP, "Seleccione una opcion: ", Validadores::Positivo);
+
+    // Estructura del switch
+    do {
+        login = false;
+        switch (opcionP) {
+            case 0:
+                Presentacion::mensajeSalida();
+                break;
+
+            case 1:
+                cout << "Opcion ingresada: " << opcionP << endl;
+                Auxiliares::waitfor(2000);
+                Auxiliares::limpiarPantalla;
+                cout << "Ingresando al apartado de Gestión de Equipos..." << endl;
+                Auxiliares::waitfor(3000);
+                Auxiliares::limpiarPantalla;
+                break;
+
+            case 2:
+                cout << "Opcion ingresada: " << opcionP << endl;
+                Auxiliares::waitfor(2000);
+                Auxiliares::limpiarPantalla;
+                cout << "Ingresando al apartado de Gestión de Jugadores..." << endl;
+                Auxiliares::waitfor(3000);
+                Auxiliares::limpiarPantalla;
+                break;
+
+            case 3:
+                cout << "Opcion ingresada: " << opcionP << endl;
+                Auxiliares::waitfor(2000);
+                Auxiliares::limpiarPantalla;
+                cout << "Ingresando al apartado de Gestión de Partidos..." << endl;
+                Auxiliares::waitfor(3000);
+                Auxiliares::limpiarPantalla;
+                break;
+
+            case 4:
+                cout << "Opcion ingresada: " << opcionP << endl;
+                Auxiliares::waitfor(2000);
+                Auxiliares::limpiarPantalla;
+                cout << "Ingresando al apartado de Tabla de Posiciones..." << endl;
+                Auxiliares::waitfor(3000);
+                Auxiliares::limpiarPantalla;
+                break;
+        }
+    } while (opcionP == 0 && !login);
+
 
     // liberar memoria y cierre del programa
     Logica::liberarSistema(PtrMiSistema);
