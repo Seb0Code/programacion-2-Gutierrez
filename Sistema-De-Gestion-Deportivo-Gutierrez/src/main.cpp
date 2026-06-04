@@ -85,16 +85,16 @@ struct SistemaDeportivo {
     Torneo torneo; // Un objeto torneo
 
     Partido *Partidos;
-    int numPartidosActuales;
-    int capacidadPartidos;
+    size_t numPartidosActuales;
+    size_t capacidadPartidos;
 
     Equipo *Equipos;
-    int numEquiposActuales;
-    int capacidadEquipos;
+    size_t numEquiposActuales;
+    size_t capacidadEquipos;
 
     Jugador *Jugadores;
-    int numJugadoresActuales;
-    int capacidadJugadores;
+    size_t numJugadoresActuales;
+    size_t capacidadJugadores;
 
     int siguienteIdEquipo;
     int siguienteIdJugador;
@@ -551,6 +551,14 @@ namespace Validadores {
 namespace Logica {
 
     void inicializarSistemaDeportivo(SistemaDeportivo *MiSistema, Torneo torneo) {
+
+        // Si no ha sido inicializado
+        if (MiSistema == nullptr) {
+            cout << "El array no ha sido inicializado\n";
+            Auxiliares::waitfor(1000);
+            return;
+        }
+
         // Inicializamos el Torneo
         MiSistema->torneo = torneo;
 
@@ -576,6 +584,14 @@ namespace Logica {
     }
 
     void liberarSistema(SistemaDeportivo *MiSistema) {
+
+        // Si no ha sido inicializado
+        if (MiSistema == nullptr) {
+            cout << "El array no ha sido inicializado\n";
+            Auxiliares::waitfor(1000);
+            return;
+        }
+
         // Inicializamos el Torneo
         MiSistema->torneo = {};
 
@@ -624,8 +640,87 @@ namespace Logica {
     }
 
     namespace redimensionar {
-        //
-    }
+        void rEquipos(SistemaDeportivo *&original) {
+
+            // Pequeña validacion en caso de que el puntero no apunte a nada
+            if (original == nullptr) {
+                cout << "El Sistema Deportivo no ha sido inicializado aun\n";
+                Auxiliares::waitfor(1000);
+                return;
+            }
+
+            // Almacenamos la capacidad antigua para el bucle for
+            size_t capacidadAntigua = original->capacidadEquipos;
+
+            // Duplicamos la capacidad de equipos en nuestro sistema original
+            original->capacidadEquipos *= 2;
+
+            // Creamos array con nueva capacidad
+            Equipo *nuevoArray = new Equipo[original->capacidadEquipos];
+
+            // Copiamos los elementos en el nuevo array uno por uno
+            for (size_t e = 0; e < capacidadAntigua; e++) {
+                nuevoArray[e] = original->Equipos[e];
+            }
+            delete[] original->Equipos;     // liberamos la memoria del array antiguo
+            original->Equipos = nuevoArray; // cambiamos el lugar al que apunta el puntero original para que apunte
+                                            // al nuevo bloque de memoria redimensionado
+        }
+
+        void rJugadores(SistemaDeportivo *&original) {
+
+            // Pequeña validacion en caso de que el puntero no apunte a nada
+            if (original == nullptr) {
+                cout << "El Sistema Deportivo no ha sido inicializado aun\n";
+                Auxiliares::waitfor(1000);
+                return;
+            }
+
+            // Almacenamos la capacidad antigua para el bucle for
+            size_t capacidadAntigua = original->capacidadJugadores;
+
+            // Duplicamos la capacidad de jugadores en nuestro sistema original
+            original->capacidadJugadores *= 2;
+
+            // Creamos array con nueva capacidad
+            Jugador *nuevoArray = new Jugador[original->capacidadJugadores];
+
+            // Copiamos los elementos en el nuevo array uno por uno
+            for (size_t e = 0; e < capacidadAntigua; e++) {
+                nuevoArray[e] = original->Jugadores[e];
+            }
+            delete[] original->Jugadores;     // liberamos la memoria del array antiguo
+            original->Jugadores = nuevoArray; // cambiamos el lugar al que apunta el puntero original para que apunte
+                                              // al nuevo bloque de memoria redimensionado
+        }
+
+        void rPartidos(SistemaDeportivo *&original) {
+
+            // Pequeña validacion en caso de que el puntero no apunte a nada
+            if (original == nullptr) {
+                cout << "El Sistema Deportivo no ha sido inicializado aun\n";
+                Auxiliares::waitfor(1000);
+                return;
+            }
+
+            // Almacenamos la capacidad antigua para el bucle for
+            size_t capacidadAntigua = original->capacidadPartidos;
+
+            // Duplicamos la capacidad de partidos en nuestro sistema original
+            original->capacidadPartidos *= 2;
+
+            // Creamos array con nueva capacidad
+            Partido *nuevoArray = new Partido[original->capacidadPartidos];
+
+            // Copiamos los elementos en el nuevo array uno por uno
+            for (size_t e = 0; e < capacidadAntigua; e++) {
+                nuevoArray[e] = original->Partidos[e];
+            }
+            delete[] original->Partidos;     // liberamos la memoria del array antiguo
+            original->Partidos = nuevoArray; // cambiamos el lugar al que apunta el puntero original para que apunte
+                                             // al nuevo bloque de memoria redimensionado
+        }
+    } // namespace redimensionar
 
     namespace agregar {
         //
@@ -652,6 +747,9 @@ namespace Presentacion {
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
             Auxiliares::ingresarCadena(torneoAux.nombre, 100, "Nombre del Torneo: ", Validadores::Nombres);
+            cout << "\nNombre seleccionado: " << torneoAux.nombre << endl;
+            Auxiliares::waitfor(2500);
+
 
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
@@ -660,6 +758,8 @@ namespace Presentacion {
             Auxiliares::ingresarCadena(torneoAux.deporte, 50, "Deporte del Torneo: ", Validadores::existeDeporte);
             // Le indicamos cual va a ser el deporte a nuestro namespace de validadores
             Validadores::setDeporteActual(torneoAux.deporte);
+            cout << "\nDeporte seleccionado: " << torneoAux.deporte << endl;
+            Auxiliares::waitfor(2500);
 
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
@@ -679,19 +779,24 @@ namespace Presentacion {
             // desde la logica definimos el tipo de torneo en base a la opcion ingresada
             Logica::definirFormato(torneoAux, opcionFormato);
             cout << "\nFormato seleccionado: " << torneoAux.formato << endl;
-            Auxiliares::waitfor(1000);
+            Auxiliares::waitfor(2500);
 
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
             Auxiliares::ingresarCadena(torneoAux.fechaInicio, 11, "Fecha De Inicio del Torneo: ", Validadores::Fechas);
+            cout << "\nFecha de inicio seleccionada: " << torneoAux.fechaInicio << endl;
+            Auxiliares::waitfor(2500);
+
 
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
             Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::Fechas);
+            cout << "\nFecha de fin seleccionada: " << torneoAux.fechaFin << endl;
+            Auxiliares::waitfor(2500);
 
             // enviamos los datos
             Logica::inicializarSistemaDeportivo(MiSistema, torneoAux);
