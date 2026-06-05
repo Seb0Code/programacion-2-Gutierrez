@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <cstring> //para el uso de strcpy
 #include <iostream>
@@ -364,6 +365,9 @@ namespace Validadores {
             mes = (fecha[5] - '0') * 10 + (fecha[6] - '0');
             dia = (fecha[8] - '0') * 10 + (fecha[9] - '0');
         }
+
+        // convierte los numeros por separado a un solo numero mas facil de comparar
+        int FechaAEntero(int año, int mes, int dia) { return (año * 10000) + (mes * 100) + dia; }
     } // namespace
 
     // ====================================================================================//
@@ -465,24 +469,12 @@ namespace Validadores {
         FechaToNum(fechaFin, añoFin, mesFin, diaFin);
         FechaToNum(fechaDeIni, añoIni, mesIni, diaIni);
 
-        // si el año a comparar es menor que el año de referencia retornamos false
-        if (añoFin < añoIni) {
+        int numIni = FechaAEntero(añoIni, mesIni, diaIni);
+        int numFin = FechaAEntero(añoFin, mesFin, diaFin);
+
+        if (numFin < numIni) {
             std::strcpy(mensajeError, "La fecha de Finalizacion no puede ser antes que la fecha de Inicio");
             return false;
-
-            // si son iguales verificamos los meses
-        } else if (añoFin == añoIni) {
-            if (mesFin < mesIni) {
-                std::strcpy(mensajeError, "La fecha de Finalizacion no puede ser antes que la fecha de Inicio");
-                return false; // si el mes es menor devolvemos false
-
-                // si los meses tambien coinciden verificamos los dias
-            } else if (mesFin == mesIni) {
-                if (diaFin < diaIni) {
-                    std::strcpy(mensajeError, "La fecha de Finalizacion no puede ser antes que la fecha de Inicio");
-                    return false; // si el dia de fin es menor al de inicio es false
-                }
-            }
         }
         return true;
     }
@@ -503,34 +495,59 @@ namespace Validadores {
         FechaToNum(fechaDeIni, añoIni, mesIni, diaIni);
         FechaToNum(fechaPartido, añoPtd, mesPtd, diaPtd);
 
-        // si el año esta fuera del rango establecido
-        if (añoPtd < añoIni || añoPtd > añoFin) {
-            std::strcpy(mensajeError, "La fecha del Partido no puede estar fuera del rango de tiempo establecido en el torneo");
+        // llevamos cada fecha a expresion de un solo numero
+        int numIni = FechaAEntero(añoIni, mesIni, diaIni);
+        int numFin = FechaAEntero(añoFin, mesFin, diaFin);
+        int numPtd = FechaAEntero(añoPtd, mesPtd, diaPtd);
+
+        // Validamos los limites
+        if (numPtd < numIni || numPtd > numFin) {
+            std::strcpy(mensajeError, "La fecha del Partido esta fuera del rango del torneo");
             return false;
-        } else {
-            // sino si el mes esta fuera del rango establecido
-            if (mesPtd < mesIni || mesPtd > mesFin) {
-                std::strcpy(mensajeError, "La fecha del Partido no puede estar fuera del rango de tiempo establecido en el torneo");
-                return false;
-            } else {
-                // sino si el mes esta fuera del rango establecido
-                if (diaPtd < diaIni || diaPtd > diaFin) {
-                    std::strcpy(mensajeError, "La fecha del Partido no puede estar fuera del rango de tiempo establecido en el torneo");
-                    return false;
-                }
-            }
         }
 
-        // si pasa todas las validaciones la fecha es válida
         return true;
     }
 
-    bool fechaValidaRegistroDeJugadorOEquipo() {
-        //
+    bool fechaValidaRegistroDeJugadorOEquipo(const char *fechaRegistro, char *mensajeError) {
+
+        // si la fecha final no es valida
+        if (!FechaValida(fechaRegistro, mensajeError)) {
+            return false;
+        }
+
+        // declaramos los valores a comparar
+        int añoRgt, mesRgt, diaRgt;
+        int añoIni, mesIni, diaIni;
+
+        // Almacenamos las fechas en variables int
+        FechaToNum(fechaRegistro, añoRgt, mesRgt, diaRgt);
+        FechaToNum(fechaDeIni, añoIni, mesIni, diaIni);
+
+        int numIni = FechaAEntero(añoIni, mesIni, diaIni);
+        int numRgt = FechaAEntero(añoRgt, mesRgt, diaRgt);
+
+        // Verificamos que el registro no sea despues de iniciar el torneo del torneo
+        if (numRgt >= numIni) {
+            std::strcpy(mensajeError, "Error, el registro debe hacerse antes del dia de inicio del torneo");
+            return false;
+        }
+
+        // Calculamos la diferencia de tiempo en meses entre ambas fechas
+        int difAños = añoIni - añoRgt;
+        int difMeses = (mesIni - mesRgt);
+        int totalDeMesesDiferencia = (difAños * 12) + difMeses;
+
+        // Verificamos que el registro no sea mas de 6 meses antes
+        if (std::abs(totalDeMesesDiferencia) > 6) {
+            std::strcpy(mensajeError, "Error, el registro solo puede hacerse hasta maximo 6 meses antes del incio del torneo");
+            return false;
+        }
+        return true;
     }
 
     bool Cedulas(const char *cedula, char *mensajeError) {
-        int tamañoMin = 7, tamañomax = 10;
+        const size_t tamañoMin = 7, tamañomax = 10;
 
         // validamos que no esté vacío
         if (charVacio(cedula)) {
@@ -632,15 +649,9 @@ namespace Validadores {
                 return false;
             }
         }
+        std::strcpy(mensajeError, "Error del sistema: El deporte actual no coincide con los registros.");
         return false;
     }
-
-    /*bool tipoTorneo (const char* tipotorneo, char* mensajeError) {
-        if (charVacio(tipotorneo)) {
-            std::strcpy(mensajeError, "El tipo de Torneo no puede estar vacio, ")
-            return false;
-        }
-    }*/
 
 } // namespace Validadores
 
@@ -727,8 +738,13 @@ namespace Logica {
         }
     }
 
+    void busquedaPorId();
+
+
+    void busquedaPorSubCadena();
+
     namespace equipos {
-        //
+        Equipo *agregarEquipo();
     }
 
     namespace partidos {
@@ -973,6 +989,13 @@ namespace Presentacion {
         }
 
         void TablaDePosiciones();
+
+        void RegistrarEquipos() {
+            Auxiliares::limpiarPantalla();
+
+            // Recolectamos los datos para registrar el equipo
+        }
+
 
     } // namespace menu
 
