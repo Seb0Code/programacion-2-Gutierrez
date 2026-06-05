@@ -398,7 +398,7 @@ namespace Validadores {
     }
 
     bool FechaValida(const char *fecha, char *mensajeError) {
-        short dia = 0, mes = 0, año = 0;
+        int dia = 0, mes = 0, año = 0;
         // array de los dias de cada mes
         int diasPorMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
@@ -425,10 +425,10 @@ namespace Validadores {
         }
 
         // Extracción numérica basada en el formato YYYY-MM-DD
-        año = (fecha[0] - '0') * 1000 + (fecha[1] - '0') * 100 + (fecha[2] - '0') * 10 + (fecha[3] - '0');
+        /*año = (fecha[0] - '0') * 1000 + (fecha[1] - '0') * 100 + (fecha[2] - '0') * 10 + (fecha[3] - '0');
         mes = (fecha[5] - '0') * 10 + (fecha[6] - '0');
-        dia = (fecha[8] - '0') * 10 + (fecha[9] - '0');
-
+        dia = (fecha[8] - '0') * 10 + (fecha[9] - '0');*/
+        FechaToNum(fecha, año, mes, dia);
         // si es año bisiesto febrero pasa a tener 29 dias
         if (mes == 2 && esBisiesto(año)) {
             diasPorMes[1] = 29;
@@ -485,6 +485,48 @@ namespace Validadores {
             }
         }
         return true;
+    }
+
+    bool fechaValidaRegistroDePartidos(const char *fechaPartido, char *mensajeError) {
+        // si la fecha final no es valida
+        if (!FechaValida(fechaPartido, mensajeError)) {
+            return false;
+        }
+
+        // declaramos los valores a comparar
+        int añoFin, mesFin, diaFin;
+        int añoIni, mesIni, diaIni;
+        int añoPtd, mesPtd, diaPtd;
+
+        // Almacenamos las fechas en variables int
+        FechaToNum(fechaDeFin, añoFin, mesFin, diaFin);
+        FechaToNum(fechaDeIni, añoIni, mesIni, diaIni);
+        FechaToNum(fechaPartido, añoPtd, mesPtd, diaPtd);
+
+        // si el año esta fuera del rango establecido
+        if (añoPtd < añoIni || añoPtd > añoFin) {
+            std::strcpy(mensajeError, "La fecha del Partido no puede estar fuera del rango de tiempo establecido en el torneo");
+            return false;
+        } else {
+            // sino si el mes esta fuera del rango establecido
+            if (mesPtd < mesIni || mesPtd > mesFin) {
+                std::strcpy(mensajeError, "La fecha del Partido no puede estar fuera del rango de tiempo establecido en el torneo");
+                return false;
+            } else {
+                // sino si el mes esta fuera del rango establecido
+                if (diaPtd < diaIni || diaPtd > diaFin) {
+                    std::strcpy(mensajeError, "La fecha del Partido no puede estar fuera del rango de tiempo establecido en el torneo");
+                    return false;
+                }
+            }
+        }
+
+        // si pasa todas las validaciones la fecha es válida
+        return true;
+    }
+
+    bool fechaValidaRegistroDeJugadorOEquipo() {
+        //
     }
 
     bool Cedulas(const char *cedula, char *mensajeError) {
@@ -862,8 +904,6 @@ namespace Presentacion {
             Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::ValidarFechaFin);
             cout << "\nFecha de Finalización del torneo seleccionada: " << torneoAux.fechaFin << endl;
             Validadores::definirFechaFin(torneoAux.fechaFin);
-
-            cout << "\nFecha de Finalizacion del Torneo seleccionada: " << torneoAux.fechaFin << endl;
             Auxiliares::waitfor(2500);
 
             // enviamos los datos
@@ -975,11 +1015,8 @@ int main() {
 
     // Inicio del Programa
     Presentacion::menu::datosInicialesTorneo(PtrMiSistema);
-
     cout << "\nDatos del torneo cargados correctamente." << endl;
     Auxiliares::pausarPrograma();
-
-
 
     // Estructura del switch
     do {
