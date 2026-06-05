@@ -382,6 +382,14 @@ namespace Validadores {
         return true;
     }
 
+    bool IDvalido(const unsigned int id, char *mensajeError) {
+        if (id <= 0) {
+            std::strcpy(mensajeError, "Error: El ID debe ser mayor a 0");
+            return false;
+        }
+        return true;
+    }
+
     bool Edad(const short edad, char *mensajeError) {
         // la edad no puede ser negativa ni igual a 0, tampoco puede ser mayor a 120
         if (edad < 14 || edad > 50) {
@@ -907,6 +915,30 @@ namespace Logica {
             return &(MiSistema->Equipos[indice]);
         }
 
+        Equipo *buscarEquipoPorID(SistemaDeportivo *MiSistema, const unsigned int id) {
+
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
+                return nullptr;
+            }
+
+            // Verificar que si haya equipos
+            if (MiSistema->numEquiposActuales == 0) {
+                return nullptr;
+            }
+
+            // Si pasa las validaciones recorremos el array dinamico con un for
+            for (size_t e = 0; e < MiSistema->numEquiposActuales; e++) {
+                // si encontramos un id que coincida con el de algun equipo
+                if (id == MiSistema->Equipos[e].ID) {
+                    // devolvemos la direccion de memoria de ese equipo
+                    return &(MiSistema->Equipos[e]);
+                }
+            }
+
+            // Si no conseguimos nada devolvemos nullptr
+            return nullptr;
+        }
     } // namespace equipos
 
 } // namespace Logica
@@ -1139,6 +1171,7 @@ namespace Presentacion {
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Mostramos los datos ingresados
+            cout << "Torneo: " << MiSistema->torneo.nombre << endl;
             cout << "Nombre del Equipo: " << nuevo->nombre << endl;
             cout << "Entrenador del Equipo: " << nuevo->entrenador << endl;
             cout << "Ciudad del Equipo: " << nuevo->ciudad << endl;
@@ -1148,6 +1181,41 @@ namespace Presentacion {
             Auxiliares::pausarPrograma();
         }
 
+        void buscarEquipoPorID(SistemaDeportivo *MiSistema) {
+            unsigned int ID = 0;
+            Equipo *EquipoBuscado = nullptr;
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║        BUSQUEDA DE EQUIPOS POR ID         ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarDatos(ID, "Ingrese el ID: ", Validadores::IDvalido);
+
+            EquipoBuscado = Logica::equipos::buscarEquipoPorID(MiSistema, ID);
+
+            if (EquipoBuscado == nullptr) {
+                cout << "El equipo de ID " << ID << " no fue encontrado\n";
+            } else {
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║             EQUIPO ENCONTRADO             ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                cout << "-------------------------------------------------------------\n";
+                cout << "  ID del Equipo:       " << EquipoBuscado->ID << "\n";
+                cout << "  Nombre:              " << EquipoBuscado->nombre << "\n";
+                cout << "  Entrenador:          " << EquipoBuscado->entrenador << "\n";
+                cout << "  Ciudad Origen:       " << EquipoBuscado->ciudad << "\n";
+                cout << "  Fecha de Registro:   " << EquipoBuscado->fechaRegistro << "\n";
+                cout << "-------------------------------------------------------------\n";
+                cout << "  Estadísticas en el Torneo:\n";
+                cout << "    Puntos Totales:    " << EquipoBuscado->puntos << "\n";
+                cout << "    Victorias:         " << EquipoBuscado->victorias << "\n";
+                cout << "    Empates:           " << EquipoBuscado->empates << "\n";
+                cout << "    Derrotas:          " << EquipoBuscado->derrotas << "\n";
+                cout << "    Puntos a Favor:    " << EquipoBuscado->puntosAFavor << "\n";
+                cout << "    Puntos en Contra:  " << EquipoBuscado->puntosEnContra << "\n";
+            }
+            cout << "-------------------------------------------------------------\n\n";
+            Auxiliares::pausarPrograma();
+        }
 
     } // namespace menu
 
