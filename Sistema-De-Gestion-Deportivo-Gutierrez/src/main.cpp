@@ -743,10 +743,6 @@ namespace Logica {
 
     void busquedaPorSubCadena();
 
-    namespace equipos {
-        Equipo *agregarEquipo();
-    }
-
     namespace partidos {
         //
     }
@@ -756,20 +752,18 @@ namespace Logica {
     }
 
     namespace redimensionar {
-        void rEquipos(SistemaDeportivo *&original) {
+        void rEquipos(SistemaDeportivo *original) {
 
             // Pequeña validacion en caso de que el puntero no apunte a nada
             if (original == nullptr) {
-                cout << "El Sistema Deportivo no ha sido inicializado aun\n";
-                Auxiliares::waitfor(1000);
                 return;
             }
 
             // Almacenamos la capacidad antigua para el bucle for
             size_t capacidadAntigua = original->capacidadEquipos;
 
-            // Duplicamos la capacidad de equipos en nuestro sistema original
-            original->capacidadEquipos *= 2;
+            // Protección contra capacidad inicial en 0. Si es cero arranca en 4, si no se duplica
+            original->capacidadEquipos = (capacidadAntigua == 0) ? 4 : capacidadAntigua * 2;
 
             // Creamos array con nueva capacidad
             Equipo *nuevoArray = new Equipo[original->capacidadEquipos];
@@ -778,25 +772,28 @@ namespace Logica {
             for (size_t e = 0; e < capacidadAntigua; e++) {
                 nuevoArray[e] = original->Equipos[e];
             }
-            delete[] original->Equipos;     // liberamos la memoria del array antiguo
-            original->Equipos = nuevoArray; // cambiamos el lugar al que apunta el puntero original para que apunte
-                                            // al nuevo bloque de memoria redimensionado
+
+            // liberamos la memoria del array antiguo
+            if (original->Equipos != nullptr) {
+                delete[] original->Equipos;
+            }
+
+            // cambiamos el lugar al que apunta el puntero original para que apunte
+            original->Equipos = nuevoArray; // al nuevo bloque de memoria redimensionado
         }
 
-        void rJugadores(SistemaDeportivo *&original) {
+        void rJugadores(SistemaDeportivo *original) {
 
             // Pequeña validacion en caso de que el puntero no apunte a nada
             if (original == nullptr) {
-                cout << "El Sistema Deportivo no ha sido inicializado aun\n";
-                Auxiliares::waitfor(1000);
                 return;
             }
 
             // Almacenamos la capacidad antigua para el bucle for
             size_t capacidadAntigua = original->capacidadJugadores;
 
-            // Duplicamos la capacidad de jugadores en nuestro sistema original
-            original->capacidadJugadores *= 2;
+            // Protección contra capacidad inicial en 0. Si es cero arranca en 4, si no se duplica
+            original->capacidadJugadores = (capacidadAntigua == 0) ? 4 : capacidadAntigua * 2;
 
             // Creamos array con nueva capacidad
             Jugador *nuevoArray = new Jugador[original->capacidadJugadores];
@@ -805,25 +802,28 @@ namespace Logica {
             for (size_t e = 0; e < capacidadAntigua; e++) {
                 nuevoArray[e] = original->Jugadores[e];
             }
-            delete[] original->Jugadores;     // liberamos la memoria del array antiguo
-            original->Jugadores = nuevoArray; // cambiamos el lugar al que apunta el puntero original para que apunte
-                                              // al nuevo bloque de memoria redimensionado
+
+            // liberamos la memoria del array antiguo
+            if (original->Jugadores != nullptr) {
+                delete[] original->Jugadores;
+            }
+
+            // cambiamos el lugar al que apunta el puntero original para que apunte
+            original->Jugadores = nuevoArray; // al nuevo bloque de memoria redimensionado
         }
 
-        void rPartidos(SistemaDeportivo *&original) {
+        void rPartidos(SistemaDeportivo *original) {
 
             // Pequeña validacion en caso de que el puntero no apunte a nada
             if (original == nullptr) {
-                cout << "El Sistema Deportivo no ha sido inicializado aun\n";
-                Auxiliares::waitfor(1000);
                 return;
             }
 
             // Almacenamos la capacidad antigua para el bucle for
             size_t capacidadAntigua = original->capacidadPartidos;
 
-            // Duplicamos la capacidad de partidos en nuestro sistema original
-            original->capacidadPartidos *= 2;
+            // Protección contra capacidad inicial en 0. Si es cero arranca en 4, si no se duplica
+            original->capacidadPartidos = (capacidadAntigua == 0) ? 4 : capacidadAntigua * 2;
 
             // Creamos array con nueva capacidad
             Partido *nuevoArray = new Partido[original->capacidadPartidos];
@@ -832,15 +832,83 @@ namespace Logica {
             for (size_t e = 0; e < capacidadAntigua; e++) {
                 nuevoArray[e] = original->Partidos[e];
             }
-            delete[] original->Partidos;     // liberamos la memoria del array antiguo
-            original->Partidos = nuevoArray; // cambiamos el lugar al que apunta el puntero original para que apunte
-                                             // al nuevo bloque de memoria redimensionado
+
+            // liberamos la memoria del array antiguo
+            if (original->Partidos != nullptr) {
+                delete[] original->Partidos;
+            }
+
+            // cambiamos el lugar al que apunta el puntero original para que apunte
+            original->Partidos = nuevoArray; // al nuevo bloque de memoria redimensionado
         }
     } // namespace redimensionar
 
-    namespace agregar {
-        //
-    }
+    namespace equipos {
+
+        bool nombreDuplicado(SistemaDeportivo *MiSistema, const char *nombre) {
+            if (MiSistema->numEquiposActuales == 0) {
+                return false;
+            }
+            for (size_t e = 0; e < MiSistema->numEquiposActuales; e++) {
+                if (std::strcmp(nombre, MiSistema->Equipos[e].nombre) == 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool nombreEntrenadorDuplicado(SistemaDeportivo *MiSistema, const char *entrenador) {
+            if (MiSistema->numEquiposActuales == 0) {
+                return true;
+            }
+            for (size_t e = 0; e < MiSistema->numEquiposActuales; e++) {
+                if (entrenador == MiSistema->Equipos[e].entrenador) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        Equipo *agregarEquipo(SistemaDeportivo *MiSistema, const char *nombre, const char *entrenador, const char *ciudad, const char *fecha) {
+
+            // Verificar si hay espacio, y redimensionar si es necesario
+            if (MiSistema->numEquiposActuales == MiSistema->capacidadEquipos) {
+                redimensionar::rEquipos(MiSistema);
+            }
+
+            // usamos una variable de posicion
+            size_t indice = MiSistema->numEquiposActuales;
+
+            std::strcpy(MiSistema->Equipos[indice].nombre, nombre);
+            std::strcpy(MiSistema->Equipos[indice].entrenador, entrenador);
+            std::strcpy(MiSistema->Equipos[indice].ciudad, ciudad);
+
+            // Inicializamos las estadísticas
+            MiSistema->Equipos[indice].victorias = 0;
+            MiSistema->Equipos[indice].empates = 0;
+            MiSistema->Equipos[indice].derrotas = 0;
+
+            // Asignamos la fecha (Usar la fecha inicio del torneo es un buen placeholder,
+            // aunque el manual pide "fecha actual", esto te sirve por ahora)
+            std::strcpy(MiSistema->Equipos[indice].fechaRegistro, fecha);
+
+            MiSistema->Equipos[indice].puntos = 0;
+            MiSistema->Equipos[indice].puntosAFavor = 0;
+            MiSistema->Equipos[indice].puntosEnContra = 0;
+
+            // Asignamos el ID
+            MiSistema->Equipos[indice].ID = MiSistema->siguienteIdEquipo;
+
+            // Aumentamos los contadores
+            MiSistema->numEquiposActuales++;
+            MiSistema->siguienteIdEquipo++;
+
+            // Retornamos la dirección de memoria del equipo que está dentro del array dinámico
+            return &(MiSistema->Equipos[indice]);
+        }
+
+    } // namespace equipos
+
 } // namespace Logica
 
 // ============================================//
@@ -990,10 +1058,94 @@ namespace Presentacion {
 
         void TablaDePosiciones();
 
-        void RegistrarEquipos() {
+        // Recolectamos los datos para registrar el equipo
+        void RegistrarEquipos(SistemaDeportivo *MiSistema) {
+            bool flagError = false;
+            char nombreAux[100];
+            char entrenadorAux[100];
+            char ciudadAux[50];
+            char fechaAux[11];
+            Equipo *nuevo = nullptr;
+
+            // Recolectamos el nombre del Equipo
+            do {
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          REGISTRAR NUVEVO EQUIPO          ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                Auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nombre del Equipo: ", Validadores::Nombres);
+
+                // Validamos nombre duplicado
+                if (Logica::equipos::nombreDuplicado(MiSistema, nombreAux)) {
+                    cout << "Error, el nombre '" << nombreAux << "' ya está en uso\n";
+                    flagError = true;
+                    Auxiliares::waitfor(3000);
+                    continue;
+                }
+                Auxiliares::waitfor(2000);
+            } while (flagError);
+
+
+            // Recolectamos el nombre del entrenador del nuevo Equipo
+            do {
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          REGISTRAR NUVEVO EQUIPO          ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                Auxiliares::ingresarCadena(entrenadorAux, 100, "Ingrese el nombre del Entrenador: ", Validadores::Nombres);
+
+                // Validamos nombre duplicado
+                if (Logica::equipos::nombreEntrenadorDuplicado(MiSistema, entrenadorAux)) {
+                    cout << "Error, el nombre '" << entrenadorAux << "' ya direge otro equipo\n";
+                    flagError = true;
+                    Auxiliares::waitfor(3000);
+                    continue;
+                }
+                Auxiliares::waitfor(2000);
+            } while (flagError);
+
+            // Recolectamos la fecha de registro del equipo
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║          REGISTRAR NUVEVO EQUIPO          ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(fechaAux, 11, "Ingrese la fecha de Registro del Equipo: ", Validadores::fechaValidaRegistroDeJugadorOEquipo);
+            Auxiliares::waitfor(2000);
             Auxiliares::limpiarPantalla();
 
-            // Recolectamos los datos para registrar el equipo
+            // Recolectamos la ciudad del Equipo
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║          REGISTRAR NUVEVO EQUIPO          ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(ciudadAux, 50, "Ingrese el nombre de la Ciudad del Equipo: ", Validadores::Nombres);
+            Auxiliares::waitfor(2000);
+            Auxiliares::limpiarPantalla();
+
+            // Agregamos el equipo a nuestro array dinamico
+            nuevo = Logica::equipos::agregarEquipo(MiSistema, nombreAux, entrenadorAux, ciudadAux, fechaAux);
+
+            // Si el equipo no se creo
+            if (nuevo == nullptr) {
+                cout << "Error: No se logró registrar el equipo\n";
+                return;
+            }
+
+            // Si el equipo se creo conn éxito
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║        EQUIPO REGISTRADO CON ÉXITO        ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            // Mostramos los datos ingresados
+            cout << "Nombre del Equipo: " << nuevo->nombre << endl;
+            cout << "Entrenador del Equipo: " << nuevo->entrenador << endl;
+            cout << "Ciudad del Equipo: " << nuevo->ciudad << endl;
+            cout << "Fecha de Registro del Equipo: " << nuevo->fechaRegistro << endl;
+            cout << "Id del Equipo: " << nuevo->ID << endl;
+
+            Auxiliares::pausarPrograma();
         }
 
 
