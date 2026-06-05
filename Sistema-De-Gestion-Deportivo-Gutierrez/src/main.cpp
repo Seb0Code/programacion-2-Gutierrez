@@ -11,8 +11,6 @@
 #include <iostream>
 #include <limits>
 #include <locale>
-// #include <sstream> // para el validador de fechas dinamico //! no lo implementé
-#include <string>
 #include <thread>
 
 #ifdef _WIN32
@@ -22,7 +20,6 @@
 using std::cin;
 using std::cout;
 using std::endl;
-using std::string;
 
 // ============================================//
 //   2. STRUCTS                                //
@@ -178,13 +175,13 @@ namespace Auxiliares {
                 cin.clear();
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 flag = true; // activamos la bandera
-                cout << "Error Tipo de Dato Incorrecto\n";
+                cout << "Error Tipo de Dato Incorrecto\n\n";
                 waitfor(3000);
             } else {
                 // si el puntero no contiene la direccion de ninguna direccion se omite este bloque
                 if (ptrValidador != nullptr) {
                     flag = !ptrValidador(variable, mensajeError); // si no es valido se activa la bandera
-                    cout << mensajeError << endl;
+                    cout << mensajeError << endl << endl;
                 }
                 // Si la lectura fue exitosa, limpiamos el enter residual
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -208,12 +205,12 @@ namespace Auxiliares {
             // Se lee toda la linea
             cin.getline(texto, tamañoMaximo);
 
-            // 3. Verificamos si la lectura falló
+            // Si falla
             if (cin.fail()) {
                 cin.clear();
                 cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 flag = true;
-                cout << "ERROR: Excediste el limite de caracteres permitido (" << tamañoMaximo - 1 << "). Intente de nuevo.\n";
+                cout << "ERROR: Excediste el limite de caracteres permitido (" << tamañoMaximo - 1 << "). Intente de nuevo.\n\n";
                 Auxiliares::waitfor(3000);
                 continue; // Saltamos directo a la siguiente iteración ya que no es necesario el validador
             }
@@ -222,7 +219,7 @@ namespace Auxiliares {
             if (ptrValidador != nullptr) {
                 if (!ptrValidador(texto, mensajeError)) {
                     flag = true; // Si el validador retorna false, la bandera se activa para repetir
-                    cout << mensajeError << endl;
+                    cout << mensajeError << endl << endl;
                     waitfor(3500);
                 }
             }
@@ -252,7 +249,7 @@ namespace Auxiliares {
 
 namespace Validadores {
     // =======================================================================================//
-    // Declaracion de arrays que serán usados para algunas validaciones                       //
+    // Declaracion de arrays y variables que serán usados para algunas validaciones                       //
     // =======================================================================================//
 
     const char *Deportes[] = {"FUTBOL", "BALONCESTO", "TENIS", "VOLEIBOL", "RUGBY", "BEISBOL", "HOCKEY", "HANDBALL", "SOFTBOL"};
@@ -271,16 +268,24 @@ namespace Validadores {
     // ahora mediante ptrs dobles creamos puntero doble que apunta a un array de punteros
     const char **MapaDeportes[] = {MatrizFutbol, MatrizBasket, MatrizVoleibol, MatrizBeisbol, MatrizSoftbol, MatrizHandball, MatrizHockey, MatrizRugby, MatrizTenis};
 
+    // calculamos la cantidad de deportes que hay
     const size_t totalDeportes = sizeof(MapaDeportes) / sizeof(MapaDeportes[0]);
 
     char deporteActual[50] = "";
+    char fechaDeIni[11];
+    char fechaDeFin[11];
 
     // Función que se llamará una sola vez al crear el torneo
-    void setDeporteActual(const char *deporte) {
+    void definirDeporteActual(const char *deporte) {
         std::strcpy(deporteActual, deporte);
         // La aseguramos en mayúsculas de una vez
         Auxiliares::toMayus(deporteActual);
     }
+
+    // definimos las fechas para las futuras validaciones de datos
+    void definirFechaInicio(const char *fechaInicio) { std::strcpy(fechaDeIni, fechaInicio); }
+
+    void definirFechaFin(const char *fechaFin) { std::strcpy(fechaDeFin, fechaFin); }
 
     // =======================================================================================//
     //  Validaciones auxiliares (no se debe poder acceder a ellas desde fuera del namespace)  //
@@ -344,13 +349,20 @@ namespace Validadores {
             return (e <= tamMaximo); // devuelve false si 'e' es mayor que el tamaño maximo o true si 'e' es menor
         }
 
-        bool esBisiesto(int anio) {
-            // 1. Un año no puede ser bisiesto si es 0 o negativo
-            if (anio <= 0) {
+        bool esBisiesto(int año) {
+            // Verificamos que no sea 0 o negativo
+            if (año <= 0) {
                 return false;
             }
-            // 2. Aplicar la regla de divisibilidad del año bisiesto
-            return (anio % 4 == 0 && anio % 100 != 0) || (anio % 400 == 0);
+            // Aplicamos la regla de divisibilidad del año bisiesto
+            return (año % 4 == 0 && año % 100 != 0) || (año % 400 == 0);
+        }
+
+        // Convertit formato fecha YYYY-MM-DD de texto a numeros que se pueden comparar
+        void FechaToNum(const char *fecha, int &año, int &mes, int &dia) {
+            año = (fecha[0] - '0') * 1000 + (fecha[1] - '0') * 100 + (fecha[2] - '0') * 10 + (fecha[3] - '0');
+            mes = (fecha[5] - '0') * 10 + (fecha[6] - '0');
+            dia = (fecha[8] - '0') * 10 + (fecha[9] - '0');
         }
     } // namespace
 
@@ -385,7 +397,7 @@ namespace Validadores {
         return true;
     }
 
-    bool Fechas(const char *fecha, char *mensajeError) {
+    bool FechaValida(const char *fecha, char *mensajeError) {
         short dia = 0, mes = 0, año = 0;
         // array de los dias de cada mes
         int diasPorMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -434,6 +446,44 @@ namespace Validadores {
             return false;
         }
 
+        return true;
+    }
+
+    // Esta funcion se usa para validar que una fecha no sea menor en el tiempo que otra
+    bool ValidarFechaFin(const char *fechaFin, char *mensajeError) {
+
+        // si la fecha final no es valida
+        if (!FechaValida(fechaFin, mensajeError)) {
+            return false;
+        }
+
+        // declaramos los valores a comparar
+        int añoFin, mesFin, diaFin;
+        int añoIni, mesIni, diaIni;
+
+        // Almacenamos las fechas en variables int
+        FechaToNum(fechaFin, añoFin, mesFin, diaFin);
+        FechaToNum(fechaDeIni, añoIni, mesIni, diaIni);
+
+        // si el año a comparar es menor que el año de referencia retornamos false
+        if (añoFin < añoIni) {
+            std::strcpy(mensajeError, "La fecha de Finalizacion no puede ser antes que la fecha de Inicio");
+            return false;
+
+            // si son iguales verificamos los meses
+        } else if (añoFin == añoIni) {
+            if (mesFin < mesIni) {
+                std::strcpy(mensajeError, "La fecha de Finalizacion no puede ser antes que la fecha de Inicio");
+                return false; // si el mes es menor devolvemos false
+
+                // si los meses tambien coinciden verificamos los dias
+            } else if (mesFin == mesIni) {
+                if (diaFin < diaIni) {
+                    std::strcpy(mensajeError, "La fecha de Finalizacion no puede ser antes que la fecha de Inicio");
+                    return false; // si el dia de fin es menor al de inicio es false
+                }
+            }
+        }
         return true;
     }
 
@@ -747,9 +797,11 @@ namespace Presentacion {
             // variables auxiliares
             Torneo torneoAux;
             int opcionFormato = 0;
-            bool error = 0;
+            bool opcionValida = false;
 
             // Aqui se recopilan los datos iniciales del torneo
+
+            // Ingresar Nombre
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
@@ -758,17 +810,18 @@ namespace Presentacion {
             cout << "\nNombre seleccionado: " << torneoAux.nombre << endl;
             Auxiliares::waitfor(2500);
 
-
+            // Ingresar Deporte
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
             Auxiliares::ingresarCadena(torneoAux.deporte, 50, "Deporte del Torneo: ", Validadores::existeDeporte);
             // Le indicamos cual va a ser el deporte a nuestro namespace de validadores
-            Validadores::setDeporteActual(torneoAux.deporte);
+            Validadores::definirDeporteActual(torneoAux.deporte);
             cout << "\nDeporte seleccionado: " << torneoAux.deporte << endl;
             Auxiliares::waitfor(2500);
 
+            // Ingresar Formato
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
@@ -777,32 +830,39 @@ namespace Presentacion {
             cout << "2. Formato de Eliminatoria Directa\n";
             cout << "--------------------------------------------------\n";
             do {
-                error = false;
+                opcionValida = true;
                 Auxiliares::ingresarDatos(opcionFormato, "Seleccione el formato (1 o 2): ");
                 if (opcionFormato != 1 && opcionFormato != 2) {
                     cout << "Opcion invalida. Intente de nuevo.\n";
-                    error = true;
+                    opcionValida = false;
                 }
-            } while (error);
+            } while (!opcionValida);
+
             // desde la logica definimos el tipo de torneo en base a la opcion ingresada
             Logica::definirFormato(torneoAux, opcionFormato);
             cout << "\nFormato seleccionado: " << torneoAux.formato << endl;
             Auxiliares::waitfor(2500);
 
+            // Ingresar Fecha de Inicio del torneo
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.fechaInicio, 11, "Fecha De Inicio del Torneo: ", Validadores::Fechas);
+            Auxiliares::ingresarCadena(torneoAux.fechaInicio, 11, "Fecha De Inicio del Torneo: ", Validadores::FechaValida);
             cout << "\nFecha de inicio del torneo seleccionada: " << torneoAux.fechaInicio << endl;
+            Validadores::definirFechaInicio(torneoAux.fechaInicio);
             Auxiliares::waitfor(2500);
 
-
+            // Ingresar Fecha de Finalizacion de Torneo
             Auxiliares::limpiarPantalla();
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::Fechas);
+
+            Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::ValidarFechaFin);
+            cout << "\nFecha de Finalización del torneo seleccionada: " << torneoAux.fechaFin << endl;
+            Validadores::definirFechaFin(torneoAux.fechaFin);
+
             cout << "\nFecha de Finalizacion del Torneo seleccionada: " << torneoAux.fechaFin << endl;
             Auxiliares::waitfor(2500);
 
