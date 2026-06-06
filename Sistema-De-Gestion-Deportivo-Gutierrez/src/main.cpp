@@ -746,11 +746,6 @@ namespace Logica {
         }
     }
 
-    void busquedaPorId();
-
-
-    void busquedaPorSubCadena();
-
     namespace partidos {
         //
     }
@@ -938,6 +933,41 @@ namespace Logica {
 
             // Si no conseguimos nada devolvemos nullptr
             return nullptr;
+        }
+
+        Equipo **buscarEquipoPorSubCadena(SistemaDeportivo *MiSistema, const char *subcadena, int *contEquiposEncontrados) {
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
+                return nullptr;
+            }
+
+            // Verificar que si haya equipos
+            if (MiSistema->numEquiposActuales == 0) {
+                return nullptr;
+            }
+
+            char copiaEquipo[100];
+            char copiaSubcadena[100];
+            std::strcpy(copiaSubcadena, subcadena);
+
+            // incializamos el contador en 0
+            *contEquiposEncontrados = 0;
+
+            // creamos un array de punteros dinamico con tamaño maximo el numero de equipos que hay
+            Equipo **arrayEquiposEncontrados = new Equipo *[MiSistema->numEquiposActuales];
+
+            for (size_t e = 0; e < MiSistema->numEquiposActuales; e++) {
+                // hacemos una copia del nombre del equipo
+                std::strcpy(copiaEquipo, MiSistema->Equipos[e].nombre);
+
+                // lo pasamos a minus para comparar mejor
+                // Buscamos si la subcadena coincide con la copia usando std::strstr
+                if (std::strstr(Auxiliares::toMinus(copiaEquipo), Auxiliares::toMinus(copiaSubcadena)) != nullptr) {
+                    arrayEquiposEncontrados[*(contEquiposEncontrados)] = &(MiSistema->Equipos[e]);
+                    (*contEquiposEncontrados)++;
+                }
+            }
+            return arrayEquiposEncontrados;
         }
     } // namespace equipos
 
@@ -1214,6 +1244,54 @@ namespace Presentacion {
                 cout << "    Puntos en Contra:  " << EquipoBuscado->puntosEnContra << "\n";
             }
             cout << "-------------------------------------------------------------\n\n";
+            Auxiliares::pausarPrograma();
+        }
+
+        void buscarEquiposPorSubCadena(SistemaDeportivo *Misistema) {
+            Auxiliares::limpiarPantalla();
+            int contEquiposEncotrados = 0;
+            char subcadena[100];
+            Equipo **arrayDePunterosAEquipos = nullptr;
+
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║     BUSQUEDA DE EQUIPOS POR SUBCADENA     ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(subcadena, 100, "Escribe el nombre (o parte del nombre) del equipo que buscas: ", Validadores::Nombres);
+            Auxiliares::waitfor(1000);
+            cout << "Buscando..." << endl;
+
+            // Llamamos a la funcion de busqueda
+            arrayDePunterosAEquipos = Logica::equipos::buscarEquipoPorSubCadena(Misistema, subcadena, &contEquiposEncotrados);
+
+            Auxiliares::waitfor(1500);
+            Auxiliares::limpiarPantalla();
+
+            // Si no se enocontro ningun equipo
+            if (arrayDePunterosAEquipos == nullptr || contEquiposEncotrados <= 0) {
+                cout << "No se encontro ninguna coincidencia con: '" << subcadena << "'\n";
+            } else {
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          RESULTADOS ENCONTRADOS           ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                cout << "----------------------------------------------------------------------------\n";
+                cout << "Se encontraron " << contEquiposEncotrados << " coincidencia(s):\n";
+                cout << "----------------------------------------------------------------------------\n";
+
+                for (size_t e = 0; e < contEquiposEncotrados; e++) {
+                    cout << endl << e + 1 << ".\n";
+                    cout << "   Nombre: " << (arrayDePunterosAEquipos[e])->nombre << endl;
+                    cout << "   ID: " << (arrayDePunterosAEquipos[e])->ID << endl;
+                }
+                cout << "---------------------------------------------------------------------------\n";
+            }
+
+            // Liberamos el array
+
+            if (arrayDePunterosAEquipos != nullptr) {
+                delete[] arrayDePunterosAEquipos;
+                arrayDePunterosAEquipos = nullptr;
+            }
+
             Auxiliares::pausarPrograma();
         }
 
