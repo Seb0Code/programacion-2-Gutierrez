@@ -969,6 +969,35 @@ namespace Logica {
             }
             return arrayEquiposEncontrados;
         }
+
+        Equipo **listarEquipos(SistemaDeportivo *MiSistema, unsigned int *cantEquipos) {
+
+            // inicializamos en 0 por si no pasa las validaciones
+            *cantEquipos = 0;
+
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
+                return nullptr;
+            }
+
+            // Verificar que si haya equipos
+            if (MiSistema->numEquiposActuales == 0) {
+                return nullptr;
+            }
+
+            // definimos las variables y el tamaño de la lista
+            *cantEquipos = MiSistema->numEquiposActuales;
+            Equipo **listaDePtrAEquipos = new Equipo *[*cantEquipos];
+
+            // recorremos el bucle para listar cada direccion de memoria de los equipos
+            for (size_t e = 0; e < (*cantEquipos); e++) {
+                listaDePtrAEquipos[e] = &(MiSistema->Equipos[e]);
+            }
+
+            return listaDePtrAEquipos;
+        }
+
+
     } // namespace equipos
 
 } // namespace Logica
@@ -1120,6 +1149,9 @@ namespace Presentacion {
 
         void TablaDePosiciones();
 
+    } // namespace menu
+
+    namespace equipos {
         // Recolectamos los datos para registrar el equipo
         void RegistrarEquipos(SistemaDeportivo *MiSistema) {
             bool flagError = false;
@@ -1295,7 +1327,44 @@ namespace Presentacion {
             Auxiliares::pausarPrograma();
         }
 
-    } // namespace menu
+        void listarEquipos(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+
+            // Inicializamos las variables a utilizar
+            unsigned int cantEquipos = 0;
+            Equipo **listaDePtrAEquipos = nullptr;
+
+            // llamamos a la funcion que nos devuelve la lista de punteros
+            listaDePtrAEquipos = Logica::equipos::listarEquipos(MiSistema, &cantEquipos);
+
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║            LISTA DE EQUIPOS               ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            if (listaDePtrAEquipos == nullptr || cantEquipos == 0) {
+                cout << "No hay equipos registrados en el sistema actualmente.\n";
+            } else {
+                cout << "----------------------------------------------------------------------------\n";
+                cout << " N° | ID   | Nombre               | Ciudad               | Puntos \n";
+                cout << "----------------------------------------------------------------------------\n";
+
+                for (size_t e = 0; e < cantEquipos; e++) {
+                    // Accedemos a los datos usando -> ya que cada elemento es un Equipo*
+                    cout << " " << e + 1 << "  | " << listaDePtrAEquipos[e]->ID << "    | " << listaDePtrAEquipos[e]->nombre << " | " << listaDePtrAEquipos[e]->ciudad << " | "
+                         << listaDePtrAEquipos[e]->puntos << "\n";
+                }
+                cout << "----------------------------------------------------------------------------\n";
+            }
+
+            if (listaDePtrAEquipos != nullptr) {
+                delete[] listaDePtrAEquipos;
+                listaDePtrAEquipos = nullptr;
+            }
+
+            Auxiliares::pausarPrograma();
+        }
+
+    } // namespace equipos
 
     void mensajeSalida() {
         cout << "Saliendo...";
