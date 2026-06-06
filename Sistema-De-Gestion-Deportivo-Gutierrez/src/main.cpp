@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring> //para el uso de strcpy
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <locale>
@@ -52,6 +53,7 @@ struct Equipo {
     char ciudad[100];                // ciudad de origen del equipo
     char entrenador[100];            // nombre completo del entrenador
     char fechaRegistro[11];          // fecha de registro del equipo en Formato: YYYY-MM-DD
+    unsigned int jugados = 0;        // Partidos jugados
     unsigned int puntos = 0;         // puntos del equipo
     unsigned int victorias = 0;      // victorias conseguidas
     unsigned int derrotas = 0;       // derrotas conseguidas
@@ -887,6 +889,7 @@ namespace Logica {
             std::strcpy(MiSistema->Equipos[indice].ciudad, ciudad);
 
             // Inicializamos las estadísticas
+            MiSistema->Equipos[indice].jugados = 0;
             MiSistema->Equipos[indice].victorias = 0;
             MiSistema->Equipos[indice].empates = 0;
             MiSistema->Equipos[indice].derrotas = 0;
@@ -997,6 +1000,49 @@ namespace Logica {
             return listaDePtrAEquipos;
         }
 
+        Equipo **TablaDePosiciones(SistemaDeportivo *MiSistema, unsigned int *cantEquipos) {
+            // inicializamos en 0 por si no pasa las validaciones
+            *cantEquipos = 0;
+
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
+                return nullptr;
+            }
+
+            // Verificar que si haya equipos
+            if (MiSistema->numEquiposActuales == 0) {
+                return nullptr;
+            }
+
+            // inicializamos nuestras variables
+            *cantEquipos = MiSistema->numEquiposActuales;
+            Equipo *ptrAux = nullptr;
+
+            // Declaramos un array de punteros a equipos
+            // Y generamos una lista con las direcciones de memoria de cada equipo
+            Equipo **listaDePtrAEquipos = Logica::equipos::listarEquipos(MiSistema, cantEquipos);
+
+            // Ordenamos por cantidad de puntos de mayor a menor
+            // Restamos 1 para no acceder a memoria indebida
+            for (size_t e = 0; e < (*cantEquipos) - 1; e++) {
+                // restamos 1 por la misma razon y 'e' para no recorrer los elemento ya ordenados del final
+                for (size_t r = 0; r < (*cantEquipos) - e - 1; r++) {
+                    // Si el equipo 1 tiene menos puntos que el equipo 2;
+                    if ((listaDePtrAEquipos[r]->puntos) < (listaDePtrAEquipos[r + 1]->puntos)) {
+
+                        // Guardamos el equipo con menos puntos en un ptr auxiliar
+                        ptrAux = listaDePtrAEquipos[r];
+
+                        // Luego movemos la direccion del mayor a la direccion donde estaba el menor
+                        listaDePtrAEquipos[r] = listaDePtrAEquipos[r + 1];
+
+                        // colocamos en la nueva posicion al equipo con menos puntos
+                        listaDePtrAEquipos[r + 1] = ptrAux;
+                    }
+                }
+            }
+            return listaDePtrAEquipos;
+        }
 
     } // namespace equipos
 
@@ -1361,6 +1407,46 @@ namespace Presentacion {
                 listaDePtrAEquipos = nullptr;
             }
 
+            Auxiliares::pausarPrograma();
+        }
+
+        void mostrarTablaDePosiciones(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+
+            // Inicializamos las variables a utilizar
+            unsigned int cantEquipos = 0;
+            Equipo **TablaDePosiciones = nullptr;
+
+            TablaDePosiciones = Logica::equipos::TablaDePosiciones(MiSistema, &cantEquipos);
+
+            if (TablaDePosiciones == nullptr || cantEquipos == 0) {
+                cout << "No hay Equipos Disponibles\n";
+            } else {
+                cout << "╔═════════════════════════════════════════════════════════════════════════════════════════════╗\n";
+                cout << "║                             TABLA DE POSICIONES                                             ║\n";
+                cout << "║               " << std::left << std::setw(83) << Auxiliares::toMayus(MiSistema->torneo.nombre) << "║\n";
+                cout << "╠════╦═══════════════════════════════════════════════╦═════╦═══╦═══╦═══╦════╦════╦════╣\n";
+                cout << "║ #  ║ Equipo                                        ║ PTS ║ J ║ G ║ E ║ D  ║ GF ║ GC ║\n";
+                cout << "╠════╬═══════════════════════════════════════════════╬═════╬═══╬═══╬═══╬════╬════╬════╣\n";
+
+                for (size_t e = 0; e < cantEquipos; e++) {
+                    cout << "║ " << std::right << std::setw(2) << (e + 1) << " ║ " << std::left << std::setw(45) << TablaDePosiciones[e]->nombre
+                         << " ║ " // <-- ¡Subió a 45 espacios fijos!
+                         << std::right << std::setw(3) << TablaDePosiciones[e]->puntos << " ║ " << std::right << std::setw(1) << TablaDePosiciones[e]->jugados << " ║ "
+                         << std::right << std::setw(1) << TablaDePosiciones[e]->victorias << " ║ " << std::right << std::setw(1) << TablaDePosiciones[e]->empates << " ║ "
+                         << std::right << std::setw(2) << TablaDePosiciones[e]->derrotas << " ║ " << std::right << std::setw(2) << TablaDePosiciones[e]->puntosAFavor << " ║ "
+                         << std::right << std::setw(2) << TablaDePosiciones[e]->puntosEnContra << " ║\n";
+                }
+                cout << "╚════╩═══════════════════════════════════════════════╩═════╩═══╩═══╩═══╩════╩════╩════╝\n";
+                cout << "\nReferencia: PTS=Puntos  J=Jugados  G=Ganados  E=Empatados\n";
+                cout << "            D=Derrotas  GF=puntos a Favor  GC=puntos en Contra\n\n";
+            }
+
+            // liberamos
+            if (TablaDePosiciones != nullptr) {
+                delete[] TablaDePosiciones;
+                TablaDePosiciones = nullptr;
+            }
             Auxiliares::pausarPrograma();
         }
 
