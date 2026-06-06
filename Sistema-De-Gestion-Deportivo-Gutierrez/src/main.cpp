@@ -1008,6 +1008,8 @@ namespace Logica {
         Equipo **TablaDePosiciones(SistemaDeportivo *MiSistema, unsigned int *cantEquipos) {
             // inicializamos en 0 por si no pasa las validaciones
             *cantEquipos = 0;
+            int difPtsEq1 = 0, difPtsEq2 = 0;
+            bool intercambiar = false;
 
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
@@ -1032,9 +1034,52 @@ namespace Logica {
             for (size_t e = 0; e < (*cantEquipos) - 1; e++) {
                 // restamos 1 por la misma razon y 'e' para no recorrer los elemento ya ordenados del final
                 for (size_t r = 0; r < (*cantEquipos) - e - 1; r++) {
+
+                    // incializamos esta bandera en false, se activa si los equipos
+                    // requieren que se interambien por los criterios de cada condicion
+                    intercambiar = false;
+
+                    //* Condicion 1
                     // Si el equipo 1 tiene menos puntos que el equipo 2;
                     if ((listaDePtrAEquipos[r]->puntos) < (listaDePtrAEquipos[r + 1]->puntos)) {
+                        intercambiar = true;
 
+                        // Si poseen igual cantidad de puntos
+                    } else if ((listaDePtrAEquipos[r]->puntos) == (listaDePtrAEquipos[r + 1]->puntos)) {
+
+                        // Calculamos diferencia de puntos
+                        difPtsEq1 = (listaDePtrAEquipos[r]->puntosAFavor) - (listaDePtrAEquipos[r]->puntosEnContra);
+                        difPtsEq2 = (listaDePtrAEquipos[r + 1]->puntosAFavor) - (listaDePtrAEquipos[r + 1]->puntosEnContra);
+
+                        // *Condicion 2
+                        // Si el equipo de la izquierda tiene menor diferencia de puntos
+                        // lo ubicamos a la deracha es decir lo bajamos una posicion
+                        if (difPtsEq1 < difPtsEq2) {
+                            intercambiar = true;
+
+                            // Si la diferencia de goles es igual tambien
+                        } else if (difPtsEq1 == difPtsEq2) {
+
+                            //* Condicion 3
+                            // comparamos los puntos a favor
+                            if (listaDePtrAEquipos[r]->puntosAFavor < listaDePtrAEquipos[r + 1]->puntosAFavor) {
+                                intercambiar = true;
+
+                                // Si los puntos a favor son iguales desempatamos por victorias
+                            } else if (listaDePtrAEquipos[r]->puntosAFavor == listaDePtrAEquipos[r + 1]->puntosAFavor) {
+
+                                // * Condicion 4
+                                // comparamos las victorias
+
+                                if (listaDePtrAEquipos[r]->victorias < listaDePtrAEquipos[r + 1]->victorias) {
+                                    intercambiar = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // Si se cumple alguna condicion hacemos el intercambio
+                    if (intercambiar) {
                         // Guardamos el equipo con menos puntos en un ptr auxiliar
                         ptrAux = listaDePtrAEquipos[r];
 
