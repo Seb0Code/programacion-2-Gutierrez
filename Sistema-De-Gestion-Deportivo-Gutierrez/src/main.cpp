@@ -1384,18 +1384,128 @@ namespace Logica {
             return &(MiSistema->Jugadores[indice]);
         }
 
-        // Retorna puntero al jugador con ese ID, o nullptr si no existe
-        Jugador *buscarJugadorPorID(SistemaDeportivo *MiSistema, int ID);
+        Jugador *buscarJugadorPorID(SistemaDeportivo *MiSistema, const unsigned int ID) {
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
+                return nullptr;
+            }
 
-        // Retorna array de punteros a jugadores cuyo nombre contiene la subcadena
-        // Escribe la cantidad en *cantidad
-        // El llamador libera el array con delete[]
-        Jugador **buscarJugadoresPorNombre(SistemaDeportivo *MiSistema, const char *subcadena, int *cantidad);
+            // si no hay equipos cancelamos la busqueda
+            if (MiSistema->numEquiposActuales == 0) {
+                return nullptr;
+            }
 
-        // Retorna array con todos los jugadores pertenecientes al equipo indicado
-        // Escribe la cantidad en *cantidad
-        // El llamador libera el array con delete[]
-        Jugador **listarJugadoresPorEquipo(SistemaDeportivo *MiSistema, int IDEquipo, int *cantidad);
+            // si no hay jugadores cancelamos la busqueda
+            if (MiSistema->numJugadoresActuales == 0) {
+                return nullptr;
+            }
+
+            // Buscamos si el id esta relacionado con un jugador
+            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
+                if (MiSistema->Jugadores[e].ID == ID) {
+                    return &(MiSistema->Jugadores[e]);
+                }
+            }
+
+            // si no encontró nada decuelve nullptr
+            return nullptr;
+        }
+
+        Jugador **buscarJugadoresPorNombre(SistemaDeportivo *MiSistema, const char *subcadena, int *cantJugadoresEncontrados) {
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
+                return nullptr;
+            }
+
+            // si no hay equipos cancelamos la busqueda
+            if (MiSistema->numEquiposActuales == 0) {
+                return nullptr;
+            }
+
+            // si no hay jugadores cancelamos la busqueda
+            if (MiSistema->numJugadoresActuales == 0) {
+                return nullptr;
+            }
+
+            // creamos dos variables para realizar copias y no dañar laa originales
+            char copiaJugador[100];
+            char copiaSubcadena[100];
+
+            // incializamos el contador en 0
+            *cantJugadoresEncontrados = 0;
+
+            // Reservamos espacio para una lista de jugadores
+            Jugador **listaDeJugadoresEncontrados = new Jugador *[MiSistema->numJugadoresActuales];
+
+            // hacemos la copia de la subcadena y la pasamos a minuscula
+            std::strcpy(copiaSubcadena, subcadena);
+            Auxiliares::toMinus(copiaSubcadena);
+
+            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
+                // realizamos la copia del nombre del jugador para esta iteración
+                std::strcpy(copiaJugador, MiSistema->Jugadores[e].nombre);
+                Auxiliares::toMinus(copiaJugador);
+                // Si conseguimos un jugador que coincida con la subcadena
+                if (std::strstr(copiaJugador, copiaSubcadena) != nullptr) {
+                    // añadimos el jugador a la lista
+                    listaDeJugadoresEncontrados[*(cantJugadoresEncontrados)] = &(MiSistema->Jugadores[e]);
+                    (*cantJugadoresEncontrados)++;
+                }
+            }
+            return listaDeJugadoresEncontrados;
+        }
+
+        Jugador **listarJugadoresPorEquipo(SistemaDeportivo *MiSistema, const unsigned int IDEquipo, unsigned int *cantidadJugadores) {
+
+            // inicializamos en 0
+            *cantidadJugadores = 0;
+
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
+                return nullptr;
+            }
+
+            // si no hay equipos cancelamos la busqueda
+            if (MiSistema->numEquiposActuales == 0) {
+                return nullptr;
+            }
+
+            // si no hay jugadores cancelamos la busqueda
+            if (MiSistema->numJugadoresActuales == 0) {
+                return nullptr;
+            }
+
+            // Buscamos si el equipo solicitado realmente existe
+            Equipo *EquipoAux = equipos::buscarEquipoPorID(MiSistema, IDEquipo);
+
+            // si devuelve nullptr el equipo no existe
+            if (EquipoAux == nullptr) {
+                return nullptr;
+            }
+
+            // Si el equipo no tiene jugadores
+            if (EquipoAux->numJugadores == 0) {
+                return nullptr;
+            }
+
+            // Creamos la lista de jugadores de ese equipo con el tamaño correcto
+            Jugador **listaDeJugadores = new Jugador *[EquipoAux->numJugadores];
+
+            // buscamos los jugadores
+            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
+
+                // Si encontramos un jugador asociado a ese id
+                if (MiSistema->Jugadores[e].IDequipo == IDEquipo) {
+
+                    // Nos aseguramos de no sobrepasarnos el limite
+                    if (*cantidadJugadores < EquipoAux->numJugadores) {
+                        listaDeJugadores[*cantidadJugadores] = &(MiSistema->Jugadores[e]);
+                        (*cantidadJugadores)++;
+                    }
+                }
+            }
+            return listaDeJugadores;
+        }
 
         // Retorna array con todos los jugadores del sistema
         // El llamador libera el array con delete[]
@@ -1736,9 +1846,8 @@ namespace Presentacion {
             int contEquiposEncotrados = 0;
             char subcadena[100];
             Equipo **arrayDePunterosAEquipos = nullptr;
-
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║     BUSQUEDA DE EQUIPOS POR SUBCADENA     ║\n";
+            cout << "       ║      BUSQUEDA DE EQUIPOS POR NOMBRE       ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
             Auxiliares::ingresarCadena(subcadena, 100, "Escribe el nombre (o parte del nombre) del equipo que buscas: ", Validadores::Nombres);
             Auxiliares::waitfor(1000);
@@ -2173,10 +2282,157 @@ namespace Presentacion {
             Auxiliares::pausarPrograma();
         }
 
-        void menuBuscarJugador(SistemaDeportivo *MiSistema);
+        void buscarJugadorID(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+            unsigned int ID = 0;
+            Jugador *jugadorBuscado = nullptr;
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║       BUSQUEDA DE JUGADORES POR ID        ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            Auxiliares::ingresarDatos(ID, "Ingrese el ID: ", Validadores::IDvalido);
+
+            jugadorBuscado = Logica::jugadores::buscarJugadorPorID(MiSistema, ID);
+
+            // si no encontro un jugador
+            if (jugadorBuscado == nullptr) {
+                cout << "Error no hay ningun jugador registrado con el ID '" << ID << "'\n";
+            } else {
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║            JUGADOR ENCONTRADO             ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+                cout << "-------------------------------------------------------------\n";
+                cout << "  ID del Jugador:       " << jugadorBuscado->ID << "\n";
+                cout << "  Nombre:               " << jugadorBuscado->nombre << "\n";
+                cout << "  Cédula:               " << jugadorBuscado->cedula << "\n";
+                cout << "  Edad:                 " << jugadorBuscado->edad << " años\n";
+                cout << "  Posición:             " << jugadorBuscado->posicion << "\n";
+                cout << "  Dorsal:               " << jugadorBuscado->dorsal << "\n";
+                cout << "  ID Equipo Asignado:   " << jugadorBuscado->IDequipo << "\n";
+                cout << "  Fecha de Registro:    " << jugadorBuscado->fechaRegistro << "\n";
+                cout << "-------------------------------------------------------------\n";
+                cout << "  Estadísticas en el Torneo:\n";
+                cout << "    Puntos Anotados:    " << jugadorBuscado->puntosAnotados << "\n";
+                cout << "-------------------------------------------------------------\n";
+            }
+            Auxiliares::pausarPrograma();
+        }
+
+        void buscarJugadorPorNombre(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+            char subcadena[100];
+            int cantidadEncontrados = 0;
+
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║      BÚSQUEDA DE JUGADORES POR NOMBRE     ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            Auxiliares::ingresarCadena(subcadena, 100, "Escribe el nombre (o parte del nombre) del jugador que buscas: ", Validadores::Nombres);
+            Auxiliares::waitfor(1000);
+            cout << "Buscando..." << endl;
+
+            // llamamos a la funcion buscar por nombre y almacenamos el resultado
+            Jugador **listaDePunterosAJugadores = Logica::jugadores::buscarJugadoresPorNombre(MiSistema, subcadena, &cantidadEncontrados);
+
+            // Si no encontró nada o no devolvió nada
+            if (listaDePunterosAJugadores == nullptr || cantidadEncontrados <= 0) {
+                cout << "\nNo se encontraron jugadores que coincidan con '" << subcadena << "'.\n";
+            } else {
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          COINCIDENCIAS ENCONTRADAS        ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                cout << " Se encontraron " << cantidadEncontrados << " jugador(es):\n";
+
+                for (int e = 0; e < cantidadEncontrados; e++) {
+                    cout << "-------------------------------------------------------------\n";
+                    cout << "  ID: " << listaDePunterosAJugadores[e]->ID << " | Nombre: " << listaDePunterosAJugadores[e]->nombre << "\n";
+                    cout << "  Cédula: " << listaDePunterosAJugadores[e]->cedula << " | Dorsal: [" << listaDePunterosAJugadores[e]->dorsal << "]\n";
+                    cout << "  Edad: " << listaDePunterosAJugadores[e]->edad << " años | Posición: " << listaDePunterosAJugadores[e]->posicion << "\n";
+                    cout << "  ID Equipo: " << listaDePunterosAJugadores[e]->IDequipo << " | Puntos Anotados: " << listaDePunterosAJugadores[e]->puntosAnotados << "\n";
+                }
+                cout << "-------------------------------------------------------------\n";
+            }
+
+            // Liberamos la memoria
+            if (listaDePunterosAJugadores != nullptr) {
+                delete[] listaDePunterosAJugadores;
+                listaDePunterosAJugadores = nullptr;
+            }
+
+            cout << "\n";
+            Auxiliares::pausarPrograma();
+        }
+
+        void mostrarJugadoresPorEquipo(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+            unsigned int IDEquipo = 0;
+            unsigned int cantidadEncontrados = 0;
+
+            // Pedimos el ID del equipo a consultar
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║      MOSTRAR JUGADORES POR EQUIPO         ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            Auxiliares::ingresarDatos(IDEquipo, "Ingrese el ID del Equipo: ", Validadores::IDvalido);
+
+            // Buscamos el equipo primero
+            Equipo *equipoBuscado = Logica::equipos::buscarEquipoPorID(MiSistema, IDEquipo);
+
+            // Si no encontramos un equipo con ese ID enviamos error
+            if (equipoBuscado == nullptr) {
+                cout << "\nError: El equipo con ID '" << IDEquipo << "' no existe.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            Auxiliares::waitfor(1000);
+            cout << "\nBuscando jugadores...\n\n";
+
+            // obtenemos la lista de punteros
+            Jugador **listaJugadores = Logica::jugadores::listarJugadoresPorEquipo(MiSistema, IDEquipo, &cantidadEncontrados);
+
+            // Si no obtenemos nada
+            if (listaJugadores == nullptr || cantidadEncontrados == 0) {
+                cout << "El equipo '" << equipoBuscado->nombre << "' actualmente no tiene jugadores registrados.\n";
+            } else {
+                cout << "╔═══════════════════════════════════════════════════════════════════════════════════╗\n";
+                cout << "║ LISTADO DE JUGADORES DEL EQUIPO: " << std::left << std::setw(50) << equipoBuscado->nombre << " ║\n";
+                cout << "╠════╦══════════════════╦═══════════════╦═════╦═══════════╦═════════════════════════╣\n";
+                cout << "║ ID ║ Nombre           ║ Posición      ║ Edad║ Dorsal    ║                         ║\n";
+                cout << "╠════╬══════════════════╬═══════════════╬═════╬═══════════╬═════════════════════════╣\n";
+
+                // Imprimimos los jugadores
+                for (size_t e = 0; e < cantidadEncontrados; e++) {
+                    cout << "║ " << std::right << std::setw(2) << listaJugadores[e]->ID << " ║ " << std::left << std::setw(16) << listaJugadores[e]->nombre << " ║ " << std::left
+                         << std::setw(13) << listaJugadores[e]->posicion << " ║ " << std::right << std::setw(3) << listaJugadores[e]->edad << " ║ [" << std::right << std::setw(2)
+                         << listaJugadores[e]->dorsal << "]       ║" << std::setw(26) << " ║\n";
+                }
+                cout << "╚════╩══════════════════╩═══════════════╩═════╩═══════════╩═════════════════════════╝\n";
+                cout << " Total de jugadores en el equipo: " << cantidadEncontrados << "\n";
+            }
+
+            // liberamos
+            if (listaJugadores != nullptr) {
+                delete[] listaJugadores;
+                listaJugadores = nullptr;
+            }
+
+            cout << "\n";
+            Auxiliares::pausarPrograma();
+        }
+
+        void menuBuscarJugador(SistemaDeportivo *MiSistema) {
+            //
+        }
+
+        void menuListarJugadores(SistemaDeportivo *MiSistema) {
+            //
+        }
+
         void menuActualizarJugador(SistemaDeportivo *MiSistema);
         void menuEliminarJugador(SistemaDeportivo *MiSistema);
-        void menuListarJugadores(SistemaDeportivo *MiSistema);
+
 
         // Muestra jugador con el nombre del equipo (no solo el ID)
         void mostrarJugador(Jugador *jugador, SistemaDeportivo *s);
