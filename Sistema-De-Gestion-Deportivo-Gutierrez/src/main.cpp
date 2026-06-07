@@ -31,7 +31,7 @@ struct Jugador {
     unsigned int ID;                 // Id del jugador
     char nombre[100];                // nombre completo del jugador
     unsigned int edad;               // edad del jugador
-    char cedula[15];                 // cedula del jugador
+    char cedula[20];                 // cedula del jugador
     unsigned int IDequipo;           // Id del equipo al que pertenece
     unsigned short dorsal;           // dorsal del jugador
     char posicion[25];               // posicion del jugador segun el deporte
@@ -60,6 +60,7 @@ struct Equipo {
     unsigned int empates = 0;        // empates conseguidos
     unsigned int puntosAFavor = 0;   // capacidad de puntos a favor
     unsigned int puntosEnContra = 0; // capacidad de puntos en contra
+    unsigned int numJugadores = 0;   // Numero de jugadores del equipo
 };
 
 struct Partido {
@@ -387,7 +388,7 @@ namespace Validadores {
         return true;
     }
 
-    bool Edad(const short edad, char *mensajeError) {
+    bool Edad(const unsigned int edad, char *mensajeError) {
         // la edad no puede ser negativa ni igual a 0, tampoco puede ser mayor a 120
         if (edad < 14 || edad > 50) {
             // asignamos la siguiente cadena de texto a el array de char
@@ -397,7 +398,7 @@ namespace Validadores {
         return true;
     }
 
-    bool Dorsal(const short dorsal, char *mensajeError) {
+    bool Dorsal(const unsigned short dorsal, char *mensajeError) {
         if (dorsal < 1 || dorsal > 99) {
             // std:strcpy copia el mensaje del segundo parametro dentro de un const char*
             std::strcpy(mensajeError, "El dorsal debe esta entre un rango de 1-99");
@@ -1337,8 +1338,8 @@ namespace Logica {
             return false;
         }
 
-        /*
-        Jugador *agregarJugador(SistemaDeportivo *MiSistema, int IDEquipo, const char *nombre, const char *cedula, const char *posicion, int edad, int numeroDorsal) {
+        Jugador *agregarJugador(SistemaDeportivo *MiSistema, const unsigned int IDEquipo, const char *nombre, const char *cedula, const char *posicion, const int unsigned edad,
+                                const unsigned short numeroDorsal, const char *fechaRegistro) {
 
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
@@ -1360,12 +1361,20 @@ namespace Logica {
             std::strcpy(MiSistema->Jugadores[indice].nombre, nombre);
             std::strcpy(MiSistema->Jugadores[indice].cedula, cedula);
             std::strcpy(MiSistema->Jugadores[indice].posicion, posicion);
-            MiSistema->Jugadores[indice].edad = static_cast<unsigned int>(edad);
-            kMiSistema->Jugadores[indice].IDequipo = static_cast<unsigned int>(IDEquipo);
-            MiSistema->Jugadores[indice].dorsal = static_cast<unsigned short>(numeroDorsal);
-            std::strcpy(MiSistema->Jugadores[indice].fechaRegistro, MiSistema->torneo.fechaInicio);
+            MiSistema->Jugadores[indice].edad = edad;
+            MiSistema->Jugadores[indice].IDequipo = IDEquipo;
+            MiSistema->Jugadores[indice].dorsal = numeroDorsal;
+            std::strcpy(MiSistema->Jugadores[indice].fechaRegistro, fechaRegistro);
             MiSistema->Jugadores[indice].puntosAnotados = 0;
             MiSistema->Jugadores[indice].ID = MiSistema->siguienteIdJugador;
+
+            // Aumentamos el numero de jugadores del equipo
+            for (size_t e = 0; e < MiSistema->numEquiposActuales; e++) {
+                if (MiSistema->Equipos[e].ID == IDEquipo) {
+                    MiSistema->Equipos[e].numJugadores++; // Incrementamos el contador en el struct Equipo
+                    break;
+                }
+            }
 
             // Aumentamos los contadores
             MiSistema->numJugadoresActuales++;
@@ -1373,7 +1382,7 @@ namespace Logica {
 
             // Retornamos la dirección de memoria del jugador que está dentro del array dinámico
             return &(MiSistema->Jugadores[indice]);
-        }*/
+        }
 
         // Retorna puntero al jugador con ese ID, o nullptr si no existe
         Jugador *buscarJugadorPorID(SistemaDeportivo *MiSistema, int ID);
@@ -1983,11 +1992,191 @@ namespace Presentacion {
     } // namespace equipos
 
     namespace Jugadores {
-        void menuRegistrarJugador(SistemaDeportivo *s);
-        void menuBuscarJugador(SistemaDeportivo *s);
-        void menuActualizarJugador(SistemaDeportivo *s);
-        void menuEliminarJugador(SistemaDeportivo *s);
-        void menuListarJugadores(SistemaDeportivo *s);
+
+        void menuRegistrarJugador(SistemaDeportivo *MiSistema) {
+            bool flagError = false;
+            char nombreAux[100];
+            char cedulaAux[20];
+            unsigned int edadAux = 0;
+            char fechaAux[11];
+            Jugador *nuevo = nullptr;
+            char confirmacion;
+            unsigned short dorsal = 0;
+            int opcion = 0;
+            char posicionAux[25];
+            unsigned int IDEquipoAux = 0;
+
+            // Recolectamos el ID del equipo
+            do {
+                flagError = false;
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          REGISTRAR NUVEVO JUGADOR         ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                Auxiliares::ingresarDatos(IDEquipoAux, "Ingrese el ID del equipo al que pertenece el jugador: ", Validadores::IDvalido);
+
+                /// Si el id no existe dentro de los equipos
+                if (!Logica::equipos::existeID(MiSistema, IDEquipoAux)) {
+                    cout << "Error el ID '" << IDEquipoAux << "' no pertenece a ningun equipo\n";
+                    flagError = true;
+                    Auxiliares::waitfor(2500);
+                    continue;
+                }
+                Auxiliares::waitfor(1500);
+            } while (flagError);
+
+            // Recolectamos el nombre del Jugador
+            do {
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          REGISTRAR NUVEVO JUGADOR          ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                Auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nombre del Jugador: ", Validadores::Nombres);
+
+                // Validamos nombre duplicado
+                if (Logica::jugadores::nombreDuplicado(MiSistema, nombreAux)) {
+                    cout << "Error, el nombre '" << nombreAux << "' ya está en uso\n";
+                    flagError = true;
+                    Auxiliares::waitfor(3000);
+                    continue;
+                }
+                Auxiliares::waitfor(2000);
+            } while (flagError);
+
+            // Recolectamos la Edad
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║          REGISTRAR NUVEVO JUGADOR         ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarDatos(edadAux, "Ingrese la edad del Jugador", Validadores::Edad);
+            Auxiliares::waitfor(1500);
+
+            // Recolectamos la cedula
+            do {
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          REGISTRAR NUVEVO JUGADOR         ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                Auxiliares::ingresarCadena(cedulaAux, 20, "Ingrese la cedula del jugador: ", Validadores::Cedulas);
+
+                // Validamos nombre duplicado
+                if (Logica::jugadores::CedulaRepetida(MiSistema, cedulaAux)) {
+                    cout << "Error, la cedula '" << cedulaAux << "' ya le pertenece a otro jugador\n";
+                    flagError = true;
+                    Auxiliares::waitfor(3000);
+                    continue;
+                }
+                Auxiliares::waitfor(2000);
+            } while (flagError);
+
+            // Recolectamos la Posicion
+            do {
+                flagError = false;
+                Auxiliares::limpiarPantalla();
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                cout << " Deporte actual del Torneo: " << MiSistema->torneo.deporte << "\n\n";
+
+                const char **matrizDeporteActual = nullptr;
+
+                for (size_t i = 0; i < Validadores::totalDeportes; i++) {
+                    // Recorremos el array de matrices y verificamos lo que hay en la posicion 0
+                    if (std::strcmp(Validadores::MapaDeportes[i][0], MiSistema->torneo.deporte) == 0) {
+                        matrizDeporteActual = Validadores::MapaDeportes[i];
+                        break;
+                    }
+                }
+
+                // Mostramos las posiciones disponibles de esa fila
+                cout << " Seleccione la posición del jugador:\n";
+
+                // Para saber el numero de posiciones del deporte
+                int contadorPosiciones = 0;
+
+                for (size_t j = 1; matrizDeporteActual[j] != nullptr; j++) {
+                    cout << " " << j << ". " << matrizDeporteActual[j] << "\n";
+                    contadorPosiciones++;
+                }
+                cout << "\n";
+
+                Auxiliares::ingresarDatos(opcion, "Seleccione una opción: ");
+
+                // Verificamos que esté en el rango de opciones
+                if (opcion >= 1 && opcion <= contadorPosiciones) {
+                    // si es correcta guardamos la posicion
+                    std::strcpy(posicionAux, matrizDeporteActual[opcion]);
+                } else {
+                    cout << "Error: Opción inválida. Por favor, intente de nuevo.\n";
+                    flagError = true;
+                    Auxiliares::waitfor(2000);
+                }
+            } while (flagError);
+
+
+            // Recolectamos la fecha de registro del jugador
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║          REGISTRAR NUVEVO JUGADOR         ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(fechaAux, 11, "Ingrese la fecha de Registro del Jugador: ", Validadores::fechaValidaRegistroDeJugadorOEquipo);
+            Auxiliares::waitfor(2000);
+            Auxiliares::limpiarPantalla();
+
+            // Recolectamos el dorsal del Jugador
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║          REGISTRAR NUVEVO JUGADOR         ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarDatos(dorsal, "Ingrese el Dorsal del jugador: ", Validadores::Dorsal);
+            Auxiliares::waitfor(2000);
+            Auxiliares::limpiarPantalla();
+
+
+            // Pedimos la confirmacion al usuario
+            Auxiliares::limpiarPantalla();
+            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea registrar este jugador? (S/N): ");
+
+            if (toupper(confirmacion) == 'S') {
+                // agregamos el jugador
+                nuevo = Logica::jugadores::agregarJugador(MiSistema, IDEquipoAux, nombreAux, cedulaAux, posicionAux, edadAux, dorsal, fechaAux);
+
+                // Si no se agregó
+                if (nuevo == nullptr) {
+                    cout << "ERROR al registrar al jugador.\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                //
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║       JUGADOR REGISTRADO CON ÉXITO        ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+                cout << " Torneo: " << MiSistema->torneo.nombre << endl;
+                cout << " ID del Jugador: " << nuevo->ID << endl;
+                cout << " Nombre del Jugador: " << nuevo->nombre << endl;
+                cout << " Cédula: " << nuevo->cedula << endl;
+                cout << " Edad: " << nuevo->edad << " años" << endl;
+                cout << " Posición: " << nuevo->posicion << endl;
+                cout << " Dorsal: " << nuevo->dorsal << endl;
+                cout << " ID del Equipo asignado: " << nuevo->IDequipo << endl;
+                cout << " Fecha de Registro: " << nuevo->fechaRegistro << endl;
+
+            } else if (toupper(confirmacion) == 'N') {
+                cout << "Registro de Jugador Cancelado.\n";
+            } else {
+                cout << "ERROR: Opción incorrecta (S/N).\nRegistro de Jugador Cancelado.\n";
+            }
+
+            Auxiliares::pausarPrograma();
+        }
+
+        void menuBuscarJugador(SistemaDeportivo *MiSistema);
+        void menuActualizarJugador(SistemaDeportivo *MiSistema);
+        void menuEliminarJugador(SistemaDeportivo *MiSistema);
+        void menuListarJugadores(SistemaDeportivo *MiSistema);
 
         // Muestra jugador con el nombre del equipo (no solo el ID)
         void mostrarJugador(Jugador *jugador, SistemaDeportivo *s);
@@ -2070,7 +2259,6 @@ int main() {
                     // Forzamos la vuelta del bucle
                     opcionMenu = -1;
                 }
-
                 break;
 
             // Gestión de Equipos
