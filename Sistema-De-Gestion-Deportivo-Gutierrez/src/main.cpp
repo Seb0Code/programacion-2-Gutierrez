@@ -1507,13 +1507,42 @@ namespace Logica {
             return listaDeJugadores;
         }
 
-        // Retorna array con todos los jugadores del sistema
-        // El llamador libera el array con delete[]
-        Jugador **listarJugadores(SistemaDeportivo *MiSistema, int *cantidad);
+        Jugador **listarJugadores(SistemaDeportivo *MiSistema, unsigned int *cantidadJugadores) {
+            // inicializamos en 0
+            *cantidadJugadores = 0;
 
-        // Actualiza datos editables de un jugador (no permite cambiar idEquipo)
-        // Retorna true si se actualizó, false si el ID no existe
-        bool actualizarJugador(SistemaDeportivo *MiSistema, int ID, Jugador jugadorActualizado);
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
+                return nullptr;
+            }
+
+            // si no hay equipos cancelamos la busqueda
+            if (MiSistema->numEquiposActuales == 0) {
+                return nullptr;
+            }
+
+            // si no hay jugadores cancelamos la busqueda
+            if (MiSistema->numJugadoresActuales == 0) {
+                return nullptr;
+            }
+
+            // Creamos y reservamos espacio para la lista
+            Jugador **listaDeJugadores = new Jugador *[MiSistema->numJugadoresActuales];
+            (*cantidadJugadores) = MiSistema->numJugadoresActuales;
+
+            // Buscamos y Agregamos los jugadores
+            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
+                // Añadimos la direccion de los jugadores a la lista
+                listaDeJugadores[e] = &(MiSistema->Jugadores[e]);
+            }
+
+            return listaDeJugadores;
+        }
+
+        //
+        bool actualizarJugador(SistemaDeportivo *MiSistema, int ID, Jugador jugadorActualizado) {
+            //
+        }
 
         // Elimina un jugador del sistema
         // Retorna true si se eliminó, false si no existe
@@ -2077,7 +2106,7 @@ namespace Presentacion {
             cout << "Entrenador: " << EqAux->entrenador << endl;
             cout << "Ciudad: " << EqAux->ciudad << endl;
 
-            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea aplicar estos cambios? (S/N): ");
+            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea eliminar este equipo? (S/N): ");
             if (toupper(confirmacion) == 'S') {
                 eliminado = Logica::equipos::eliminarEquipo(MiSistema, ID);
                 if (!eliminado) {
@@ -2102,7 +2131,7 @@ namespace Presentacion {
 
     namespace Jugadores {
 
-        void menuRegistrarJugador(SistemaDeportivo *MiSistema) {
+        void RegistrarJugador(SistemaDeportivo *MiSistema) {
             bool flagError = false;
             char nombreAux[100];
             char cedulaAux[20];
@@ -2397,22 +2426,73 @@ namespace Presentacion {
                 cout << "El equipo '" << equipoBuscado->nombre << "' actualmente no tiene jugadores registrados.\n";
             } else {
                 cout << "╔═══════════════════════════════════════════════════════════════════════════════════╗\n";
-                cout << "║ LISTADO DE JUGADORES DEL EQUIPO: " << std::left << std::setw(50) << equipoBuscado->nombre << " ║\n";
-                cout << "╠════╦══════════════════╦═══════════════╦═════╦═══════════╦═════════════════════════╣\n";
-                cout << "║ ID ║ Nombre           ║ Posición      ║ Edad║ Dorsal    ║                         ║\n";
-                cout << "╠════╬══════════════════╬═══════════════╬═════╬═══════════╬═════════════════════════╣\n";
+                cout << "║ EQUIPO: " << std::left << std::setw(73) << equipoBuscado->nombre << " ║\n";
+                cout << "║ ID DEL EQUIPO: " << std::left << std::setw(66) << equipoBuscado->ID << " ║\n";
+                cout << "╠════╦══════════════════════════════════════════╦═══════════════╦═════╦═══════════╣\n";
+                cout << "║ ID ║ Nombre                                   ║ Posición      ║ Edad║ Dorsal    ║\n";
+                cout << "╠════╬══════════════════════════════════════════╬═══════════════╬═════╬═══════════╣\n";
 
                 // Imprimimos los jugadores
                 for (size_t e = 0; e < cantidadEncontrados; e++) {
-                    cout << "║ " << std::right << std::setw(2) << listaJugadores[e]->ID << " ║ " << std::left << std::setw(16) << listaJugadores[e]->nombre << " ║ " << std::left
+                    cout << "║ " << std::right << std::setw(2) << listaJugadores[e]->ID << " ║ " << std::left << std::setw(40) << listaJugadores[e]->nombre << " ║ " << std::left
                          << std::setw(13) << listaJugadores[e]->posicion << " ║ " << std::right << std::setw(3) << listaJugadores[e]->edad << " ║ [" << std::right << std::setw(2)
-                         << listaJugadores[e]->dorsal << "]       ║" << std::setw(26) << " ║\n";
+                         << listaJugadores[e]->dorsal << "]       ║\n";
                 }
-                cout << "╚════╩══════════════════╩═══════════════╩═════╩═══════════╩═════════════════════════╝\n";
+                cout << "╚════╩══════════════════════════════════════════╩═══════════════╩═════╩═══════════╝\n";
                 cout << " Total de jugadores en el equipo: " << cantidadEncontrados << "\n";
             }
 
             // liberamos
+            if (listaJugadores != nullptr) {
+                delete[] listaJugadores;
+                listaJugadores = nullptr;
+            }
+
+            cout << "\n";
+            Auxiliares::pausarPrograma();
+        }
+
+        void mostrarListaDeJugadores(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+            unsigned int cantidadEncontrados = 0;
+
+            // Encabezado de la sección
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║        LISTADO GENERAL DE JUGADORES       ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            Auxiliares::waitfor(1000);
+            cout << "Cargando todos los jugadores...\n\n";
+
+            // Llamamos a tu función lógica (asumiendo que sigue el mismo patrón de firmas)
+            Jugador **listaJugadores = Logica::jugadores::listarJugadores(MiSistema, &cantidadEncontrados);
+
+            // Validamos si el sistema tiene jugadores cargados
+            if (listaJugadores == nullptr || cantidadEncontrados == 0) {
+                cout << "No existen jugadores registrados en el sistema actualmente.\n";
+            } else {
+                cout << "╔═══════════════════════════════════════════════════════════════════════════════════╗\n";
+                cout << "║ SPORT G&C TOURNAMENTS                                                             ║\n";
+                cout << "║ TORNEO: " << std::left << std::setw(73) << MiSistema->torneo.nombre << " ║\n";
+                cout << "║ LISTA DE JUGADORES REGISTRADOS                                                    ║\n";
+                cout << "╠════╦══════════════════════╦══════════════════════╦═══════════════╦═════╦═══════════╣\n";
+                cout << "║ ID ║ Nombre               ║ Equipo               ║ Posición      ║ Edad║ Dorsal    ║\n";
+                cout << "╠════╬══════════════════════╬══════════════════════╬═══════════════╬═════╬═══════════╣\n";
+
+                // Imprimimos cada jugador en el sistema
+                for (size_t e = 0; e < cantidadEncontrados; e++) {
+                    // Buscamos el equipo en cada iteracion
+                    Equipo *equipoAux = Logica::equipos::buscarEquipoPorID(MiSistema, listaJugadores[e]->IDequipo);
+
+                    cout << "║ " << std::right << std::setw(2) << listaJugadores[e]->ID << " ║ " << std::left << std::setw(20) << listaJugadores[e]->nombre << " ║ " << std::left
+                         << std::setw(20) << equipoAux->nombre << " ║ " << std::left << std::setw(13) << listaJugadores[e]->posicion << " ║ " << std::right << std::setw(3)
+                         << listaJugadores[e]->edad << " ║ [" << std::right << std::setw(2) << listaJugadores[e]->dorsal << "]       ║\n";
+                }
+                cout << "╚════╩══════════════════════╩══════════════════════╩═══════════════╩═════╩═══════════╝\n";
+                cout << " Total de jugadores registrados en el sistema: " << cantidadEncontrados << "\n";
+            }
+
+            // Liberamos la memoria
             if (listaJugadores != nullptr) {
                 delete[] listaJugadores;
                 listaJugadores = nullptr;
