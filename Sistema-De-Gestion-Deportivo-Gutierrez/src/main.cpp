@@ -1729,6 +1729,14 @@ namespace Presentacion {
             unsigned int ID = 0;
             Equipo *EquipoBuscado = nullptr;
             Auxiliares::limpiarPantalla();
+
+            // Si no hay equipos registrados
+            if (MiSistema->numEquiposActuales == 0) {
+                cout << "No hay ningún equipo registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║        BUSQUEDA DE EQUIPOS POR ID         ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
@@ -1761,11 +1769,19 @@ namespace Presentacion {
             Auxiliares::pausarPrograma();
         }
 
-        void buscarEquiposPorSubCadena(SistemaDeportivo *Misistema) {
+        void buscarEquiposPorSubCadena(SistemaDeportivo *MiSistema) {
             Auxiliares::limpiarPantalla();
             int contEquiposEncotrados = 0;
             char subcadena[100];
             Equipo **arrayDePunterosAEquipos = nullptr;
+
+            // Si no hay equipos registrados
+            if (MiSistema->numEquiposActuales == 0) {
+                cout << "No hay ningún equipo registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║      BUSQUEDA DE EQUIPOS POR NOMBRE       ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
@@ -1774,7 +1790,7 @@ namespace Presentacion {
             cout << "Buscando..." << endl;
 
             // Llamamos a la funcion de busqueda
-            arrayDePunterosAEquipos = Logica::equipos::buscarEquipoPorSubCadena(Misistema, subcadena, &contEquiposEncotrados);
+            arrayDePunterosAEquipos = Logica::equipos::buscarEquipoPorSubCadena(MiSistema, subcadena, &contEquiposEncotrados);
 
             Auxiliares::waitfor(1500);
             Auxiliares::limpiarPantalla();
@@ -1901,6 +1917,16 @@ namespace Presentacion {
             unsigned int ID = 0;
             char confirmacion;
 
+            // Si no hay equipos registrados
+            if (MiSistema->numEquiposActuales == 0) {
+                cout << "No hay ningún equipo registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║            ACTUALIZAR EQUIPOS             ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
             // Pedimos el ID del equipo que desean actualizar
             Auxiliares::ingresarDatos(ID, "Ingresa el ID del equipo que desea actualizar: ", Validadores::IDvalido);
 
@@ -1962,6 +1988,13 @@ namespace Presentacion {
             unsigned int ID = 0;
             char confirmacion;
             Equipo *EqAux = nullptr;
+
+            // Si no hay equipos registrados
+            if (MiSistema->numEquiposActuales == 0) {
+                cout << "No hay ningún equipo registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
 
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║             ELIMINAR EQUIPOS              ║\n";
@@ -2204,6 +2237,14 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
             unsigned int ID = 0;
             Jugador *jugadorBuscado = nullptr;
+
+            // Si no hay jugadores registrados
+            if (MiSistema->numJugadoresActuales == 0) {
+                cout << "No hay ningún jugador registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║       BUSQUEDA DE JUGADORES POR ID        ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
@@ -2241,6 +2282,13 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
             char subcadena[100];
             int cantidadEncontrados = 0;
+
+            // Si no hay jugadores registrados
+            if (MiSistema->numJugadoresActuales == 0) {
+                cout << "No hay ningún jugador registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
 
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║      BÚSQUEDA DE JUGADORES POR NOMBRE     ║\n";
@@ -2286,6 +2334,13 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
             unsigned int IDEquipo = 0;
             unsigned int cantidadEncontrados = 0;
+
+            // Si no hay jugadores registrados
+            if (MiSistema->numJugadoresActuales == 0) {
+                cout << "No hay ningún jugador registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
 
             // Pedimos el ID del equipo a consultar
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
@@ -2344,6 +2399,8 @@ namespace Presentacion {
         void mostrarListaDeJugadores(SistemaDeportivo *MiSistema) {
             Auxiliares::limpiarPantalla();
             unsigned int cantidadEncontrados = 0;
+
+
 
             // Encabezado de la sección
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
@@ -2409,6 +2466,17 @@ namespace Presentacion {
             char confirmacion;
             bool actualizado = false;
             bool flagError = false;
+
+            // Si no hay jugadores registrados
+            if (MiSistema->numJugadoresActuales == 0) {
+                cout << "No hay ningún jugador registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Recolectamos el ID del jugador
             Auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que desea actualizar: ", Validadores::IDvalido);
@@ -2545,6 +2613,13 @@ namespace Presentacion {
             unsigned int ID = 0;
             char confirmacion;
 
+            // Si no hay jugadores registrados
+            if (MiSistema->numJugadoresActuales == 0) {
+                cout << "No hay ningún jugador registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║            ELIMINAR JUGADOR               ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
@@ -2615,7 +2690,7 @@ namespace Presentacion {
             cout << "\n       ╔═══════════════════════════════════════════╗\n";
             cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.nombre, 100, "Nombre del Torneo: ", Validadores::Nombres);
+            Auxiliares::ingresarCadena(torneoAux.nombre, 100, "Nombre del Torneo: ", Validadores::nombreTorneo);
             Auxiliares::waitfor(1500);
 
             // Ingresar Deporte
