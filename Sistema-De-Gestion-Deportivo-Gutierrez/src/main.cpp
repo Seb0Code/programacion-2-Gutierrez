@@ -1162,7 +1162,7 @@ namespace Logica {
             Equipo *ptrEquipo = nullptr;
             ptrEquipo = buscarEquipoPorID(MiSistema, ID);
 
-
+            // si no encontro ningun equipo
             if (ptrEquipo == nullptr) {
                 return false;
             }
@@ -1539,14 +1539,77 @@ namespace Logica {
             return listaDeJugadores;
         }
 
-        //
         bool actualizarJugador(SistemaDeportivo *MiSistema, int ID, Jugador jugadorActualizado) {
-            //
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
+                return false;
+            }
+
+            // si no hay equipos cancelamos la busqueda
+            if (MiSistema->numEquiposActuales == 0) {
+                return false;
+            }
+
+            // si no hay jugadores cancelamos la busqueda
+            if (MiSistema->numJugadoresActuales == 0) {
+                return false;
+            }
+
+            // Buscamos el jugador que queremos actualizar
+            Jugador *ptrJugador = buscarJugadorPorID(MiSistema, ID);
+
+            // Si no encontró nada
+            if (ptrJugador == nullptr) {
+                return false;
+            }
+
+            // En caso de que sí, actualizamos el jugador
+            // Solo actualizamos NOMBRE, EDAD, DORSAL O POSICION
+            std::strcpy(ptrJugador->nombre, jugadorActualizado.nombre);
+            std::strcpy(ptrJugador->posicion, jugadorActualizado.posicion);
+            ptrJugador->edad = jugadorActualizado.edad;
+            ptrJugador->dorsal = jugadorActualizado.dorsal;
+
+            return true;
         }
 
-        // Elimina un jugador del sistema
-        // Retorna true si se eliminó, false si no existe
-        bool eliminarJugador(SistemaDeportivo *MiSistema, int ID);
+        // Solo podemos eliminar un jugador si su equipo no ha disputado partidos
+        bool eliminarJugador(SistemaDeportivo *MiSistema, int ID) {
+            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
+            if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
+                return false;
+            }
+
+            int posicion = -1; // -1 porque las posiciones no son negativas
+
+            // Buscamos la posicion del jugador
+            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
+                if (MiSistema->Jugadores[e].ID == ID) {
+                    posicion = e;
+                    break;
+                }
+            }
+
+            // Si no encontró nada
+            if (posicion == -1) {
+                return false;
+            }
+
+            // si ya anotó puntos no lo podemos borrar
+            if (MiSistema->Jugadores[posicion].puntosAnotados > 0) {
+                return false;
+            }
+
+            // Lo eliminamos rodando todos los demas jugadores
+            for (size_t i = posicion; i < MiSistema->numJugadoresActuales - 1; i++) {
+                MiSistema->Jugadores[i] = MiSistema->Jugadores[i + 1];
+            }
+
+            // Reducimos el número de jugadores actuales
+            MiSistema->numJugadoresActuales--;
+
+            return true;
+        }
     } // namespace jugadores
 
     namespace partidos {
@@ -1560,178 +1623,6 @@ namespace Logica {
 // ============================================//
 
 namespace Presentacion {
-
-    namespace menu {
-
-        void datosInicialesTorneo(SistemaDeportivo *MiSistema) {
-            // variables auxiliares
-            Torneo torneoAux;
-            int opcionFormato = 0;
-            bool opcionValida = false;
-
-            //* Aqui se recopilan los datos iniciales del torneo
-
-            // Ingresar Nombre
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.nombre, 100, "Nombre del Torneo: ", Validadores::Nombres);
-            Auxiliares::waitfor(1500);
-
-            // Ingresar Deporte
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-
-            // Mostrar deportes disponibles
-            cout << "Deportes disponibles:\n";
-            for (size_t e = 0; e < Validadores::totalDeportes; e++) {
-                cout << " - " << Validadores::Deportes[e] << std::endl;
-            }
-
-            // Validación externa
-            char mensajeError[150];
-            bool deporteValido = false;
-            do {
-                Auxiliares::ingresarCadena(torneoAux.deporte, 50, "Deporte del Torneo: ");
-                // Normalizamos a mayusculas para facilitar la comparación
-                Auxiliares::toMayus(torneoAux.deporte);
-
-                if (!Validadores::existeDeporte(torneoAux.deporte, mensajeError)) {
-                    cout << "Error: " << mensajeError << std::endl;
-                    Auxiliares::waitfor(2000);
-                    deporteValido = false;
-                } else {
-                    deporteValido = true;
-                }
-            } while (!deporteValido);
-
-            // Definimos el deporte actual en Validadores
-            Validadores::definirDeporteActual(torneoAux.deporte);
-            Auxiliares::waitfor(1500);
-
-            // Ingresar Formato
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            cout << "1. Formato de Grupos (Todos contra todos)\n";
-            cout << "2. Formato de Eliminatoria Directa\n";
-            cout << "--------------------------------------------------\n";
-            do {
-                opcionValida = true;
-                Auxiliares::ingresarDatos(opcionFormato, "Seleccione el formato (1 o 2): ");
-                if (opcionFormato != 1 && opcionFormato != 2) {
-                    cout << "Opcion invalida. Intente de nuevo.\n";
-                    opcionValida = false;
-                }
-            } while (!opcionValida);
-
-            // desde la logica definimos el tipo de torneo en base a la opcion ingresada
-            Logica::definirFormato(torneoAux, opcionFormato);
-            Auxiliares::waitfor(1500);
-
-            // Ingresar Fecha de Inicio del torneo
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneoAux.fechaInicio, 11, "Fecha De Inicio del Torneo: ", Validadores::FechaValida);
-            Validadores::definirFechaInicio(torneoAux.fechaInicio);
-            Auxiliares::waitfor(1500);
-
-            // Ingresar Fecha de Finalizacion de Torneo
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-
-            Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::ValidarFechaFin);
-            Validadores::definirFechaFin(torneoAux.fechaFin);
-            Auxiliares::waitfor(1500);
-            Auxiliares::limpiarPantalla();
-
-            // enviamos los datos
-            Logica::inicializarSistemaDeportivo(MiSistema, torneoAux);
-
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║  NUEVO TORNEO CREADO CON ÉXITO            ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-
-            cout << "Nombre: " << torneoAux.nombre << endl;
-            cout << "Deporte: " << torneoAux.deporte << endl;
-            cout << "Formato: " << torneoAux.formato << endl;
-            cout << "Fecha de inicio del torneo: " << torneoAux.fechaInicio << endl;
-            cout << "Fecha de Finalización del torneo: " << torneoAux.fechaFin;
-            Auxiliares::pausarPrograma();
-        }
-
-        void Principal(SistemaDeportivo *MiSistema) {
-            Auxiliares::limpiarPantalla();
-
-            cout << "\n   ╔══════════════════════════════════════════════════════════════╗\n";
-            cout << "   ║                    Sport G&C Tournaments                     ║\n";
-            cout << "   ║  Torneo:   " << std::left << std::setw(50) << MiSistema->torneo.nombre << "║\n";
-            cout << "   ║  Deporte: " << std::left << std::setw(18) << MiSistema->torneo.deporte << " | Formato: " << std::left << std::setw(21) << MiSistema->torneo.formato
-                 << "║\n";
-            cout << "   ╠══════════════════════════════════════════════════════════════╣\n";
-            cout << "   ║  " << std::left << std::setw(61) << "1. Gestión de Equipos" << "║\n";
-            cout << "   ║  " << std::left << std::setw(61) << "2. Gestión de Jugadores" << "║\n";
-            cout << "   ║  " << std::left << std::setw(61) << "3. Gestión de Partidos" << "║\n";
-            cout << "   ║  " << std::left << std::setw(60) << "4. Tabla de Posiciones" << "║\n";
-            cout << "   ║  " << std::left << std::setw(60) << "0. Salir" << "║\n";
-            cout << "   ╚══════════════════════════════════════════════════════════════╝\n";
-            cout << endl;
-        }
-
-        void GestionDeEquipos() {
-            Auxiliares::limpiarPantalla();
-            cout << "\n   ╔═══════════════════════════════════════════╗\n";
-            cout << "   ║          GESTIÓN DE EQUIPOS               ║\n";
-            cout << "   ╠═══════════════════════════════════════════╣\n";
-            cout << "   ║  1. Registrar equipo                      ║\n";
-            cout << "   ║  2. Buscar equipo                         ║\n";
-            cout << "   ║  3. Actualizar equipo                     ║\n";
-            cout << "   ║  4. Listar equipos                        ║\n";
-            cout << "   ║  5. Eliminar equipo                       ║\n";
-            cout << "   ║  0. Volver al menú principal              ║\n";
-            cout << "   ╚═══════════════════════════════════════════╝\n";
-            cout << endl;
-        }
-
-        void GestionDePartidos() {
-            Auxiliares::limpiarPantalla();
-            cout << "\n   ╔═══════════════════════════════════════════╗\n";
-            cout << "   ║        GESTIÓN DE PARTIDOS                ║\n";
-            cout << "   ╠═══════════════════════════════════════════╣\n";
-            cout << "   ║  1. Programar partido                     ║\n";
-            cout << "   ║  2. Registrar resultado                   ║\n";
-            cout << "   ║  3. Buscar partido                        ║\n";
-            cout << "   ║  4. Listar partidos                       ║\n";
-            cout << "   ║  5. Cancelar partido                      ║\n";
-            cout << "   ║  0. Volver al menú principal              ║\n";
-            cout << "   ╚═══════════════════════════════════════════╝\n";
-            cout << endl;
-        }
-
-        void GestionDeJugadores() {
-            Auxiliares::limpiarPantalla();
-            cout << "\n   ╔═══════════════════════════════════════════╗\n";
-            cout << "   ║        GESTIÓN DE JUGADORES               ║\n";
-            cout << "   ╠═══════════════════════════════════════════╣\n";
-            cout << "   ║  1. Registrar jugador                     ║\n";
-            cout << "   ║  2. Buscar jugador                        ║\n";
-            cout << "   ║  3. Actualizar jugador                    ║\n";
-            cout << "   ║  4. Listar jugadores (todos)              ║\n";
-            cout << "   ║  5. Listar jugadores por equipo           ║\n";
-            cout << "   ║  6. Eliminar jugador                      ║\n";
-            cout << "   ║  0. Volver al menú principal              ║\n";
-            cout << "   ╚═══════════════════════════════════════════╝\n";
-            cout << endl;
-        }
-    } // namespace menu
 
     namespace equipos {
         // Recolectamos los datos para registrar el equipo
@@ -1999,11 +1890,8 @@ namespace Presentacion {
 
         void actualizarEquipo(SistemaDeportivo *MiSistema) {
             Auxiliares::limpiarPantalla();
-
             // Datos Actualizables:
-            // Nombre del Equipo
-            // Nombre del Entrenador
-            // Nombre de la Ciudad
+            // Nombre del Equipo, Nombre del Entrenador, Nombre de la Ciudad
 
             // Variables
             char nombreAux[100];
@@ -2019,6 +1907,7 @@ namespace Presentacion {
             // si no Existe el ID
             if (!Logica::equipos::existeID(MiSistema, ID)) {
                 cout << "Error el ID '" << ID << "' no pertenece a ningún equipo registrado\n";
+                Auxiliares::pausarPrograma();
                 return;
             }
 
@@ -2502,26 +2391,428 @@ namespace Presentacion {
             Auxiliares::pausarPrograma();
         }
 
-        void menuBuscarJugador(SistemaDeportivo *MiSistema) {
-            //
+        void ActualizarJugador(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+            // Datos Actualizables:
+            // Nombre
+            // Edad
+            // Dorsal
+            // Posicion
+
+            // Variables
+            char nombreAux[100];
+            char posicionAux[25];
+            unsigned int edadAux = 0;
+            unsigned short dorsalAux = 0;
+
+            unsigned int ID = 0;
+            char confirmacion;
+            bool actualizado = false;
+            bool flagError = false;
+
+            // Recolectamos el ID del jugador
+            Auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que desea actualizar: ", Validadores::IDvalido);
+
+            // Si no existe el ID del jugador
+            if (!Logica::jugadores::existeID(MiSistema, ID)) {
+                cout << "Error: El ID '" << ID << "' no pertenece a ningún jugador registrado\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Recolectamos el nombre
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nuevo nombre del Jugador: ", Validadores::Nombres);
+            Auxiliares::waitfor(1000);
+            Auxiliares::limpiarPantalla();
+
+            // Recolectamos la Edad
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarDatos(edadAux, "Ingrese la nueva edad del Jugador: ", Validadores::Edad);
+            Auxiliares::waitfor(1000);
+            Auxiliares::limpiarPantalla();
+
+            // Recolectamos la posición
+            do {
+                int opcion = 0;
+                flagError = false;
+                Auxiliares::limpiarPantalla();
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                cout << " Deporte actual del Torneo: " << MiSistema->torneo.deporte << "\n\n";
+
+                const char **matrizDeporteActual = nullptr;
+
+                for (size_t i = 0; i < Validadores::totalDeportes; i++) {
+                    // Recorremos el array de matrices y verificamos lo que hay en la posicion 0
+                    if (std::strcmp(Validadores::MapaDeportes[i][0], MiSistema->torneo.deporte) == 0) {
+                        matrizDeporteActual = Validadores::MapaDeportes[i];
+                        break;
+                    }
+                }
+
+                // Mostramos las posiciones disponibles de esa fila
+                cout << " Seleccione la posición del jugador:\n";
+
+                // Para saber el numero de posiciones del deporte
+                int contadorPosiciones = 0;
+
+                for (size_t j = 1; matrizDeporteActual[j] != nullptr; j++) {
+                    cout << " " << j << ". " << matrizDeporteActual[j] << "\n";
+                    contadorPosiciones++;
+                }
+                cout << "\n";
+
+                Auxiliares::ingresarDatos(opcion, "Seleccione una opción: ");
+
+                // Verificamos que esté en el rango de opciones
+                if (opcion >= 1 && opcion <= contadorPosiciones) {
+                    // si es correcta guardamos la posicion
+                    std::strcpy(posicionAux, matrizDeporteActual[opcion]);
+                } else {
+                    cout << "Error: Opción inválida. Por favor, intente de nuevo.\n";
+                    flagError = true;
+                    Auxiliares::waitfor(2000);
+                }
+            } while (flagError);
+
+            // Recolectamos el dorsal
+            do {
+                flagError = false;
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                Auxiliares::ingresarDatos(dorsalAux, "Ingrese el nuevo dorsal del Jugador: ", Validadores::Dorsal);
+                Auxiliares::waitfor(1000);
+
+                // Buscamos al jugador para obtener el id de su equipo
+                Jugador *jugadorAux = Logica::jugadores::buscarJugadorPorID(MiSistema, ID);
+
+                // Si el dorsal ingresado esta duplicado y es distinto del dorsal actual del jugador
+                if (Logica::jugadores::DorsalDuplicado(MiSistema, dorsalAux, jugadorAux->IDequipo) && dorsalAux != jugadorAux->dorsal) {
+                    cout << "Error: El dorsal '" << dorsalAux << "' ya está en uso\n";
+                    Auxiliares::waitfor(2000);
+                    flagError = true;
+                }
+                Auxiliares::waitfor(1000);
+                Auxiliares::limpiarPantalla();
+            } while (flagError);
+
+
+
+            // Confirmación de los cambios
+            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea actualizar el jugador? (S/N): ");
+
+            if (toupper(confirmacion) == 'S') {
+
+                Jugador jugadorActualizado;
+                std::strcpy(jugadorActualizado.nombre, nombreAux);
+                std::strcpy(jugadorActualizado.posicion, posicionAux);
+                jugadorActualizado.edad = edadAux;
+                jugadorActualizado.dorsal = dorsalAux;
+
+                // Llamamos a la lógica correspondiente de Jugadores
+                actualizado = Logica::jugadores::actualizarJugador(MiSistema, ID, jugadorActualizado);
+
+                // Si no pudo ser actualizado
+                if (!actualizado) {
+                    cout << "Se produjo un error a la hora de actualizar el jugador\n";
+                } else {
+                    cout << "------------------------------------------------------------------------------\n";
+                    cout << "           Jugador Actualizado con Éxito\n";
+                    cout << "------------------------------------------------------------------------------\n";
+                    cout << "Nuevo Nombre:   " << nombreAux << endl;
+                    cout << "Nueva Posición: " << posicionAux << endl;
+                    cout << "Nueva Edad:     " << edadAux << " años" << endl;
+                    cout << "Nuevo Dorsal:   " << dorsalAux << endl;
+                }
+            } else if (toupper(confirmacion) == 'N') {
+                cout << "Actualización de Datos Cancelada\n";
+            } else {
+                cout << "Error: No se ingresó una opción correcta (S/N)\n";
+                cout << "Actualización de Datos Cancelada\n";
+            }
+            Auxiliares::pausarPrograma();
         }
 
-        void menuListarJugadores(SistemaDeportivo *MiSistema) {
-            //
+        void EliminarJugador(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+            unsigned int ID = 0;
+            char confirmacion;
+
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║            ELIMINAR JUGADOR               ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            // Recolectamos el ID
+            Auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que deseas eliminar: ", Validadores::IDvalido);
+
+            // Buscamos al jugador para mostrar sus datos en pantalla antes de continuar
+            Jugador *ptrJugador = Logica::jugadores::buscarJugadorPorID(MiSistema, ID);
+
+            if (ptrJugador == nullptr) {
+                cout << "\nError: El ID '" << ID << "' no pertenece a ningún jugador registrado.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Buscamos el equipo al que pertenece
+            Equipo *ptrEquipo = Logica::equipos::buscarEquipoPorID(MiSistema, ptrJugador->IDequipo);
+
+            // Mostramos el jugador que se va a eliminar
+            cout << "\n Se eliminará el siguiente jugador del sistema:\n";
+            cout << " -----------------------------------------------\n";
+            cout << " Nombre:     " << ptrJugador->nombre << "\n";
+            cout << " Posición:   " << ptrJugador->posicion << "\n";
+            cout << " Dorsal:     " << ptrJugador->dorsal << "\n";
+            cout << " Puntos:     " << ptrJugador->puntosAnotados << "\n";
+
+            // Validacion por si acaso ocurre un error imprevisto (no debería)
+            cout << " Equipo:     " << (ptrEquipo == nullptr ? "ERROR" : ptrEquipo->nombre) << "\n";
+            cout << " -----------------------------------------------\n\n";
+
+            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de eliminar este jugador? (S/N): ");
+
+            if (toupper(confirmacion) == 'S') {
+
+                // Llamamos a la logica
+                bool eliminado = Logica::jugadores::eliminarJugador(MiSistema, ID);
+
+                if (eliminado) {
+                    cout << "\n------------------------------------------------------------------------------\n";
+                    cout << "           Jugador eliminado con éxito\n";
+                    cout << "------------------------------------------------------------------------------\n";
+                } else {
+                    cout << "\nError: No se pudo eliminar al jugador.\nVerifique que no tenga puntos anotados en el torneo.\n";
+                }
+            } else if (toupper(confirmacion) == 'N') {
+                cout << "\nActualización de datos cancelada\n";
+            } else {
+                cout << "\nError: Opción inválida (S/N).\nActualización de datos cancelada.\n";
+            }
+            Auxiliares::pausarPrograma();
         }
 
-        void menuActualizarJugador(SistemaDeportivo *MiSistema);
-        void menuEliminarJugador(SistemaDeportivo *MiSistema);
-
-
-        // Muestra jugador con el nombre del equipo (no solo el ID)
-        void mostrarJugador(Jugador *jugador, SistemaDeportivo *s);
-        void mostrarListaJugadores(Jugador **jugadores, int cantidad, SistemaDeportivo *s);
     } // namespace Jugadores
 
+    namespace menu {
+
+        void datosInicialesTorneo(SistemaDeportivo *MiSistema) {
+            // variables auxiliares
+            Torneo torneoAux;
+            int opcionFormato = 0;
+            bool opcionValida = false;
+
+            //* Aqui se recopilan los datos iniciales del torneo
+
+            // Ingresar Nombre
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(torneoAux.nombre, 100, "Nombre del Torneo: ", Validadores::Nombres);
+            Auxiliares::waitfor(1500);
+
+            // Ingresar Deporte
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            // Mostrar deportes disponibles
+            cout << "Deportes disponibles:\n";
+            for (size_t e = 0; e < Validadores::totalDeportes; e++) {
+                cout << " - " << Validadores::Deportes[e] << std::endl;
+            }
+
+            // Validación externa
+            char mensajeError[150];
+            bool deporteValido = false;
+            do {
+                Auxiliares::ingresarCadena(torneoAux.deporte, 50, "Deporte del Torneo: ");
+                // Normalizamos a mayusculas para facilitar la comparación
+                Auxiliares::toMayus(torneoAux.deporte);
+
+                if (!Validadores::existeDeporte(torneoAux.deporte, mensajeError)) {
+                    cout << "Error: " << mensajeError << std::endl;
+                    Auxiliares::waitfor(2000);
+                    deporteValido = false;
+                } else {
+                    deporteValido = true;
+                }
+            } while (!deporteValido);
+
+            // Definimos el deporte actual en Validadores
+            Validadores::definirDeporteActual(torneoAux.deporte);
+            Auxiliares::waitfor(1500);
+
+            // Ingresar Formato
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            cout << "1. Formato de Grupos (Todos contra todos)\n";
+            cout << "2. Formato de Eliminatoria Directa\n";
+            cout << "--------------------------------------------------\n";
+            do {
+                opcionValida = true;
+                Auxiliares::ingresarDatos(opcionFormato, "Seleccione el formato (1 o 2): ");
+                if (opcionFormato != 1 && opcionFormato != 2) {
+                    cout << "Opcion invalida. Intente de nuevo.\n";
+                    opcionValida = false;
+                }
+            } while (!opcionValida);
+
+            // desde la logica definimos el tipo de torneo en base a la opcion ingresada
+            Logica::definirFormato(torneoAux, opcionFormato);
+            Auxiliares::waitfor(1500);
+
+            // Ingresar Fecha de Inicio del torneo
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            Auxiliares::ingresarCadena(torneoAux.fechaInicio, 11, "Fecha De Inicio del Torneo: ", Validadores::FechaValida);
+            Validadores::definirFechaInicio(torneoAux.fechaInicio);
+            Auxiliares::waitfor(1500);
+
+            // Ingresar Fecha de Finalizacion de Torneo
+            Auxiliares::limpiarPantalla();
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            Auxiliares::ingresarCadena(torneoAux.fechaFin, 11, "Fecha de Finalización del Torneo: ", Validadores::ValidarFechaFin);
+            Validadores::definirFechaFin(torneoAux.fechaFin);
+            Auxiliares::waitfor(1500);
+            Auxiliares::limpiarPantalla();
+
+            // enviamos los datos
+            Logica::inicializarSistemaDeportivo(MiSistema, torneoAux);
+
+            cout << "\n       ╔═══════════════════════════════════════════╗\n";
+            cout << "       ║  NUEVO TORNEO CREADO CON ÉXITO            ║\n";
+            cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+            cout << "Nombre: " << torneoAux.nombre << endl;
+            cout << "Deporte: " << torneoAux.deporte << endl;
+            cout << "Formato: " << torneoAux.formato << endl;
+            cout << "Fecha de inicio del torneo: " << torneoAux.fechaInicio << endl;
+            cout << "Fecha de Finalización del torneo: " << torneoAux.fechaFin;
+            Auxiliares::pausarPrograma();
+        }
+
+        void Principal(SistemaDeportivo *MiSistema) {
+            Auxiliares::limpiarPantalla();
+
+            cout << "\n   ╔══════════════════════════════════════════════════════════════╗\n";
+            cout << "   ║                    Sport G&C Tournaments                     ║\n";
+            cout << "   ║  Torneo:   " << std::left << std::setw(50) << MiSistema->torneo.nombre << "║\n";
+            cout << "   ║  Deporte: " << std::left << std::setw(18) << MiSistema->torneo.deporte << " | Formato: " << std::left << std::setw(21) << MiSistema->torneo.formato
+                 << "║\n";
+            cout << "   ╠══════════════════════════════════════════════════════════════╣\n";
+            cout << "   ║  " << std::left << std::setw(61) << "1. Gestión de Equipos" << "║\n";
+            cout << "   ║  " << std::left << std::setw(61) << "2. Gestión de Jugadores" << "║\n";
+            cout << "   ║  " << std::left << std::setw(61) << "3. Gestión de Partidos" << "║\n";
+            cout << "   ║  " << std::left << std::setw(60) << "4. Tabla de Posiciones" << "║\n";
+            cout << "   ║  " << std::left << std::setw(60) << "0. Salir" << "║\n";
+            cout << "   ╚══════════════════════════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+        void GestionDeEquipos() {
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║          GESTIÓN DE EQUIPOS               ║\n";
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Registrar equipo                      ║\n";
+            cout << "   ║  2. Buscar equipo                         ║\n";
+            cout << "   ║  3. Actualizar equipo                     ║\n";
+            cout << "   ║  4. Listar equipos                        ║\n";
+            cout << "   ║  5. Eliminar equipo                       ║\n";
+            cout << "   ║  0. Volver al menú principal              ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+        void menuBuscarEquipo() {
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║          BUSQUEDA DE EQUIPOS              ║\n";
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Buscar equipo por ID                  ║\n";
+            cout << "   ║  2. Buscar equipo por nombre              ║\n";
+            cout << "   ║  0. Volver al menú anterior               ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+        void menuBuscarJugador() {
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║          BUSQUEDA DE JUGADORES            ║\n";
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Buscar jugador por ID                 ║\n";
+            cout << "   ║  2. Buscar jugador por nombre             ║\n";
+            cout << "   ║  0. Volver al menú anterior               ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+        void GestionDePartidos() {
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║        GESTIÓN DE PARTIDOS                ║\n";
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Programar partido                     ║\n";
+            cout << "   ║  2. Registrar resultado                   ║\n";
+            cout << "   ║  3. Buscar partido                        ║\n";
+            cout << "   ║  4. Listar partidos                       ║\n";
+            cout << "   ║  5. Cancelar partido                      ║\n";
+            cout << "   ║  0. Volver al menú principal              ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+        void GestionDeJugadores() {
+            Auxiliares::limpiarPantalla();
+            cout << "\n   ╔═══════════════════════════════════════════╗\n";
+            cout << "   ║        GESTIÓN DE JUGADORES               ║\n";
+            cout << "   ╠═══════════════════════════════════════════╣\n";
+            cout << "   ║  1. Registrar jugador                     ║\n";
+            cout << "   ║  2. Buscar jugador                        ║\n";
+            cout << "   ║  3. Actualizar jugador                    ║\n";
+            cout << "   ║  4. Listar jugadores (todos)              ║\n";
+            cout << "   ║  5. Listar jugadores por equipo           ║\n";
+            cout << "   ║  6. Eliminar jugador                      ║\n";
+            cout << "   ║  0. Volver al menú principal              ║\n";
+            cout << "   ╚═══════════════════════════════════════════╝\n";
+            cout << endl;
+        }
+
+    } // namespace menu
+
     void mensajeSalida() {
+        Auxiliares::limpiarPantalla();
         cout << "Saliendo...";
         Auxiliares::waitfor(3500);
+    }
+
+    void mensajeMenuPrincipal() {
+        Auxiliares::limpiarPantalla();
+        cout << "Volviendo al Menú Principal...";
+        Auxiliares::waitfor(3000);
+    }
+
+    void mensajeMenuAnterior() {
+        Auxiliares::limpiarPantalla();
+        cout << "Volviendo al menu anterior...";
+        Auxiliares::waitfor(3000);
     }
 
     void mensajeDefault() {
@@ -2548,12 +2839,13 @@ int main() {
     Torneo MiTorneo;
 
     // Punteros
-    SistemaDeportivo *PtrMiSistema = &MiSistema;
-    Torneo *PtrMiTorneo = &MiTorneo;
+    SistemaDeportivo *ptrMiSistema = &MiSistema;
+    Torneo *ptrMiTorneo = &MiTorneo;
 
     // Variables Estaticas
-    int opcionMenu = -1;    // declaramos en -1 para evitar que coincida con una de las opciones
-    int opcionSubMenu = -1; // declaramos en -1 para evitar que coincida con una de las opciones
+    int opcionMenu = -1;     // declaramos en -1 para evitar que coincida con una de las opciones
+    int opcionSubMenu = -1;  // declaramos en -1 para evitar que coincida con una de las opciones
+    int opcionMenuBusq = -1; // declaramos en -1 para evitar que coincida con una de las opciones
     bool loginMenu = false;
     char confirmacion;
 
@@ -2561,7 +2853,7 @@ int main() {
     // (no duplicar aquí para evitar inconsistencias)
 
     // Inicio del Programa
-    Presentacion::menu::datosInicialesTorneo(PtrMiSistema);
+    Presentacion::menu::datosInicialesTorneo(ptrMiSistema);
 
     // Estructura del switch
     do {
@@ -2569,10 +2861,9 @@ int main() {
         loginMenu = false;
         opcionMenu = -1;
         opcionSubMenu = -1;
-        Auxiliares::limpiarPantalla();
 
         // Presentamos el menu principal
-        Presentacion::menu::Principal(PtrMiSistema);
+        Presentacion::menu::Principal(ptrMiSistema);
         Auxiliares::ingresarDatos(opcionMenu, "Seleccione una opcion: ", Validadores::Positivo);
 
         switch (opcionMenu) {
@@ -2591,7 +2882,6 @@ int main() {
                     cout << "Error: No se ingresó una opción correcta (S/N)\n";
                     cout << "Salida del Programa Cancelada\n";
                     Auxiliares::waitfor(3000);
-                    Auxiliares::limpiarPantalla();
                     // Forzamos la vuelta del bucle
                     opcionMenu = -1;
                 }
@@ -2604,9 +2894,66 @@ int main() {
                 Auxiliares::limpiarPantalla();
                 cout << "Ingresando al apartado de Gestión de Equipos..." << endl;
                 Auxiliares::waitfor(3000);
-                Auxiliares::limpiarPantalla();
-                Presentacion::menu::GestionDeEquipos();
-                Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
+
+                do {
+                    opcionSubMenu = -1;
+                    opcionMenuBusq = -1;
+                    Presentacion::menu::GestionDeEquipos();
+                    Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione una opcion: ", Validadores::Positivo);
+
+                    switch (opcionSubMenu) {
+                        case 0: // Volver al menu Principal
+                            Presentacion::mensajeMenuPrincipal();
+                            break;
+
+
+                        case 1: // Registrar nuevos equipos
+                            Presentacion::equipos::RegistrarEquipos(ptrMiSistema);
+                            break;
+
+                        case 2: // Menu Buscar equipos
+                            do {
+                                opcionMenuBusq = -1;
+                                Presentacion::menu::menuBuscarEquipo();
+                                Auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", Validadores::Positivo);
+
+                                switch (opcionMenuBusq) {
+                                    case 0: // Volver al menu anterior
+                                        Presentacion::mensajeMenuAnterior();
+                                        break;
+
+                                    case 1: // Busqueda por ID
+                                        Presentacion::equipos::buscarEquipoPorID(ptrMiSistema);
+                                        break;
+
+                                    case 2: // Busqueda por nombre
+                                        Presentacion::equipos::buscarEquiposPorSubCadena(ptrMiSistema);
+                                        break;
+
+                                    default:
+                                        Presentacion::mensajeDefault();
+                                }
+                            } while (opcionMenuBusq != -1);
+
+                            break;
+
+                        case 3: // Actualizar Equipos
+                            Presentacion::equipos::actualizarEquipo(ptrMiSistema);
+                            break;
+
+                        case 4: // Listar Equipos
+                            Presentacion::equipos::listarEquipos(ptrMiSistema);
+                            break;
+
+                        case 5: // Eliminar Equipos
+                            Presentacion::equipos::eliminarEquipo(ptrMiSistema);
+                            break;
+
+                        default:
+                            Presentacion::mensajeDefault();
+                    }
+                } while (opcionSubMenu != 0);
+
                 break;
 
             // Gestión de Jugadores
@@ -2616,9 +2963,67 @@ int main() {
                 Auxiliares::limpiarPantalla();
                 cout << "Ingresando al apartado de Gestión de Jugadores..." << endl;
                 Auxiliares::waitfor(3000);
-                Auxiliares::limpiarPantalla();
-                Presentacion::menu::GestionDeJugadores();
-                Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
+
+                do {
+                    Auxiliares::limpiarPantalla();
+                    opcionSubMenu = -1;
+                    Presentacion::menu::GestionDeJugadores();
+                    Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
+
+                    switch (opcionSubMenu) {
+                        case 0: // Volver al menu Principal
+                            Presentacion::mensajeMenuPrincipal();
+                            break;
+
+                        case 1: // Registrar nuevos jugadores
+                            Presentacion::Jugadores::RegistrarJugador(ptrMiSistema);
+                            break;
+
+                        case 2: // Menu Buscar jugadores
+                            do {
+                                opcionMenuBusq = -1;
+                                Presentacion::menu::menuBuscarJugador();
+                                Auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", Validadores::Positivo);
+
+                                switch (opcionMenuBusq) {
+                                    case 0: // Volver al menu anterior
+                                        Presentacion::mensajeMenuAnterior();
+                                        break;
+
+                                    case 1: // Busqueda por ID
+                                        Presentacion::Jugadores::buscarJugadorID(ptrMiSistema);
+                                        break;
+
+                                    case 2: // Busqueda por nombre
+                                        Presentacion::Jugadores::buscarJugadorPorNombre(ptrMiSistema);
+                                        break;
+
+                                    default:
+                                        Presentacion::mensajeDefault();
+                                }
+                            } while (opcionMenuBusq != -1);
+                            break;
+
+                        case 3: // Actualizar Jugador
+                            Presentacion::Jugadores::ActualizarJugador(ptrMiSistema);
+                            break;
+
+                        case 4: // Listar todos los jugadores
+                            Presentacion::Jugadores::mostrarListaDeJugadores(ptrMiSistema);
+                            break;
+
+                        case 5: // Listar Jugadores por Equipos
+                            Presentacion::Jugadores::mostrarJugadoresPorEquipo(ptrMiSistema);
+                            break;
+
+                        case 6: // Eliminar jugador
+                            Presentacion::Jugadores::EliminarJugador(ptrMiSistema);
+                            break;
+
+                        default:
+                            Presentacion::mensajeDefault();
+                    }
+                } while (opcionSubMenu != 0);
                 break;
 
             // Gestión de Partidos
@@ -2628,7 +3033,6 @@ int main() {
                 Auxiliares::limpiarPantalla();
                 cout << "Ingresando al apartado de Gestión de Partidos..." << endl;
                 Auxiliares::waitfor(3000);
-                Auxiliares::limpiarPantalla();
                 Presentacion::menu::GestionDePartidos();
                 Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", Validadores::Positivo);
                 break;
@@ -2641,6 +3045,7 @@ int main() {
                 cout << "Ingresando al apartado de Tabla de Posiciones..." << endl;
                 Auxiliares::waitfor(3000);
                 Auxiliares::limpiarPantalla();
+                Presentacion::equipos::mostrarTablaDePosiciones(ptrMiSistema);
                 break;
 
             // Si no se selecciona una opcion correcta enviamos un mensaje de aviso
@@ -2651,5 +3056,5 @@ int main() {
     } while (opcionMenu != 0);
 
     // liberar memoria y cierre del programa
-    Logica::liberarSistema(PtrMiSistema);
+    Logica::liberarSistema(ptrMiSistema);
 }
