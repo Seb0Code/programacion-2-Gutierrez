@@ -28,45 +28,37 @@ using std::endl;
 // ============================================//
 
 struct Jugador {
-    unsigned int ID;                 // Id del jugador
-    char nombre[100];                // nombre completo del jugador
-    unsigned int edad;               // edad del jugador
-    char cedula[20];                 // cedula del jugador
-    unsigned int IDequipo;           // Id del equipo al que pertenece
-    unsigned short dorsal;           // dorsal del jugador
-    char posicion[25];               // posicion del jugador segun el deporte
-    char fechaRegistro[11];          // fecha de registro del jugador en formato YYYY-MM-DD
-    unsigned int puntosAnotados = 0; // puntos que anotó el jugador
-};
-
-struct ArbitroCentral {
-    char nombre[100];       // nombre completo del arbitro
-    unsigned int edad;      // edad del arbitro
-    char cedula[20];        // cedula del arbitro
-    unsigned int ID;        // Id del arbitro
-    char fechaRegistro[11]; // fecha de registro del arbitro en formato YYYY-MM-DD
+    int ID;                 // Id del jugador
+    char nombre[100];       // nombre completo del jugador
+    int edad;               // edad del jugador
+    char cedula[20];        // cedula del jugador
+    int IDequipo;           // Id del equipo al que pertenece
+    int dorsal;             // dorsal del jugador
+    char posicion[25];      // posicion del jugador segun el deporte
+    char fechaRegistro[11]; // fecha de registro del jugador en formato YYYY-MM-DD
+    int puntosAnotados = 0; // puntos que anotó el jugador
 };
 
 struct Equipo {
-    unsigned int ID;                 // Id del equipo
-    char nombre[100];                // nombre completo del equipo
-    char ciudad[100];                // ciudad de origen del equipo
-    char entrenador[100];            // nombre completo del entrenador
-    char fechaRegistro[11];          // fecha de registro del equipo en Formato: YYYY-MM-DD
-    unsigned int jugados = 0;        // Partidos jugados
-    unsigned int puntos = 0;         // puntos del equipo
-    unsigned int victorias = 0;      // victorias conseguidas
-    unsigned int derrotas = 0;       // derrotas conseguidas
-    unsigned int empates = 0;        // empates conseguidos
-    unsigned int puntosAFavor = 0;   // capacidad de puntos a favor
-    unsigned int puntosEnContra = 0; // capacidad de puntos en contra
-    unsigned int numJugadores = 0;   // Numero de jugadores del equipo
+    int ID;                 // Id del equipo
+    char nombre[100];       // nombre completo del equipo
+    char ciudad[100];       // ciudad de origen del equipo
+    char entrenador[100];   // nombre completo del entrenador
+    char fechaRegistro[11]; // fecha de registro del equipo en Formato: YYYY-MM-DD
+    int jugados = 0;        // Partidos jugados
+    int puntos = 0;         // puntos del equipo
+    int victorias = 0;      // victorias conseguidas
+    int derrotas = 0;       // derrotas conseguidas
+    int empates = 0;        // empates conseguidos
+    int puntosAFavor = 0;   // capacidad de puntos a favor
+    int puntosEnContra = 0; // capacidad de puntos en contra
+    int numJugadores = 0;   // Numero de jugadores del equipo
 };
 
 struct Partido {
-    int id;                  // Id del partido
-    int idEquipoLocal;       // ID del equipo local
-    int idEquipoVisitante;   // ID del equipo visitante
+    int ID;                  // Id del partido
+    int IDEquipoLocal;       // ID del equipo local
+    int IDEquipoVisitante;   // ID del equipo visitante
     int puntosLocal = 0;     // puntos del equipo local
     int puntosVisitante = 0; // puntos del equipo visitante
     char fecha[11];          // fecha en la que se jugó el partido en Formato YYYY-MM-DD
@@ -261,6 +253,41 @@ namespace Auxiliares {
 
 namespace Validadores {
 
+    // =======================================================================================//
+    // Declaracion de arrays y variables que serán usados para algunas validaciones          //
+    // =======================================================================================//
+
+    const char *Deportes[] = {"FUTBOL", "BALONCESTO", "TENIS", "VOLEIBOL", "RUGBY", "BEISBOL", "HOCKEY", "HANDBALL", "SOFTBOL"};
+
+    // Definimos nuestros punteros a arrays de literales para cada deporte iniciando con el nombre del deporte
+    const char *MatrizFutbol[] = {"FUTBOL", "PORTERO", "DEFENSA", "MEDIOCAMPISTA", "DELANTERO", nullptr};
+    const char *MatrizBasket[] = {"BALONCESTO", "BASE", "ESCOLTA", "ALERO", "ALA-PIVOT", "PIVOT", nullptr};
+    const char *MatrizVoleibol[] = {"VOLEIBOL", "COLOCADOR", "PUNTA", "CENTRAL", "LIBERO", "OPUESTO", nullptr};
+    const char *MatrizBeisbol[] = {"BEISBOL", "LANZADOR", "RECEPTOR", "INFIELDER", "OUTFIELDER", nullptr};
+    const char *MatrizSoftbol[] = {"SOFTBOL", "LANZADOR", "RECEPTOR", "INFIELDER", "OUTFIELDER", nullptr};
+    const char *MatrizHandball[] = {"HANDBALL", "PORTERO", "CENTRAL", "LATERAL", "EXTREMO", "PIVOTE", nullptr};
+    const char *MatrizHockey[] = {"HOCKEY", "PORTERO", "DEFENSA", "MEDIOCAMPISTA", "DELANTERO", nullptr};
+    const char *MatrizRugby[] = {"RUGBY", "DELANTERO", "RETAGUARDIA", "MEDIO", nullptr};
+    const char *MatrizTenis[] = {"TENIS", "INDIVIDUAL", "DOBLES", nullptr};
+
+    const char **MapaDeportes[] = {MatrizFutbol, MatrizBasket, MatrizVoleibol, MatrizBeisbol, MatrizSoftbol, MatrizHandball, MatrizHockey, MatrizRugby, MatrizTenis};
+
+    const size_t totalDeportes = sizeof(MapaDeportes) / sizeof(MapaDeportes[0]);
+
+
+    // Arreglo para el minimo de jugadores para poder jugar un partido
+    const int MinimoJugadoresPorDeporte[] = {
+        11, // FUTBOL
+        5,  // BALONCESTO
+        1,  // TENIS (Individual)
+        6,  // VOLEIBOL
+        15, // RUGBY
+        9,  // BEISBOL
+        6,  // HOCKEY (Sobre hielo/pista estándar mínimo de inicio)
+        7,  // HANDBALL
+        9   // SOFTBOL
+    };
+
     char deporteActual[50] = "";
     char fechaDeIni[11];
     char fechaDeFin[11];
@@ -383,7 +410,7 @@ namespace Validadores {
         return true;
     }
 
-    bool IDvalido(const unsigned int id, char *mensajeError) {
+    bool IDvalido(const int id, char *mensajeError) {
         if (id <= 0) {
             std::strcpy(mensajeError, "Error: El ID debe ser mayor a 0");
             return false;
@@ -391,7 +418,7 @@ namespace Validadores {
         return true;
     }
 
-    bool Edad(const unsigned int edad, char *mensajeError) {
+    bool Edad(const int edad, char *mensajeError) {
         // la edad no puede ser negativa ni igual a 0, tampoco puede ser mayor a 120
         if (edad < 14 || edad > 50) {
             // asignamos la siguiente cadena de texto a el array de char
@@ -401,7 +428,7 @@ namespace Validadores {
         return true;
     }
 
-    bool Dorsal(const unsigned short dorsal, char *mensajeError) {
+    bool Dorsal(const int dorsal, char *mensajeError) {
         if (dorsal < 1 || dorsal > 99) {
             // std:strcpy copia el mensaje del segundo parametro dentro de un const char*
             std::strcpy(mensajeError, "El dorsal debe esta entre un rango de 1-99");
@@ -613,27 +640,6 @@ namespace Validadores {
 
         return true;
     }
-
-    // =======================================================================================//
-    // Declaracion de arrays y variables que serán usados para algunas validaciones          //
-    // =======================================================================================//
-
-    const char *Deportes[] = {"FUTBOL", "BALONCESTO", "TENIS", "VOLEIBOL", "RUGBY", "BEISBOL", "HOCKEY", "HANDBALL", "SOFTBOL"};
-
-    // Definimos nuestros punteros a arrays de literales para cada deporte iniciando con el nombre del deporte
-    const char *MatrizFutbol[] = {"FUTBOL", "PORTERO", "DEFENSA", "MEDIOCAMPISTA", "DELANTERO", nullptr};
-    const char *MatrizBasket[] = {"BALONCESTO", "BASE", "ESCOLTA", "ALERO", "ALA-PIVOT", "PIVOT", nullptr};
-    const char *MatrizVoleibol[] = {"VOLEIBOL", "COLOCADOR", "PUNTA", "CENTRAL", "LIBERO", "OPUESTO", nullptr};
-    const char *MatrizBeisbol[] = {"BEISBOL", "LANZADOR", "RECEPTOR", "INFIELDER", "OUTFIELDER", nullptr};
-    const char *MatrizSoftbol[] = {"SOFTBOL", "LANZADOR", "RECEPTOR", "INFIELDER", "OUTFIELDER", nullptr};
-    const char *MatrizHandball[] = {"HANDBALL", "PORTERO", "CENTRAL", "LATERAL", "EXTREMO", "PIVOTE", nullptr};
-    const char *MatrizHockey[] = {"HOCKEY", "PORTERO", "DEFENSA", "MEDIOCAMPISTA", "DELANTERO", nullptr};
-    const char *MatrizRugby[] = {"RUGBY", "DELANTERO", "RETAGUARDIA", "MEDIO", nullptr};
-    const char *MatrizTenis[] = {"TENIS", "INDIVIDUAL", "DOBLES", nullptr};
-
-    const char **MapaDeportes[] = {MatrizFutbol, MatrizBasket, MatrizVoleibol, MatrizBeisbol, MatrizSoftbol, MatrizHandball, MatrizHockey, MatrizRugby, MatrizTenis};
-
-    const size_t totalDeportes = sizeof(MapaDeportes) / sizeof(MapaDeportes[0]);
 
     // Función para validar si un deporte está en la lista (usa mensaje de error estilo original)
     bool existeDeporte(const char *deporte, char *mensajeError) {
@@ -863,7 +869,7 @@ namespace Logica {
 
     namespace equipos {
 
-        bool existeID(SistemaDeportivo *MiSistema, const unsigned int ID) {
+        bool existeID(SistemaDeportivo *MiSistema, const int ID) {
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
                 return false;
@@ -973,7 +979,7 @@ namespace Logica {
             return &(MiSistema->Equipos[indice]);
         }
 
-        Equipo *buscarEquipoPorID(SistemaDeportivo *MiSistema, const unsigned int id) {
+        Equipo *buscarEquipoPorID(SistemaDeportivo *MiSistema, const int id) {
 
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
@@ -1033,7 +1039,7 @@ namespace Logica {
             return arrayEquiposEncontrados;
         }
 
-        Equipo **listarEquipos(SistemaDeportivo *MiSistema, unsigned int *cantEquipos) {
+        Equipo **listarEquipos(SistemaDeportivo *MiSistema, int *cantEquipos) {
 
             // inicializamos en 0 por si no pasa las validaciones
             *cantEquipos = 0;
@@ -1060,7 +1066,7 @@ namespace Logica {
             return listaDePtrAEquipos;
         }
 
-        Equipo **TablaDePosiciones(SistemaDeportivo *MiSistema, unsigned int *cantEquipos) {
+        Equipo **TablaDePosiciones(SistemaDeportivo *MiSistema, int *cantEquipos) {
             // inicializamos en 0 por si no pasa las validaciones
             *cantEquipos = 0;
             int difPtsEq1 = 0, difPtsEq2 = 0;
@@ -1149,7 +1155,7 @@ namespace Logica {
             return listaDePtrAEquipos;
         }
 
-        bool actualizarEquipo(SistemaDeportivo *MiSistema, const unsigned int ID, const char *nombre, const char *entrenador, const char *ciudad) {
+        bool actualizarEquipo(SistemaDeportivo *MiSistema, const int ID, const char *nombre, const char *entrenador, const char *ciudad) {
 
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
@@ -1178,7 +1184,7 @@ namespace Logica {
             return true;
         }
 
-        bool eliminarEquipo(SistemaDeportivo *MiSistema, const unsigned int ID) {
+        bool eliminarEquipo(SistemaDeportivo *MiSistema, const int ID) {
 
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (MiSistema == nullptr || MiSistema->Equipos == nullptr) {
@@ -1208,7 +1214,7 @@ namespace Logica {
 
             // Verificamos que no tenga partidos asociados
             for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                if ((MiSistema->Partidos[e].idEquipoLocal == ID) || (MiSistema->Partidos[e].idEquipoVisitante == ID)) {
+                if ((MiSistema->Partidos[e].IDEquipoLocal == ID) || (MiSistema->Partidos[e].IDEquipoVisitante == ID)) {
                     return false;
                 }
             }
@@ -1249,7 +1255,7 @@ namespace Logica {
 
     namespace jugadores {
 
-        bool existeID(SistemaDeportivo *MiSistema, const unsigned int ID) {
+        bool existeID(SistemaDeportivo *MiSistema, const int ID) {
 
             // Verificamos que todo este inicializado por precaucion
             if (MiSistema == nullptr || MiSistema->Equipos == nullptr || MiSistema->Jugadores == nullptr) {
@@ -1298,7 +1304,7 @@ namespace Logica {
             return false;
         }
 
-        bool DorsalDuplicado(SistemaDeportivo *MiSistema, unsigned short Dorsal, const unsigned int IDequipo) {
+        bool DorsalDuplicado(SistemaDeportivo *MiSistema, int Dorsal, const int IDequipo) {
 
             // Verificamos que todo este inicializado por precaucion
             if (MiSistema == nullptr || MiSistema->Equipos == nullptr || MiSistema->Jugadores == nullptr) {
@@ -1341,8 +1347,8 @@ namespace Logica {
             return false;
         }
 
-        Jugador *agregarJugador(SistemaDeportivo *MiSistema, const unsigned int IDEquipo, const char *nombre, const char *cedula, const char *posicion, const int unsigned edad,
-                                const unsigned short numeroDorsal, const char *fechaRegistro) {
+        Jugador *agregarJugador(SistemaDeportivo *MiSistema, const int IDEquipo, const char *nombre, const char *cedula, const char *posicion, const int edad,
+                                const int numeroDorsal, const char *fechaRegistro) {
 
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
@@ -1387,7 +1393,7 @@ namespace Logica {
             return &(MiSistema->Jugadores[indice]);
         }
 
-        Jugador *buscarJugadorPorID(SistemaDeportivo *MiSistema, const unsigned int ID) {
+        Jugador *buscarJugadorPorID(SistemaDeportivo *MiSistema, const int ID) {
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr) {
                 return nullptr;
@@ -1458,7 +1464,7 @@ namespace Logica {
             return listaDeJugadoresEncontrados;
         }
 
-        Jugador **listarJugadoresPorEquipo(SistemaDeportivo *MiSistema, const unsigned int IDEquipo, unsigned int *cantidadJugadores) {
+        Jugador **listarJugadoresPorEquipo(SistemaDeportivo *MiSistema, const int IDEquipo, int *cantidadJugadores) {
 
             // inicializamos en 0
             *cantidadJugadores = 0;
@@ -1510,7 +1516,7 @@ namespace Logica {
             return listaDeJugadores;
         }
 
-        Jugador **listarJugadores(SistemaDeportivo *MiSistema, unsigned int *cantidadJugadores) {
+        Jugador **listarJugadores(SistemaDeportivo *MiSistema, int *cantidadJugadores) {
             // inicializamos en 0
             *cantidadJugadores = 0;
 
@@ -1616,8 +1622,111 @@ namespace Logica {
     } // namespace jugadores
 
     namespace partidos {
-        //
-    }
+
+        int minJugadoresPorDeporte() {
+            for (size_t e = 0; e < Validadores::totalDeportes; e++) {
+                if (std::strcmp(Validadores::Deportes[e], Validadores::deporteActual) == 0) {
+                    return Validadores::MinimoJugadoresPorDeporte[e];
+                }
+            }
+            return 1;
+        }
+
+        const char *estadoPartidos[] = {"PROGRAMADO", "JUGADO", "CANCELADO"};
+
+        // Programa un partido entre dos equipos
+        // Valida: ambos equipos existen, no son el mismo, no tienen partido ya programado entre sí
+        // Retorna puntero al partido creado, o nullptr si falla alguna validación
+        Partido *programarPartido(SistemaDeportivo *MiSistema, int IDLocal, int IDVisitante, const char *fecha, const char *descripcion) {
+            // Si el sistema no está definido ni los equipos ni los jugadores
+            if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr || fecha == nullptr || descripcion == nullptr) {
+                return nullptr;
+            }
+
+            // Si no hay al menos 2 equipos no se puede programar un partido
+            // ! Declarar tambien en la presentacion
+            if (MiSistema->numEquiposActuales <= 1) {
+                return nullptr;
+            }
+
+            // No se puede programar un partido entre el mismo equipo
+            if (IDLocal == IDVisitante) {
+                return nullptr;
+            }
+
+            // Si los equipos no existen
+            Equipo *EquipoLocal = Logica::equipos::buscarEquipoPorID(MiSistema, IDLocal);
+            Equipo *EquipoVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, IDVisitante);
+
+            // Si uno de los dos equipos no existe cancelamos
+            if (EquipoLocal == nullptr || EquipoVisitante == nullptr) {
+                return nullptr;
+            }
+
+            // Si tienen partidos programados entre sí
+            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
+                bool tienePartidoEntreSi = ((MiSistema->Partidos[e].IDEquipoLocal == IDLocal) && (MiSistema->Partidos[e].IDEquipoVisitante == IDVisitante) ||
+                                            (MiSistema->Partidos[e].IDEquipoLocal == IDVisitante) && (MiSistema->Partidos[e].IDEquipoVisitante == IDLocal));
+
+                // Si ya hay un partido programado entre ellos
+                if (tienePartidoEntreSi && (std::strcmp(MiSistema->Partidos[e].estado, estadoPartidos[0]) == 0)) {
+                    return nullptr;
+                }
+            }
+
+            // Alamacenamos en una variable la nueva posición del partido
+            size_t nuevaPosicion = MiSistema->numPartidosActuales;
+
+            // Procedemos a programar el partido
+            MiSistema->Partidos[nuevaPosicion].ID = MiSistema->siguienteIdPartido;
+            MiSistema->Partidos[nuevaPosicion].IDEquipoLocal = IDLocal;
+            MiSistema->Partidos[nuevaPosicion].IDEquipoVisitante = IDVisitante;
+            std::strcpy(MiSistema->Partidos[nuevaPosicion].fecha, fecha);
+            std::strcpy(MiSistema->Partidos[nuevaPosicion].descripcion, descripcion);
+
+            // Asignamos los valores iniciales
+            std::strcpy(MiSistema->Partidos[nuevaPosicion].estado, estadoPartidos[0]); // PROGRAMADO
+            MiSistema->Partidos[nuevaPosicion].puntosLocal = 0;
+            MiSistema->Partidos[nuevaPosicion].puntosVisitante = 0;
+
+            // Aumentamos el numero de partidos
+            MiSistema->numPartidosActuales++;
+            // Aumentamos el ID enseguida
+            MiSistema->siguienteIdPartido++;
+
+            return &(MiSistema->Partidos[nuevaPosicion]);
+        }
+
+        // Registra el resultado de un partido PROGRAMADO
+        // Actualiza estado a "JUGADO" y recalcula estadísticas de ambos equipos:
+        //   Victoria local  → local  +3 pts, +1 victoria  / visitante +1 derrota
+        //   Empate          → ambos  +1 pt,  +1 empate
+        //   Victoria visit. → visit. +3 pts, +1 victoria  / local     +1 derrota
+        //   Siempre actualizar puntosAFavor y puntosEnContra de ambos
+        // Retorna puntero al partido actualizado, o nullptr si no existe o ya fue jugado
+        Partido *registrarResultado(SistemaDeportivo *s, int idPartido, int puntosLocal, int puntosVisitante);
+
+        // Retorna puntero al partido con ese ID, o nullptr si no existe
+        Partido *buscarPartidoPorID(SistemaDeportivo *s, int id);
+
+        // Retorna array de partidos en los que participó el equipo (como local o visitante)
+        // Escribe la cantidad en *cantidad
+        // El llamador libera el array con delete[]
+        Partido **buscarPartidosPorEquipo(SistemaDeportivo *s, int idEquipo, int *cantidad);
+
+        // Retorna array de partidos con ese estado ("PROGRAMADO", "JUGADO", "CANCELADO")
+        // El llamador libera el array con delete[]
+        Partido **listarPartidosPorEstado(SistemaDeportivo *s, const char *estado, int *cantidad);
+
+        // Retorna array con todos los partidos
+        // El llamador libera el array con delete[]
+        Partido **listarPartidos(SistemaDeportivo *s, int *cantidad);
+
+        // Cancela un partido: cambia estado a "CANCELADO"
+        // Si el partido ya fue JUGADO, revierte las estadísticas de ambos equipos
+        // Retorna true si se canceló, false si no existe o ya estaba cancelado
+        bool cancelarPartido(SistemaDeportivo *s, int idPartido);
+    } // namespace partidos
 
 } // namespace Logica
 
@@ -1732,7 +1841,7 @@ namespace Presentacion {
         }
 
         void buscarEquipoPorID(SistemaDeportivo *MiSistema) {
-            unsigned int ID = 0;
+            int ID = 0;
             Equipo *EquipoBuscado = nullptr;
             Auxiliares::limpiarPantalla();
 
@@ -1834,7 +1943,7 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
 
             // Inicializamos las variables a utilizar
-            unsigned int cantEquipos = 0;
+            int cantEquipos = 0;
             Equipo **listaDePtrAEquipos = nullptr;
 
             // llamamos a la funcion que nos devuelve la lista de punteros
@@ -1878,7 +1987,7 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
 
             // Inicializamos las variables a utilizar
-            unsigned int cantEquipos = 0;
+            int cantEquipos = 0;
             Equipo **TablaDePosiciones = nullptr;
 
             TablaDePosiciones = Logica::equipos::TablaDePosiciones(MiSistema, &cantEquipos);
@@ -1926,7 +2035,7 @@ namespace Presentacion {
             char entrenadorAux[100];
             char ciudadAux[100];
             bool actualizado = false;
-            unsigned int ID = 0;
+            int ID = 0;
             char confirmacion;
 
             // Si no hay equipos registrados
@@ -1999,7 +2108,7 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
 
             bool eliminado = false;
-            unsigned int ID = 0;
+            int ID = 0;
             char confirmacion;
             Equipo *EqAux = nullptr;
 
@@ -2072,14 +2181,14 @@ namespace Presentacion {
             bool flagError = false;
             char nombreAux[100];
             char cedulaAux[20];
-            unsigned int edadAux = 0;
+            int edadAux = 0;
             char fechaAux[11];
             Jugador *nuevo = nullptr;
             char confirmacion;
-            unsigned short dorsal = 0;
+            int dorsal = 0;
             int opcion = 0;
             char posicionAux[25];
-            unsigned int IDEquipoAux = 0;
+            int IDEquipoAux = 0;
 
             // Si no hay equipos registrados
             if (MiSistema->numEquiposActuales == 0) {
@@ -2207,14 +2316,23 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
 
             // Recolectamos el dorsal del Jugador
-            Auxiliares::limpiarPantalla();
-            cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            cout << "       ║          REGISTRAR NUVEVO JUGADOR         ║\n";
-            cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarDatos(dorsal, "Ingrese el Dorsal del jugador: ", Validadores::Dorsal);
-            Auxiliares::waitfor(2000);
-            Auxiliares::limpiarPantalla();
 
+            do {
+                flagError = false;
+                Equipo *eqAux = Logica::equipos::buscarEquipoPorID(MiSistema, IDEquipoAux);
+                Auxiliares::limpiarPantalla();
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║          REGISTRAR NUVEVO JUGADOR         ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                Auxiliares::ingresarDatos(dorsal, "Ingrese el Dorsal del jugador: ", Validadores::Dorsal);
+                if (Logica::jugadores::DorsalDuplicado(MiSistema, dorsal, IDEquipoAux)) {
+                    cout << "Error el dorsal '" << dorsal << "' ya está ocupado en el equipo '" << eqAux->nombre << "'.\n";
+                    Auxiliares::waitfor(2500);
+                    flagError = true;
+                }
+                Auxiliares::waitfor(2000);
+                Auxiliares::limpiarPantalla();
+            } while (flagError);
 
             // Pedimos la confirmacion al usuario
             Auxiliares::limpiarPantalla();
@@ -2231,11 +2349,9 @@ namespace Presentacion {
                     return;
                 }
 
-                //
                 cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 cout << "       ║       JUGADOR REGISTRADO CON ÉXITO        ║\n";
                 cout << "       ╚═══════════════════════════════════════════╝\n\n";
-
                 cout << " Torneo: " << MiSistema->torneo.nombre << endl;
                 cout << " ID del Jugador: " << nuevo->ID << endl;
                 cout << " Nombre del Jugador: " << nuevo->nombre << endl;
@@ -2245,7 +2361,6 @@ namespace Presentacion {
                 cout << " Dorsal: " << nuevo->dorsal << endl;
                 cout << " ID del Equipo asignado: " << nuevo->IDequipo << endl;
                 cout << " Fecha de Registro: " << nuevo->fechaRegistro << endl;
-
             } else if (toupper(confirmacion) == 'N') {
                 cout << "Registro de Jugador Cancelado.\n";
             } else {
@@ -2257,7 +2372,7 @@ namespace Presentacion {
 
         void buscarJugadorID(SistemaDeportivo *MiSistema) {
             Auxiliares::limpiarPantalla();
-            unsigned int ID = 0;
+            int ID = 0;
             Jugador *jugadorBuscado = nullptr;
 
             // Si no hay equipos registrados
@@ -2368,8 +2483,8 @@ namespace Presentacion {
 
         void mostrarJugadoresPorEquipo(SistemaDeportivo *MiSistema) {
             Auxiliares::limpiarPantalla();
-            unsigned int IDEquipo = 0;
-            unsigned int cantidadEncontrados = 0;
+            int IDEquipo = 0;
+            int cantidadEncontrados = 0;
 
             // Si no hay equipos registrados
             if (MiSistema->numEquiposActuales == 0) {
@@ -2445,7 +2560,7 @@ namespace Presentacion {
 
         void mostrarListaDeJugadores(SistemaDeportivo *MiSistema) {
             Auxiliares::limpiarPantalla();
-            unsigned int cantidadEncontrados = 0;
+            int cantidadEncontrados = 0;
 
             // Si no hay equipos registrados
             if (MiSistema->numEquiposActuales == 0) {
@@ -2506,10 +2621,10 @@ namespace Presentacion {
             // Variables
             char nombreAux[100];
             char posicionAux[25];
-            unsigned int edadAux = 0;
-            unsigned short dorsalAux = 0;
+            int edadAux = 0;
+            int dorsalAux = 0;
 
-            unsigned int ID = 0;
+            int ID = 0;
             char confirmacion;
             bool actualizado = false;
             bool flagError = false;
@@ -2614,14 +2729,15 @@ namespace Presentacion {
 
                 // Buscamos al jugador para obtener el id de su equipo
                 Jugador *jugadorAux = Logica::jugadores::buscarJugadorPorID(MiSistema, ID);
+                Equipo *eqAux = Logica::equipos::buscarEquipoPorID(MiSistema, jugadorAux->IDequipo);
 
                 // Si el dorsal ingresado esta duplicado y es distinto del dorsal actual del jugador
                 if (Logica::jugadores::DorsalDuplicado(MiSistema, dorsalAux, jugadorAux->IDequipo) && dorsalAux != jugadorAux->dorsal) {
-                    cout << "Error: El dorsal '" << dorsalAux << "' ya está en uso\n";
+                    cout << "Error: El dorsal '" << dorsalAux << "' ya está en uso en el equipo '" << eqAux->nombre << "'.\n";
                     Auxiliares::waitfor(2000);
                     flagError = true;
                 }
-                Auxiliares::waitfor(1000);
+                Auxiliares::waitfor(2000);
                 Auxiliares::limpiarPantalla();
             } while (flagError);
 
@@ -2662,7 +2778,7 @@ namespace Presentacion {
 
         void EliminarJugador(SistemaDeportivo *MiSistema) {
             Auxiliares::limpiarPantalla();
-            unsigned int ID = 0;
+            int ID = 0;
             char confirmacion;
 
             // Si no hay equipos registrados
@@ -2732,6 +2848,158 @@ namespace Presentacion {
             }
             Auxiliares::pausarPrograma();
         }
+
+        namespace partidos {
+            void menuProgramarPartido(SistemaDeportivo *MiSistema) {
+                Auxiliares::limpiarPantalla();
+                if (MiSistema->numEquiposActuales == 0) {
+                    cout << "No hay Equipos Disponibles para programar un partido\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                if (MiSistema->numEquiposActuales <= 1) {
+                    cout << "No se puede programar un partido con un solo equipo\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                // Calculamos el minimo de jugadores en el deporte actual para organizar un partido
+                int minimoDeJugadores = Logica::partidos::minJugadoresPorDeporte();
+                int IDLocal = 0, IDVisitante = 0;
+                bool flagError = false;
+                char fecha[11];
+                char descripcion[200];
+                char confirmacion;
+
+                // Recolectamos el ID LOCAL
+                do {
+                    Auxiliares::limpiarPantalla();
+                    flagError = false;
+                    cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                    cout << "       ║           PROGRAMAR PARTIDO               ║\n";
+                    cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                    Auxiliares::ingresarDatos(IDLocal, "Ingrese el ID del equipo local: ", Validadores::IDvalido);
+
+                    // Si el ID no corresponde a ningun equipo
+                    if (!Logica::equipos::existeID(MiSistema, IDLocal)) {
+                        cout << "Error el ID '" << IDLocal << "' no está asociado a ningún equipo\n";
+                        Auxiliares::waitfor(2000);
+                        flagError = true;
+                    }
+
+                } while (flagError);
+
+                // Recolectamos el ID VISItante
+                do {
+                    Auxiliares::limpiarPantalla();
+                    flagError = false;
+                    cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                    cout << "       ║           PROGRAMAR PARTIDO               ║\n";
+                    cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                    Auxiliares::ingresarDatos(IDVisitante, "Ingrese el ID del equipo visitante: ", Validadores::IDvalido);
+
+                    // Si el ID no corresponde a ningun equipo
+                    if (!Logica::equipos::existeID(MiSistema, IDVisitante)) {
+                        cout << "Error el ID '" << IDVisitante << "' no está asociado a ningún equipo\n";
+                        Auxiliares::waitfor(2000);
+                        flagError = true;
+                    }
+
+                    // Si el ID VISITANTE es el mismo que el ID del local
+                    if (IDLocal == IDVisitante) {
+                        cout << "Error no se puede programar un partido entre un mismo equipo\n";
+                        Auxiliares::waitfor(2000);
+                        flagError = true;
+                    }
+                } while (flagError);
+
+                Auxiliares::limpiarPantalla();
+                Equipo *EqLocal = Logica::equipos::buscarEquipoPorID(MiSistema, IDLocal);
+                Equipo *EqVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, IDVisitante);
+
+                // Validacion de nullptr de respaldo (no debería activarse)
+                if (EqLocal == nullptr || EqVisitante == nullptr) {
+                    cout << "Error Inesperado \n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                // Si no cumplen con el minimo de jugadores
+                if ((EqLocal->numJugadores < minimoDeJugadores) || (EqVisitante->numJugadores < minimoDeJugadores)) {
+                    cout << "Error no se puede programar un partido.\n";
+                    cout << "Los equipos no cumplen con el minimo de jugadores establecido\n";
+                    cout << "Deporte: " << MiSistema->torneo.nombre << endl;
+                    cout << "Minimo de Jugadores por Equipo: " << minimoDeJugadores << endl;
+                    cout << "Numero de Jugadores de '" << EqLocal->nombre << "': " << EqLocal->numJugadores << endl;
+                    cout << "Numero de Jugadores de '" << EqVisitante->nombre << "': " << EqVisitante->numJugadores << endl;
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                // Si ya tienen un partido programado
+                for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
+                    bool partidoEntreSi = ((MiSistema->Partidos[e].IDEquipoLocal == IDLocal && MiSistema->Partidos[e].IDEquipoVisitante == IDVisitante) ||
+                                           (MiSistema->Partidos[e].IDEquipoLocal == IDVisitante && MiSistema->Partidos[e].IDEquipoVisitante == IDLocal));
+                    if (partidoEntreSi && (std::strcmp(MiSistema->Partidos[e].estado, Logica::partidos::estadoPartidos[0]) == 0)) {
+                        cout << "Error ya hay un partido programado entre el equipo " << EqLocal->nombre << "' y '" << EqVisitante->nombre << endl;
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+                }
+
+                // Pedimos la fecha flagError = false;
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║           PROGRAMAR PARTIDO               ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                cout << "Encuentro: " << EqLocal->nombre << " VS " << EqVisitante->nombre << "\n\n";
+                Auxiliares::ingresarCadena(fecha, 11, "Ingrese la fecha del partido (DD/MM/AAAA): ", Validadores::fechaValidaRegistroDePartidos);
+                Auxiliares::waitfor(750);
+                Auxiliares::limpiarPantalla();
+
+                // Pedimos la descripcion
+                cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                cout << "       ║           PROGRAMAR PARTIDO               ║\n";
+                cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                Auxiliares::ingresarCadena(descripcion, 200, "Ingrese la descripción del partido: ", Validadores::Nombres);
+                Auxiliares::waitfor(750);
+                Auxiliares::limpiarPantalla();
+
+
+                cout << "\n";
+                Auxiliares::ingresarDatos(confirmacion, "Confirme la programación del partido (S/N): ");
+                Auxiliares::waitfor(750);
+                Auxiliares::limpiarPantalla();
+
+                if (toupper(confirmacion) == 'S') {
+                    Partido *nuevoPartido = Logica::partidos::programarPartido(MiSistema, IDLocal, IDVisitante, fecha, descripcion);
+
+                    if (nuevoPartido != nullptr) {
+                        cout << "\n------------------------------------------------------------------------------\n";
+                        cout << "                ¡Partido programado con éxito!\n";
+                        cout << "                " << EqLocal->nombre << "  VS  " << EqVisitante->nombre << "\n";
+                        cout << "                Fecha: " << nuevoPartido->fecha << endl;
+                        cout << "                ID Asignado: " << nuevoPartido->ID << endl;
+                        cout << "------------------------------------------------------------------------------\n";
+                    } else {
+                        cout << "\nSe produjo un error a la hora de programar el partido.\n";
+                    }
+                } else {
+                    cout << "\nLa programación del partido ha sido cancelada.\n";
+                }
+
+                Auxiliares::pausarPrograma();
+            }
+
+            void menuRegistrarResultado(SistemaDeportivo *MiSistema);
+            void menuBuscarPartido(SistemaDeportivo *MiSistema);
+            void menuListarPartidos(SistemaDeportivo *MiSistema);
+            void menuCancelarPartido(SistemaDeportivo *MiSistema);
+
+            // Muestra partido con los nombres de los equipos (no solo los IDs)
+            void mostrarPartido(Partido *partido, SistemaDeportivo *s);
+            void mostrarListaPartidos(Partido **partidos, int cantidad, SistemaDeportivo *s);
+        } // namespace partidos
 
     } // namespace Jugadores
 
