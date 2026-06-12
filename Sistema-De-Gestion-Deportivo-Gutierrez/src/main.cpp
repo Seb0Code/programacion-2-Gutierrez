@@ -1730,11 +1730,11 @@ namespace Logica {
                 }
             }
 
-            int minimoRequerido = minJugadoresPorDeporte();
+            /*int minimoRequerido = minJugadoresPorDeporte();
             // Verificar que ambos equipos tengan suficientes jugadores
             if (EquipoLocal->numJugadores < minimoRequerido || EquipoVisitante->numJugadores < minimoRequerido) {
                 return nullptr;
-            }
+            }*/
 
             // Verificar si hay espacio, y redimensionar si es necesario
             if (MiSistema->numPartidosActuales == MiSistema->capacidadPartidos) {
@@ -2284,7 +2284,7 @@ namespace Presentacion {
                 char nombreTorneo[100];
                 strcpy(nombreTorneo, MiSistema->torneo.nombre);
                 Auxiliares::toMayus(nombreTorneo);
-                cout << "╔═════════════════════════════════════════════════════════════════════════════════════════════╗\n";
+                cout << "╔═════════════════════════════════════════════════════════════════════════════════════╗\n";
                 cout << "║                             TABLA DE POSICIONES                                     ║\n";
                 cout << "║               " << std::left << std::setw(70) << nombreTorneo << "║\n";
                 cout << "╠════╦═══════════════════════════════════════════════╦═════╦═══╦═══╦═══╦════╦════╦════╣\n";
@@ -2649,7 +2649,8 @@ namespace Presentacion {
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 // agregamos el jugador
                 nuevo = Logica::jugadores::agregarJugador(MiSistema, IDEquipoAux, nombreAux, cedulaAux, posicionAux, edadAux, dorsal, fechaAux);
-
+                Auxiliares::waitfor(1200);
+                Auxiliares::limpiarPantalla();
                 // Si no se agregó
                 if (nuevo == nullptr) {
                     cout << "ERROR al registrar al jugador.\n";
@@ -3256,17 +3257,18 @@ namespace Presentacion {
                 return;
             }
 
+            /*
             // Si no cumplen con el minimo de jugadores
             if ((EqLocal->numJugadores < minimoDeJugadores) || (EqVisitante->numJugadores < minimoDeJugadores)) {
                 cout << "Error no se puede programar un partido.\n";
-                cout << "Los equipos no cumplen con el minimo de jugadores establecido\n";
-                cout << "Deporte: " << MiSistema->torneo.nombre << endl;
+                cout << "Los equipos no cumplen con el minimo de jugadores establecido\n\n";
+                cout << "Deporte: " << MiSistema->torneo.deporte << endl;
                 cout << "Minimo de Jugadores por Equipo: " << minimoDeJugadores << endl;
                 cout << "Numero de Jugadores de '" << EqLocal->nombre << "': " << EqLocal->numJugadores << endl;
                 cout << "Numero de Jugadores de '" << EqVisitante->nombre << "': " << EqVisitante->numJugadores << endl;
                 Auxiliares::pausarPrograma();
                 return;
-            }
+            }*/
 
             // Si ya tienen un partido programado
             for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
@@ -3360,8 +3362,8 @@ namespace Presentacion {
                 ptrPartido = Logica::partidos::buscarPartidoPorID(MiSistema, IDPartido);
                 if (ptrPartido == nullptr) {
                     cout << "Error: El ID de partido '" << IDPartido << "' no está asociado a ningún partido.\n";
-                    Auxiliares::waitfor(2000);
-                    flagError = true;
+                    Auxiliares::pausarPrograma();
+                    return;
                 } else if (std::strcmp(ptrPartido->estado, Logica::partidos::estadoPartidos[0]) != 0) {
                     cout << "Error: El partido ya fue JUGADO o no se encuentra en estado PROGRAMADO.\n";
                     Auxiliares::waitfor(2000);
