@@ -125,11 +125,9 @@ namespace Auxiliares {
 
     // funcion que limpia la consola
     void limpiarPantalla() {
-        // INTENTO 1: Usar códigos de escape ASCII/ANSI (El método más rápido y moderno)
         // Enviamos el comando de borrado. Si la terminal lo soporta, se limpiará al instante.
         std::cout << "\x1B[2J\x1B[H" << std::flush;
 
-        // INTENTO 2: Fallback tradicional mediante comandos del Sistema Operativo
         // Si la terminal es antigua o no procesó el código ANSI, ejecutamos el comando nativo.
 #ifdef _WIN32
         // Si estamos en Windows
