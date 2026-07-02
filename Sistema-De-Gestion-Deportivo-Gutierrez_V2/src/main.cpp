@@ -27,6 +27,13 @@
 const int TAMANO_MENSAJE_ERROR = 150;
 const int TAMANO_NOMBRE = 100;
 const int TAMANO_FECHA = 11;
+const int TAMANO_DEPORTE = 50;
+const int TAMANO_CEDULA = 20;
+const int TAMANO_POSICION = 25;
+const int TAMANO_ESTADO = 12;
+const int TAMANO_FORMATO = 20;
+const int TAMANO_DESCRIPCION = 200;
+const int TAMANO_LOCAL_O_VISITANTE = 12;
 const char *NOMBRE_ARCHIVO_TORNEO = "datos/torneo.bin";
 const char *NOMBRE_ARCHIVO_JUGADORES = "datos/jugadores.bin";
 const char *NOMBRE_ARCHIVO_EQUIPOS = "datos/equipos.bin";
@@ -49,15 +56,15 @@ struct Jugador {
     int ID;
     int idEquipo;
     char nombre[TAMANO_NOMBRE];
-    char cedula[20];
-    char posicion[25];
+    char cedula[TAMANO_CEDULA];
+    char posicion[TAMANO_POSICION];
     int edad;
     int numeroDorsal;
     char fechaRegistro[TAMANO_FECHA]; // fecha de registro del jugador en formato YYYY-MM-DD
     // bool suspendido;
 
     // Estadísticas individuales (se actualizan al registrar goles en partidos)
-    int golesAnotados;
+    int anotaciones;
     int tarjetasAmarillas;
     int tarjetasRojas;
 
@@ -96,9 +103,9 @@ struct Equipo {
 };
 
 struct Anotacion {
-    int idJugador;   // ID del jugador que anotó (0 = desconocido / gol en contra)
-    int minuto;      // Minuto del partido en que se anotó (1 - 120)
-    char equipo[12]; // "LOCAL" o "VISITANTE"
+    int idJugador;                         // ID del jugador que anotó (0 = desconocido / gol en contra)
+    int minuto;                            // Minuto del partido en que se anotó (1 - 120)
+    char equipo[TAMANO_LOCAL_O_VISITANTE]; // "LOCAL" o "VISITANTE"
 };
 
 struct tarjetaAmarilla {
@@ -115,15 +122,15 @@ struct Partido {
     int idEquipoLocal;
     int idEquipoVisitante;
     char fecha[TAMANO_FECHA];
-    char estado[12]; // "PROGRAMADO", "JUGADO", "CANCELADO"
-    char descripcion[200];
+    char estado[TAMANO_ESTADO]; // "PROGRAMADO", "JUGADO", "CANCELADO"
+    char descripcion[TAMANO_DESCRIPCION];
 
     // Marcador global (para acceso rápido sin recorrer el array de goles)
-    int AnotacionLocal;
-    int golesVisitante;
+    int anotacionesLocal;
+    int anotacionesVisitante;
 
     // Detalle de goles (NUEVO en Proyecto 2)
-    Anotacion goles[22]; // Máximo 22 goles por partido
+    Anotacion anotaciones[22]; // Máximo 22 goles por partido
     // tarjetaAmarilla tarjetasA[30]; // Máximo 30 tarjetas A por partido
     // tarjetaRoja tarjetaR[8]; // Máximo 8 tarjetas R por partido
     int numAnotaciones;
@@ -138,8 +145,8 @@ struct Partido {
 
 struct Torneo {
     char nombre[TAMANO_NOMBRE];     // Nombre del torneo
-    char deporte[50];               // Deporte del torneo
-    char formato[20];               // "GRUPOS" o "ELIMINATORIA"
+    char deporte[TAMANO_DEPORTE];   // Deporte del torneo
+    char formato[TAMANO_FORMATO];   // "GRUPOS" o "ELIMINATORIA"
     char fechaInicio[TAMANO_FECHA]; // Formato YYYY-MM-DD
     char fechaFin[TAMANO_FECHA];    // Formato YYYY-MM-DD
     // Metadata de control
@@ -748,6 +755,14 @@ namespace Validadores {
 
 namespace Logica {
 
+    void definirFormato(Torneo &torneoAux, int opcion) {
+        if (opcion == 1) {
+            std::strncpy(torneoAux.formato, "GRUPOS", TAMANO_FORMATO);
+        } else if (opcion == 2) {
+            std::strncpy(torneoAux.formato, "ELIMINATORIA", TAMANO_FORMATO);
+        }
+    }
+
     bool existeArchivo(const char *nombreArchivo) {
         // Creamos el archivo y le colocamos la cabecera
         std::ifstream comprobar;
@@ -861,7 +876,7 @@ namespace Logica {
             archivo.write(reinterpret_cast<const char *>(&header), sizeof(ArchivoHeader));
 
             // Verificamos si la escritura fue correcta
-            if (!archivo.fail()) {
+            if (archivo.fail()) {
                 archivo.close();
                 return false;
             }
@@ -903,6 +918,12 @@ namespace Logica {
 
         // Realizamos la busqueda
         while (archivo.read(reinterpret_cast<char *>(&registroTemp), sizeof(struct1))) {
+
+            // Verficamos que la lectura haya sido correcta
+            if (archivo.fail()) {
+                archivo.close();
+                return indice;
+            }
 
             // Si el ID coincide activamos la bandera y rompemos el bucle
             if (registroTemp.ID == ID) {
@@ -998,6 +1019,7 @@ namespace Logica {
 
             // verificamos que no hayan errores en la lectura
             if (archivo.fail()) {
+                archivo.close();
                 return false;
             }
 
@@ -1151,6 +1173,7 @@ namespace Logica {
 
             // Verificamos que no haya error al hacer la lectura
             if (archivo.fail()) {
+                archivo.close();
                 return error;
             }
 
@@ -1216,6 +1239,7 @@ namespace Logica {
 
             // Verificamos si no hubo un falló en la lectura
             if (archivo.fail()) {
+                archivo.close();
                 return error;
             }
 
@@ -1482,7 +1506,7 @@ namespace Logica {
             return cantidadDeRegistros;
         }
 
-        bool actualizarEquipo(const char *nombreArchivo, const int ID, const char *nombre, const char *entrenador, const char *ciudad) {
+        /*bool actualizarEquipo(const char *nombreArchivo, const int ID, const char *nombre, const char *entrenador, const char *ciudad) {
 
             // verificamos que ni el sistema ni el array de equipos apunte a nullptr
             if (!sistemaEquiposValido(MiSistema)) {
@@ -1512,7 +1536,7 @@ namespace Logica {
             std::strncpy(ptrEquipo->ciudad, ciudad);
 
             return true;
-        }
+        }*/
 
         bool eliminarEquipo(const char *nombreArchivo, const int ID, bool &flag1, bool &flag2) {
 
@@ -1556,6 +1580,7 @@ namespace Logica {
             archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(Equipo));
 
             if (archivo.fail()) {
+                archivo.close();
                 return false;
             }
 
@@ -1572,16 +1597,17 @@ namespace Logica {
 
             // * Verificamos que no tenga partidos asociados
             while (archivoPartidos.read(reinterpret_cast<char *>(&partidoTemporal), sizeof(Partido))) {
+
+                // verificamos que no se haya producido un error
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
                 if ((partidoTemporal.idEquipoLocal == registroTemporal.ID) || (partidoTemporal.idEquipoVisitante == registroTemporal.ID)) {
                     flag1 = true;
                     return false;
                 }
-            }
-
-            // Verificamos que la lectura haya sido correcta
-            if (archivoPartidos.fail()) {
-                archivoPartidos.close();
-                return false;
             }
 
             // Cerramos el archivo de partidos
@@ -1600,16 +1626,17 @@ namespace Logica {
 
             // * Verificamos que no tenga jugadores asociados
             while (archivoPartidos.read(reinterpret_cast<char *>(&jugadorTemporal), sizeof(Jugador))) {
+
+                // Verificamos que la lectura haya sido correcta
+                if (archivoJugadores.fail()) {
+                    archivoJugadores.close();
+                    return false;
+                }
+
                 if (jugadorTemporal.idEquipo == registroTemporal.ID) {
                     flag2 = true;
                     return false;
                 }
-            }
-
-            // Verificamos que la lectura haya sido correcta
-            if (archivoJugadores.fail()) {
-                archivoJugadores.close();
-                return false;
             }
 
             // Cerramos el archivo de jugadores
@@ -1627,7 +1654,7 @@ namespace Logica {
 
     namespace jugadores {
 
-        bool DorsalDuplicado(const char *nombreArchivo, const int dorsal, const int idEquipo, bool &error) {
+        bool DorsalDuplicado(const char *nombreArchivo, const int dorsal, const int idEquipo, bool &error, bool actualizar) {
 
             // Verificamos que exista el archivo
             if (!existeArchivo(nombreArchivo)) {
@@ -1654,6 +1681,7 @@ namespace Logica {
 
                 // Verificamos si no hubo error en la lectura
                 if (archivo.fail()) {
+                    archivo.close();
                     error = true;
                     return false;
                 }
@@ -1668,39 +1696,97 @@ namespace Logica {
             return false;
         }
 
-        bool dorsalDuplicadoParaActualizar(, const int dorsal, const int IDJugador, const int idEquipo) {
-            if (!sistemaJugadoresValido(MiSistema)) {
+        bool dorsalDuplicadoParaActualizar(const char *nombreArchivo, const int dorsal, const int IDJugador, const int idEquipo, bool &error) {
+
+            // Verificamos que exista el archivo
+            if (!existeArchivo(nombreArchivo)) {
+                error = true;
                 return false;
             }
 
-            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
-                // Saltamos al jugador actual
-                if (MiSistema->Jugadores[e].ID == IDJugador)
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Verificamos que se haya abierto
+            if (!archivo.is_open()) {
+                error = true;
+                return false;
+            }
+
+            // Movemos el puntero de lectura despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+            Jugador jugadorTemporal;
+
+            // Leemos el archivo
+            while (archivo.read(reinterpret_cast<char *>(&jugadorTemporal), sizeof(Jugador))) {
+
+                // Verificamos si no hubo error en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    error = true;
+                    return false;
+                }
+
+                // Saltamos al jugador que está siendo actualizado
+                if (jugadorTemporal.ID == IDJugador) {
                     continue;
+                }
 
-                // Si otro jugador del mismo equipo ya tiene el dorsal en uso devuelvo true
-                if (MiSistema->Jugadores[e].idEquipo == idEquipo && MiSistema->Jugadores[e].dorsal == dorsal) {
+                // Si encontramos coincidencia y pertence al mismo equipo
+                if ((jugadorTemporal.numeroDorsal == dorsal) && (jugadorTemporal.idEquipo == idEquipo)) {
                     return true;
                 }
             }
+
+            archivo.close();
             return false;
         }
 
-        bool CedulaRepetida(, const char *Cedula) {
-            if (!sistemaJugadoresValido(MiSistema)) {
+        bool CedulaRepetida(const char *nombreArchivo, const char *cedula, bool &error) {
+
+            // Verificamos que exista el archivo
+            if (!existeArchivo(nombreArchivo)) {
+                error = true;
                 return false;
             }
-            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
-                // si hay una cedula que coincide
-                if (std::strcmp(Cedula, MiSistema->Jugadores[e].cedula) == 0) {
+
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Verificamos que se haya abierto
+            if (!archivo.is_open()) {
+                error = true;
+                return false;
+            }
+
+            // Movemos el puntero de lectura despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+            Jugador jugadorTemporal;
+
+            // Leemos el archivo
+            while (archivo.read(reinterpret_cast<char *>(&jugadorTemporal), sizeof(Jugador))) {
+
+                // Verificamos si no hubo error en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    error = true;
+                    return false;
+                }
+
+                if (std::strcmp(jugadorTemporal.cedula, cedula) == 0) {
                     return true;
                 }
             }
+
+            archivo.close();
             return false;
         }
 
-        Jugador *agregarJugador(, const int idEquipo, const char *nombre, const char *cedula, const char *posicion, const int edad, const int numeroDorsal,
-                                const char *fechaRegistro) {
+        bool registrarJugador(const char *nombreArchivo, Jugador &nuevoJugador) {
+
+            int error = -1;
 
             // verificamos primero que el archivo existe
             if (!existeArchivo(nombreArchivo)) {
@@ -1711,7 +1797,7 @@ namespace Logica {
             ArchivoHeader header = leerHeader(nombreArchivo);
 
             // Validamos que el header no devuelva error
-            if (header.cantidadRegistros == -1) {
+            if (header.cantidadRegistros == error) {
                 return false;
             }
 
@@ -1723,154 +1809,172 @@ namespace Logica {
                 return false;
             }
 
-            // movemos el puntero de escritura al final
+            // * Inicializamos las estadisticas
+            nuevoJugador.anotaciones = 0;
+            nuevoJugador.tarjetasAmarillas = 0;
+            nuevoJugador.tarjetasRojas = 0;
+
+            // * Inicializamos las fechas de creacion y ultima modificacion
+            nuevoJugador.fechaCreacion = std::time(nullptr);
+            nuevoJugador.fechaUltimaModificacion = std::time(nullptr);
+
+            // * Colocamos el jugador como activo y le colocamos el ID
+            nuevoJugador.ID = header.proximoID;
+            nuevoJugador.eliminado = false;
+
+            // * Actualizamos el header
+            header.cantidadRegistros++;
+            header.registrosActivos++;
+            header.proximoID++;
+
+            // * Movemos el puntero de escritura al final
             archivo.seekp(0, std::ios::end);
 
+            // * Registramos el nuevo jugador
+            archivo.write(reinterpret_cast<const char *>(&nuevoJugador), sizeof(Jugador));
 
-            // usamos una variable de posicion
-            size_t indice = MiSistema->numJugadoresActuales;
+            // Verficamos que no haya errores con la escritura
+            if (archivo.fail()) {
+                archivo.close();
+                return false;
+            }
 
-            // Agregamos al jugador
-            std::strncpy(MiSistema->Jugadores[indice].nombre, nombre);
-            std::strncpy(MiSistema->Jugadores[indice].cedula, cedula);
-            std::strncpy(MiSistema->Jugadores[indice].posicion, posicion);
-            MiSistema->Jugadores[indice].edad = edad;
-            MiSistema->Jugadores[indice].idEquipo = idEquipo;
-            MiSistema->Jugadores[indice].dorsal = numeroDorsal;
-            std::strncpy(MiSistema->Jugadores[indice].fechaRegistro, fechaRegistro);
-            MiSistema->Jugadores[indice].puntosAnotados = 0;
-            MiSistema->Jugadores[indice].ID = MiSistema->siguienteIdJugador;
+            // Cerramos el archivo de jugadores
+            archivo.close();
 
-            // Aumentamos el numero de jugadores del equipo
-            for (size_t e = 0; e < MiSistema->numEquiposActuales; e++) {
-                if (MiSistema->Equipos[e].ID == idEquipo) {
-                    MiSistema->Equipos[e].numJugadores++; // Incrementamos el contador en el struct Equipo
+            // * Actualziamos el header
+            actualizarHeader(nombreArchivo, header);
+
+
+            // * Aumentamos el numero de jugadores del equipo
+
+            // buscamos el indice fisico del equipo al que pertence el jugador
+            size_t indice = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, nuevoJugador.idEquipo);
+
+            // Verificamos que indice no arroje error
+            if (indice == error) {
+                return false;
+            }
+
+            // Calculamos la posicion
+            std::streampos posicion = sizeof(ArchivoHeader) + indice * sizeof(Equipo);
+
+            std::fstream archivoEquipo;
+            archivoEquipo.open(NOMBRE_ARCHIVO_EQUIPOS, std::ios::binary | std::ios::in | std::ios::out);
+
+            // Verificamos que se haya abierto correctamente
+            if (!archivoEquipo.is_open()) {
+                return false;
+            }
+
+            // Nos movemos a la posicion del registro (puntero de lectura)
+            archivoEquipo.seekg(posicion, std::ios::beg);
+
+            Equipo equipoTemporal;
+
+            // Leemos el equipo
+            archivoEquipo.read(reinterpret_cast<char *>(&equipoTemporal), sizeof(Equipo));
+
+            // Verificamos que no haya errores de lectura
+            if (archivoEquipo.fail()) {
+                archivo.close();
+                return false;
+            }
+
+            // aumentamos en 1 el numero de jugadores
+            equipoTemporal.numJugadores++;
+
+            // Ahora nos movemos a la posicion del registro (puntero de escritura)
+            archivoEquipo.seekp(posicion, std::ios::beg);
+
+            // Sobreescribmos el registro
+            archivoEquipo.write(reinterpret_cast<const char *>(&equipoTemporal), sizeof(Equipo));
+
+            // Verificamos que no hubo errores
+            if (archivoEquipo.fail()) {
+                archivo.close();
+                return false;
+            }
+
+            // Cerramos el archivo de equipo
+            archivoEquipo.close();
+            return true;
+        }
+
+        int listarJugadoresPorEquipo(const char *nombreArchivo, const int idEquipo, Jugador resultados[], int maxResultados) {
+
+            int error = -1;
+            int cantidadDeEquiposEncontrados = 0;
+
+            // verificamos primero que el archivo existe
+            if (!existeArchivo(nombreArchivo)) {
+                return;
+            }
+
+            // Leemos el header para obtener los datos
+            ArchivoHeader header = leerHeader(nombreArchivo);
+
+            // Validamos que el header no devuelva error
+            if (header.cantidadRegistros == error) {
+                return false;
+            }
+
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Si se produjo un error a la hora de abrir el archivo devolvemos false
+            if (!archivo.is_open()) {
+                return false;
+            }
+
+            Equipo equipoTemporal;
+            Jugador jugadorTemporal;
+
+            // Buscamos si el equipo solicitado realmente existe
+            bool existe = buscarRegistrosPorId(nombreArchivo, equipoTemporal, idEquipo);
+
+            // Verificamos si el equipo existe
+            if (!existe) {
+                return error;
+            }
+
+            // Si el equipo no tiene jugadores
+            if (equipoTemporal.numJugadores == 0) {
+                return error;
+            }
+
+            // buscamos los jugadores
+            while (archivo.read(reinterpret_cast<char *>(&jugadorTemporal), sizeof(Jugador))) {
+
+                // Verificamos que la lectura no arroje error
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
+                // Si aun nos superamos el maximo de resultados permitido
+                if (cantidadDeEquiposEncontrados < maxResultados) {
+
+                    // Si el jugador no pertence al equipo lo ignoramos
+                    if (jugadorTemporal.idEquipo != idEquipo) {
+                        continue;
+                    }
+
+                    // Guardamos los jugadores
+                    resultados[cantidadDeEquiposEncontrados] = jugadorTemporal;
+
+                    // aumentamos el contador de equipos encontrados
+                    cantidadDeEquiposEncontrados++;
+
+                } else { // si no rompemos el bucle
                     break;
                 }
             }
 
-            // Aumentamos los contadores
-            MiSistema->numJugadoresActuales++;
-            MiSistema->siguienteIdJugador++;
-
-            // Retornamos la dirección de memoria del jugador que está dentro del array dinámico
-            return &(MiSistema->Jugadores[indice]);
+            return cantidadDeEquiposEncontrados;
         }
 
-        Jugador *buscarJugadorPorID(, const int ID) {
-            if (!sistemaJugadoresValido(MiSistema)) {
-                return nullptr;
-            }
-
-
-            // Buscamos si el id esta relacionado con un jugador
-            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
-                if (MiSistema->Jugadores[e].ID == ID) {
-                    return &(MiSistema->Jugadores[e]);
-                }
-            }
-
-            // si no encontró nada devuelve nullptr
-            return nullptr;
-        }
-
-        Jugador **buscarJugadoresPorNombre(, const char *subcadena, int *cantJugadoresEncontrados) {
-            if (!sistemaJugadoresValido(MiSistema)) {
-                return nullptr;
-            }
-
-
-            // creamos dos variables para realizar copias y no dañar laa MiSistemaes
-            char copiaJugador[100];
-            char copiaSubcadena[100];
-
-            // incializamos el contador en 0
-            *cantJugadoresEncontrados = 0;
-
-            // Reservamos espacio para una lista de jugadores
-            Jugador **listaDeJugadoresEncontrados = new Jugador *[MiSistema->numJugadoresActuales];
-
-            // hacemos la copia de la subcadena y la pasamos a minuscula
-            std::strncpy(copiaSubcadena, subcadena);
-            Auxiliares::toMinus(copiaSubcadena);
-
-            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
-                // realizamos la copia del nombre del jugador para esta iteración
-                std::strncpy(copiaJugador, MiSistema->Jugadores[e].nombre);
-                Auxiliares::toMinus(copiaJugador);
-                // Si conseguimos un jugador que coincida con la subcadena
-                if (std::strstr(copiaJugador, copiaSubcadena) != nullptr) {
-                    // añadimos el jugador a la lista
-                    listaDeJugadoresEncontrados[*(cantJugadoresEncontrados)] = &(MiSistema->Jugadores[e]);
-                    (*cantJugadoresEncontrados)++;
-                }
-            }
-            return listaDeJugadoresEncontrados;
-        }
-
-        Jugador **listarJugadoresPorEquipo(, const int idEquipo, int *cantidadJugadores) {
-
-            // inicializamos en 0
-            *cantidadJugadores = 0;
-
-            if (!sistemaJugadoresValido(MiSistema)) {
-                return nullptr;
-            }
-
-            // Buscamos si el equipo solicitado realmente existe
-            Equipo *EquipoAux = equipos::buscarEquipoPorID(MiSistema, idEquipo);
-
-            // si devuelve nullptr el equipo no existe
-            if (EquipoAux == nullptr) {
-                return nullptr;
-            }
-
-            // Si el equipo no tiene jugadores
-            if (EquipoAux->numJugadores == 0) {
-                return nullptr;
-            }
-
-            // Creamos la lista de jugadores de ese equipo con el tamaño correcto
-            Jugador **listaDeJugadores = new Jugador *[EquipoAux->numJugadores];
-
-            // buscamos los jugadores
-            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
-
-                // Si encontramos un jugador asociado a ese id
-                if (MiSistema->Jugadores[e].idEquipo == idEquipo) {
-
-                    // Nos aseguramos de no sobrepasarnos el limite
-                    if (*cantidadJugadores < EquipoAux->numJugadores) {
-                        listaDeJugadores[*cantidadJugadores] = &(MiSistema->Jugadores[e]);
-                        (*cantidadJugadores)++;
-                    }
-                }
-            }
-            return listaDeJugadores;
-        }
-
-        Jugador **listarJugadores(, int *cantidadJugadores) {
-            // inicializamos en 0
-            *cantidadJugadores = 0;
-
-            if (!sistemaJugadoresValido(MiSistema)) {
-                return nullptr;
-            }
-
-            // Creamos y reservamos espacio para la lista
-            Jugador **listaDeJugadores = new Jugador *[MiSistema->numJugadoresActuales];
-            (*cantidadJugadores) = MiSistema->numJugadoresActuales;
-
-            // Buscamos y Agregamos los jugadores
-            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
-                // Añadimos la direccion de los jugadores a la lista
-                listaDeJugadores[e] = &(MiSistema->Jugadores[e]);
-            }
-
-            return listaDeJugadores;
-        }
-
-        bool actualizarJugador(, int ID, Jugador jugadorActualizado) {
+        /*bool actualizarJugador(, int ID, Jugador jugadorActualizado) {
             if (!sistemaJugadoresValido(MiSistema)) {
                 return false;
             }
@@ -1899,50 +2003,92 @@ namespace Logica {
             ptrJugador->dorsal = jugadorActualizado.dorsal;
 
             return true;
-        }
+        }*/
 
-        // Solo podemos eliminar un jugador si su equipo no ha disputado partidos
-        bool eliminarJugador(, int ID) {
-            // verificamos que ni el sistema ni el array de equipos apunte a nullptr
-            if (!sistemaJugadoresValido(MiSistema)) {
+        bool eliminarJugador(const char *nombreArchivo, int ID) {
+
+            int error = -1;
+
+            // verificamos que si existe ese archivo
+            if (!existeArchivo(nombreArchivo)) {
                 return false;
             }
 
-            int posicion = -1; // -1 porque las posiciones no son negativas
+            std::fstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
 
-            // Buscamos la posicion del jugador
-            for (size_t e = 0; e < MiSistema->numJugadoresActuales; e++) {
-                if (MiSistema->Jugadores[e].ID == ID) {
-                    posicion = e;
-                    break;
-                }
-            }
-
-            // Si no encontró nada
-            if (posicion == -1) {
+            // Verificamos que se haya abierto correctamente
+            if (!archivo.is_open()) {
                 return false;
             }
 
-            // si ya anotó puntos no lo podemos borrar
-            if (MiSistema->Jugadores[posicion].puntosAnotados > 0) {
+            ArchivoHeader header = leerHeader(nombreArchivo);
+
+            // Verificamos que el header se haya leido correctamente
+            if (header.cantidadRegistros == -1) {
                 return false;
             }
 
-            // Guardamos el ID del equipo del jugador a eliminar antes de desplazar el array
-            int equipoId = MiSistema->Jugadores[posicion].idEquipo;
+            // * Borramos el Jugador
 
-            // Lo eliminamos rodando todos los demas jugadores
-            for (size_t i = posicion; i < MiSistema->numJugadoresActuales - 1; i++) {
-                MiSistema->Jugadores[i] = MiSistema->Jugadores[i + 1];
+            // Buscamos el indice fisico del jugador
+            size_t indice = buscarIndicePorID<Jugador>(nombreArchivo, ID);
+
+            // Verificamos si no se encontró ningun jugador con ese ID
+            if (indice == error) {
+                return false;
             }
 
-            // Reducimos el número de jugadores actuales
-            MiSistema->numJugadoresActuales--;
+            Jugador registroTemporal;
 
-            // Disminuimos el contador de jugadores del equipo correspondiente (si existe)
-            Equipo *EqAux = equipos::buscarEquipoPorID(MiSistema, equipoId);
-            if (EqAux != nullptr && EqAux->numJugadores > 0) {
-                EqAux->numJugadores--;
+            // Calculamos la posicion
+            std::streampos posicion = sizeof(ArchivoHeader) + indice * sizeof(Jugador);
+
+            // Movemos el puntero de lectura al indice de posicion
+            archivo.seekg(posicion, std::ios::beg);
+
+            // * Leemos el registro
+            archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(Jugador));
+
+            // Verificamos que no haya fallado
+            if (archivo.fail()) {
+                archivo.close();
+                return false;
+            }
+
+            // Lo colocamos como eliminado
+            registroTemporal.eliminado = true;
+
+            // Movemos el puntero de escritura al indice de posicion
+            archivo.seekp(posicion, std::ios::beg);
+
+            // * Sobreescribimos el registro
+            archivo.write(reinterpret_cast<const char *>(&registroTemporal), sizeof(Jugador));
+
+            // Verificamos que no haya fallado
+            if (archivo.fail()) {
+                archivo.close();
+                return false;
+            }
+
+            // Cerramos el archivo
+            archivo.close();
+
+            // Reducimos el numero de jugadores activos
+            header.registrosActivos--;
+
+            //  *Actualizamos el header
+            actualizarHeader(nombreArchivo, header);
+
+
+            // * Disminuimos el contador de jugadores del equipo correspondiente
+
+            Equipo equipoTemporal;
+            bool existeEquipo = buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoTemporal, registroTemporal.idEquipo);
+
+            // si tiene equipo disminuimos el numero de jugadoress del equipo, sino no hacemos nada
+            if (existeEquipo && equipoTemporal.numJugadores > 0) {
+                equipoTemporal.numJugadores--;
             }
 
             return true;
@@ -1960,78 +2106,81 @@ namespace Logica {
             return 1;
         }
 
-        bool existeID(, const int ID) {
-
-            // Verificamos que todo este inicializado por precaucion
-            if (MiSistema == nullptr || MiSistema->Partidos == nullptr) {
-                return false;
-            }
-
-            // Si no hay partidos devolver false
-            if (MiSistema->numPartidosActuales == 0) {
-                return false;
-            }
-
-            // Recorremos y verficamos que existe el ID
-            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                if (ID == MiSistema->Partidos[e].ID) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        int contarPartidosDeEquipo(const, int idEquipo) {
-            if (MiSistema == nullptr || MiSistema->Partidos == nullptr)
-                return 0;
-
-            int contador = 0;
-            for (int i = 0; i < MiSistema->numPartidosActuales; i++) {
-                if (MiSistema->Partidos[i].idEquipoLocal == idEquipo || MiSistema->Partidos[i].idEquipoVisitante == idEquipo) {
-                    contador++;
-                }
-            }
-            return contador;
-        }
-
         const char *estadoPartidos[] = {"PROGRAMADO", "JUGADO", "CANCELADO"};
 
-        // Programa un partido entre dos equipos
-        // Valida: ambos equipos existen, no son el mismo, no tienen partido ya programado entre sí
-        // Retorna puntero al partido creado, o nullptr si falla alguna validación
-        Partido *programarPartido(, int IDLocal, int IDVisitante, const char *fecha, const char *descripcion) {
-            // Si el sistema no está definido ni los equipos ni los jugadores
-            if (MiSistema == nullptr || MiSistema->Jugadores == nullptr || MiSistema->Equipos == nullptr || fecha == nullptr || descripcion == nullptr) {
-                return nullptr;
+        bool programarPartido(const char *nombreArchivo, Partido &nuevoPartido) {
+            int error = -1;
+
+            // * Validaciones
+
+            // Verificamos que exista el archivo
+            if (!existeArchivo(nombreArchivo)) {
+                return false;
+            }
+
+            // Leemos el header del archivo de Equipos
+            ArchivoHeader headerEquipos = leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que el header se haya leido correctamente
+            if (headerEquipos.cantidadRegistros == error) {
+                return false;
             }
 
             // Si no hay al menos 2 equipos no se puede programar un partido
-            if (MiSistema->numEquiposActuales <= 1) {
-                return nullptr;
+            if (headerEquipos.registrosActivos <= 1) {
+                return false;
             }
 
             // No se puede programar un partido entre el mismo equipo
-            if (IDLocal == IDVisitante) {
-                return nullptr;
+            if (nuevoPartido.idEquipoLocal == nuevoPartido.idEquipoVisitante) {
+                return false;
             }
+
+            Equipo eqLocal, eqVisitante;
 
             // Si los equipos no existen
-            Equipo *EquipoLocal = Logica::equipos::buscarEquipoPorID(MiSistema, IDLocal);
-            Equipo *EquipoVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, IDVisitante);
+            bool existeEquipoLocal = buscarRegistrosPorId<Equipo>(nombreArchivo, eqLocal, nuevoPartido.idEquipoLocal);
+            bool existeEquipoVisitante = buscarRegistrosPorId<Equipo>(nombreArchivo, eqVisitante, nuevoPartido.idEquipoVisitante);
 
             // Si uno de los dos equipos no existe cancelamos
-            if (EquipoLocal == nullptr || EquipoVisitante == nullptr) {
-                return nullptr;
+            if ((!existeEquipoLocal) || (!existeEquipoVisitante)) {
+                return false;
             }
 
-            // Si tienen partidos programados entre sí
-            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                bool tienePartidoEntreSi = ((MiSistema->Partidos[e].idEquipoLocal == IDLocal) && (MiSistema->Partidos[e].idEquipoVisitante == IDVisitante) ||
-                                            (MiSistema->Partidos[e].idEquipoLocal == IDVisitante) && (MiSistema->Partidos[e].idEquipoVisitante == IDLocal));
+            // * Leemos el header del archivo de partidos
+            ArchivoHeader header = leerHeader(nombreArchivo);
+
+            // * Creamos y abrimos el archivo
+
+            std::fstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+
+            // Verificamos que abrió correctamente
+            if (!archivo.is_open()) {
+                return false;
+            }
+
+            // * Realizamos una lectura de todos los archivos para verificar que no tengan partidos programados entre sí
+
+            // Movemos el puntero despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+            Partido pAux;
+
+            // Realizamos la lectura
+            while (archivo.read(reinterpret_cast<char *>(&pAux), sizeof(Partido))) {
+
+                // Verificamos que no se haya producido errores en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+                bool tienePartidoEntreSi = ((pAux.idEquipoLocal == nuevoPartido.idEquipoLocal) && (pAux.idEquipoVisitante == nuevoPartido.idEquipoVisitante)) ||
+                                           ((pAux.idEquipoLocal == nuevoPartido.idEquipoVisitante) && (pAux.idEquipoVisitante == nuevoPartido.idEquipoLocal));
 
                 // Si ya hay un partido programado entre ellos
-                if (tienePartidoEntreSi && (std::strcmp(MiSistema->Partidos[e].estado, estadoPartidos[0]) == 0)) {
-                    return nullptr;
+                if (tienePartidoEntreSi && (std::strcmp(pAux.estado, estadoPartidos[0]) == 0)) {
+                    return false;
                 }
             }
 
@@ -2041,38 +2190,51 @@ namespace Logica {
                 return nullptr;
             }*/
 
-            // Verificar si hay espacio, y redimensionar si es necesario
-            if (MiSistema->numPartidosActuales == MiSistema->capacidadPartidos) {
-                redimensionar::rPartidos(MiSistema);
-            }
-
-            // Alamacenamos en una variable la nueva posición del partido
-            size_t nuevaPosicion = MiSistema->numPartidosActuales;
-
-            // Procedemos a programar el partido
-            MiSistema->Partidos[nuevaPosicion].ID = MiSistema->siguienteIdPartido;
-            MiSistema->Partidos[nuevaPosicion].idEquipoLocal = IDLocal;
-            MiSistema->Partidos[nuevaPosicion].idEquipoVisitante = IDVisitante;
-            std::strncpy(MiSistema->Partidos[nuevaPosicion].fecha, fecha);
-            std::strncpy(MiSistema->Partidos[nuevaPosicion].descripcion, descripcion);
+            // * Procedemos a programar el partido
+            nuevoPartido.ID = header.proximoID;
 
             // Asignamos los valores iniciales
-            std::strncpy(MiSistema->Partidos[nuevaPosicion].estado, estadoPartidos[0]); // PROGRAMADO
-            MiSistema->Partidos[nuevaPosicion].puntosLocal = 0;
-            MiSistema->Partidos[nuevaPosicion].puntosVisitante = 0;
+            std::strncpy(nuevoPartido.estado, estadoPartidos[0], TAMANO_FECHA); // PROGRAMADO
+            nuevoPartido.anotacionesLocal = 0;
+            nuevoPartido.anotacionesVisitante = 0;
+            nuevoPartido.numAnotaciones = 0;
+            nuevoPartido.eliminado = false;
 
-            // Aumentamos el numero de partidos
-            MiSistema->numPartidosActuales++;
-            // Aumentamos el ID enseguida
-            MiSistema->siguienteIdPartido++;
+            // Asignamos los valores de tiempo
+            nuevoPartido.fechaCreacion = std::time(nullptr);
+            nuevoPartido.fechaUltimaModificacion = std::time(nullptr);
 
-            return &(MiSistema->Partidos[nuevaPosicion]);
+            // Movemos el puntero de escritura al final para programar el nuevo partido
+            archivo.seekp(0, std::ios::end);
+
+            // * Guardamos el registro en el archivo
+            archivo.write(reinterpret_cast<const char *>(&nuevoPartido), sizeof(Partido));
+
+            // Verificamos que la escritura no arroje errores
+            if (archivo.fail()) {
+                archivo.close();
+                return false;
+            }
+
+            // Cerramos el archivo
+            archivo.close();
+
+            // Modificamos los datos del header
+            header.proximoID++;
+            header.cantidadRegistros++;
+            header.registrosActivos++;
+
+            // Actualizamos el header
+            actualizarHeader(nombreArchivo, header);
+
+            return true;
         }
 
-        //   Victoria local  → local  +3 pts, +1 victoria  / visitante +1 derrota
-        //   Empate          → ambos  +1 pt,  +1 empate
-        //   Victoria visit. → visit. +3 pts, +1 victoria  / local     +1 derrota
-        Partido *registrarResultado(, int IDPartido, int puntosLocal, int puntosVisitante) {
+        // TODO:   Victoria local  → local  +3 pts, +1 victoria  / visitante +1 derrota
+        // TODO:   Empate          → ambos  +1 pt,  +1 empate
+        // TODO:   Victoria visit. → visit. +3 pts, +1 victoria  / local     +1 derrota
+        Partido *registrarResultado(const char *nombreArchivo, int IDPartido, int puntosLocal, int puntosVisitante) {
+
             if (!sistemaPartidosValido(MiSistema)) {
                 return nullptr;
             }
@@ -2158,37 +2320,6 @@ namespace Logica {
             EqVisitante->jugados++;
 
             return &(MiSistema->Partidos[posicion]);
-        }
-
-        Partido *buscarPartidoPorID(, int IDPartido) {
-            if (!sistemaPartidosValido(MiSistema)) {
-                return nullptr;
-            }
-
-            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                if (MiSistema->Partidos[e].ID == IDPartido) {
-                    return &(MiSistema->Partidos[e]);
-                }
-            }
-
-            return nullptr;
-        }
-
-        Partido **listarPartidos(, int *cantidad) {
-            if (!sistemaPartidosValido(MiSistema)) {
-                return nullptr;
-            }
-
-            // inicializamos el array y las variables
-            *cantidad = MiSistema->numPartidosActuales;
-            Partido **listaDePartidos = new Partido *[*cantidad];
-
-            // Recorremos el array y almacenamos las direcciones de memoria de cada objet0
-            for (size_t e = 0; e < *cantidad; e++) {
-                listaDePartidos[e] = &(MiSistema->Partidos[e]);
-            }
-
-            return listaDePartidos;
         }
 
         Partido **listarPartidosPorEquipo(, int idEquipo, int *cantidad) {
@@ -2318,14 +2449,6 @@ namespace Logica {
             return true;
         }
     } // namespace partidos
-
-    void definirFormato(Torneo &torneoAux, int opcion) {
-        if (opcion == 1) {
-            std::strncpy(torneoAux.formato, "GRUPOS");
-        } else if (opcion == 2) {
-            std::strncpy(torneoAux.formato, "ELIMINATORIA");
-        }
-    }
 
 } // namespace Logica
 
