@@ -39,16 +39,19 @@ const char *NOMBRE_ARCHIVO_JUGADORES = "datos/jugadores.bin";
 const char *NOMBRE_ARCHIVO_EQUIPOS = "datos/equipos.bin";
 const char *NOMBRE_ARCHIVO_PARTIDOS = "datos/partidos.bin";
 const int MAX_RESULTADOS = 100;
+const int MAX_ANOTACIONES = 22;
+const int MAX_TARJETAS_AMARILLAS = 30;
+const int MAX_TARJETAS_ROJAS = 8;
 
 // ============================================//
 //   2. STRUCTS                                //
 // ============================================//
 
 struct ArchivoHeader {
-    int cantidadRegistros; // Total histórico (incluyendo eliminados lógicamente)
-    int proximoID;         // Siguiente ID a asignar (autoincremental)
-    int registrosActivos;  // Registros con eliminado == false
-    int version;           // Control de versión del archivo (iniciar en 1)
+    int cantidadRegistros; // Total histórico (incluyendo eliminados lógicamente) // 0
+    int proximoID;         // Siguiente ID a asignar (autoincremental)  // 1
+    int registrosActivos;  // Registros con eliminado == false  // 0
+    int version;           // Control de versión del archivo (iniciar en 1) // 1
 };
 
 struct Jugador {
@@ -109,11 +112,15 @@ struct Anotacion {
 };
 
 struct tarjetaAmarilla {
-    //
+    int idJugador;                         // ID del jugador que anotó (0 = desconocido / gol en contra)
+    int minuto;                            // Minuto del partido en que se anotó (1 - 120)
+    char equipo[TAMANO_LOCAL_O_VISITANTE]; // "LOCAL" o "VISITANTE"
 };
 
 struct tarjetaRoja {
-    //
+    int idJugador;                         // ID del jugador que anotó (0 = desconocido / gol en contra)
+    int minuto;                            // Minuto del partido en que se anotó (1 - 120)
+    char equipo[TAMANO_LOCAL_O_VISITANTE]; // "LOCAL" o "VISITANTE"
 };
 
 struct Partido {
@@ -129,13 +136,19 @@ struct Partido {
     int anotacionesLocal;
     int anotacionesVisitante;
 
+    // Tarjetas por equipo
+    int tarjetasAmaLocal;
+    int tarjetasAmaVisitante;
+    int tarjetasRojasLocal;
+    int tarjetasRojasVisitante;
+
     // Detalle de goles (NUEVO en Proyecto 2)
-    Anotacion anotaciones[22]; // Máximo 22 goles por partido
-    // tarjetaAmarilla tarjetasA[30]; // Máximo 30 tarjetas A por partido
-    // tarjetaRoja tarjetaR[8]; // Máximo 8 tarjetas R por partido
+    Anotacion anotaciones[MAX_ANOTACIONES];            // Máximo 22 goles por partido
+    tarjetaAmarilla tarjetasA[MAX_TARJETAS_AMARILLAS]; // Máximo 30 tarjetas A por partido
+    tarjetaRoja tarjetaR[MAX_TARJETAS_ROJAS];          // Máximo 8 tarjetas R por partido
     int numAnotaciones;
-    // int numTarjetasAma;
-    // int numTarjetasRojas;
+    int numTarjetasAma;
+    int numTarjetasRojas;
 
     // Metadata de control
     bool eliminado;
@@ -755,519 +768,521 @@ namespace Validadores {
 
 namespace Logica {
 
-    void definirFormato(Torneo &torneoAux, int opcion) {
-        if (opcion == 1) {
-            std::strncpy(torneoAux.formato, "GRUPOS", TAMANO_FORMATO);
-        } else if (opcion == 2) {
-            std::strncpy(torneoAux.formato, "ELIMINATORIA", TAMANO_FORMATO);
+    namespace {
+        void definirFormato(Torneo &torneoAux, int opcion) {
+            if (opcion == 1) {
+                std::strncpy(torneoAux.formato, "GRUPOS", TAMANO_FORMATO);
+            } else if (opcion == 2) {
+                std::strncpy(torneoAux.formato, "ELIMINATORIA", TAMANO_FORMATO);
+            }
         }
-    }
 
-    bool existeArchivo(const char *nombreArchivo) {
-        // Creamos el archivo y le colocamos la cabecera
-        std::ifstream comprobar;
+        bool existeArchivo(const char *nombreArchivo) {
+            // Creamos el archivo y le colocamos la cabecera
+            std::ifstream comprobar;
 
-        // intentamos abrir el archivo
-        comprobar.open(nombreArchivo, std::ios::binary);
+            // intentamos abrir el archivo
+            comprobar.open(nombreArchivo, std::ios::binary);
 
-        // Si el archivo no se pudo leer/abrir significa que no existe
-        if (!comprobar.good()) {
+            // Si el archivo no se pudo leer/abrir significa que no existe
+            if (!comprobar.good()) {
+                comprobar.close();
+                return false;
+            }
+            return true;
             comprobar.close();
-            return false;
         }
-        return true;
-        comprobar.close();
-    }
 
-    // Crea el archivo si no existe y escribe un ArchivoHeader en cero
-    // Retorna true si el archivo quedó listo para usar
-    bool inicializarArchivo(const char *nombreArchivo) {
+        // Crea el archivo si no existe y escribe un ArchivoHeader en cero
+        // Retorna true si el archivo quedó listo para usar
+        bool inicializarArchivo(const char *nombreArchivo) {
 
-        // Si el archivo existe (se puede abrir para leer) simplemente devolvemos true y cerramos el archivo
-        if (existeArchivo(nombreArchivo)) {
-            return true;
+            // Si el archivo existe (se puede abrir para leer) simplemente devolvemos true y cerramos el archivo
+            if (existeArchivo(nombreArchivo)) {
+                return true;
 
-        } else { // Si el archivo no existe lo creamos
-            std::ofstream archivo;
-            archivo.open(nombreArchivo, std::ios::binary);
+            } else { // Si el archivo no existe lo creamos
+                std::ofstream archivo;
+                archivo.open(nombreArchivo, std::ios::binary);
 
-            if (!archivo.is_open()) {
-                // Devolvemos false porque ya que el archivo NO quedó listo para usar (no existe)
-                return false;
-            }
+                if (!archivo.is_open()) {
+                    // Devolvemos false porque ya que el archivo NO quedó listo para usar (no existe)
+                    return false;
+                }
 
-            // inicializamos un archivo Header
-            ArchivoHeader nuevo = {0, 1, 0, 1};
+                // inicializamos un archivo Header
+                ArchivoHeader nuevo = {0, 1, 0, 1};
 
-            // Movemos el puntero de escritura al inicio por seguridad
-            archivo.seekp(0, std::ios::beg);
+                // Movemos el puntero de escritura al inicio por seguridad
+                archivo.seekp(0, std::ios::beg);
 
-            // escribimos el header en el archivo binario
-            archivo.write(reinterpret_cast<const char *>(&nuevo), sizeof(ArchivoHeader));
+                // escribimos el header en el archivo binario
+                archivo.write(reinterpret_cast<const char *>(&nuevo), sizeof(ArchivoHeader));
 
-            // Verifcamos que se haya escrito bien
-            if (archivo.fail()) {
+                // Verifcamos que se haya escrito bien
+                if (archivo.fail()) {
+                    archivo.close();
+                    // Devolvemos false porque ya que el archivo NO quedó listo para usar (falló)
+                    return false;
+                }
+
+                // cerramos el archivo
                 archivo.close();
-                // Devolvemos false porque ya que el archivo NO quedó listo para usar (falló)
-                return false;
+                return true;
             }
-
-            // cerramos el archivo
-            archivo.close();
-            return true;
         }
-    }
 
-    // Abre el archivo y retorna el header si el archivo existe y si tiene header
-    ArchivoHeader leerHeader(const char *nombreArchivo) {
-        // si no existe el archivo devolvemos el header lleno de -1
-        ArchivoHeader header, headerError = {-1, -1, -1, -1};
-        if (!existeArchivo) {
-            return headerError;
-        } else { // Si existe el archivo
-            // abrimos el archivo en modo lectura
+        // Abre el archivo y retorna el header si el archivo existe y si tiene header
+        ArchivoHeader leerHeader(const char *nombreArchivo) {
+            // si no existe el archivo devolvemos el header lleno de -1
+            ArchivoHeader header, headerError = {-1, -1, -1, -1};
+            if (!existeArchivo) {
+                return headerError;
+            } else { // Si existe el archivo
+                // abrimos el archivo en modo lectura
+                std::ifstream archivo;
+                archivo.open(nombreArchivo, std::ios::binary);
+
+                // Verificamos que el archivo abrió correctamente
+                if (!archivo.is_open()) {
+                    return headerError;
+                }
+
+                // ubicamos el puntero de lectura al principio por seguridad
+                archivo.seekg(0, std::ios::beg);
+
+                // Leemos solo el header
+                archivo.read(reinterpret_cast<char *>(&header), sizeof(ArchivoHeader));
+
+                // Verificamos si la lectura fue correcta
+                if (!archivo.fail()) {
+                    archivo.close();
+                    return headerError;
+                }
+
+                archivo.close();
+                return header;
+            }
+        }
+
+        // recibe el header y se actualiza el header del archivo
+        bool actualizarHeader(const char *nombreArchivo, ArchivoHeader header) {
+
+            // Si no existe el archivo devolvemos false
+            if (!existeArchivo(nombreArchivo)) {
+                return false;
+
+            } else { // Si existe el archivo cambiamos el header
+                std::fstream archivo;
+
+                // abrimos el archivo de esta forma para evitar el truncamiento de los datos
+                archivo.open(nombreArchivo, std::ios::in | std::ios::out | std::ios::binary);
+
+                // Verificamos si abrió el archivo
+                if (!archivo.is_open()) {
+                    return false;
+                }
+
+                // Movemos el puntero de escritura al inicio por seguridad
+                archivo.seekp(0, std::ios::beg);
+
+                // Escribimos el nuevo header
+                archivo.write(reinterpret_cast<const char *>(&header), sizeof(ArchivoHeader));
+
+                // Verificamos si la escritura fue correcta
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
+                archivo.close();
+                return true;
+            }
+        }
+
+        bool inicializarSistemaArchivos() {
+            return inicializarArchivo(NOMBRE_ARCHIVO_TORNEO) && inicializarArchivo(NOMBRE_ARCHIVO_EQUIPOS) && inicializarArchivo(NOMBRE_ARCHIVO_JUGADORES) &&
+                   inicializarArchivo(NOMBRE_ARCHIVO_PARTIDOS);
+        }
+
+        template <class struct1> //
+        int buscarIndicePorID(const char *nombreArchivo, int ID) {
+            int indice = -1;
+
+            // Si el archivo no existe devolvemos -1
+            if (!existeArchivo(nombreArchivo)) {
+                return indice;
+            }
             std::ifstream archivo;
+
+            // Abrimos el archivo en modo lectura
             archivo.open(nombreArchivo, std::ios::binary);
 
-            // Verificamos que el archivo abrió correctamente
+            // Verificamos que el archivo esté abierto
             if (!archivo.is_open()) {
-                return headerError;
+                return indice;
             }
 
-            // ubicamos el puntero de lectura al principio por seguridad
-            archivo.seekg(0, std::ios::beg);
+            // Movemos el puntero de lectura despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
 
-            // Leemos solo el header
-            archivo.read(reinterpret_cast<char *>(&header), sizeof(ArchivoHeader));
+            struct1 registroTemp;
+            int contadorIndice = 0;
+            bool encontrado = false;
+
+            // Realizamos la busqueda
+            while (archivo.read(reinterpret_cast<char *>(&registroTemp), sizeof(struct1))) {
+
+                // Verficamos que la lectura haya sido correcta
+                if (archivo.fail()) {
+                    archivo.close();
+                    return indice;
+                }
+
+                // Si el ID coincide activamos la bandera y rompemos el bucle
+                if (registroTemp.ID == ID) {
+                    encontrado = true;
+                    break;
+                }
+                contadorIndice++;
+            }
 
             // Verificamos si la lectura fue correcta
             if (!archivo.fail()) {
                 archivo.close();
-                return headerError;
+                return indice;
             }
 
+            indice = contadorIndice;
             archivo.close();
-            return header;
+
+            // Si lo encontramos devolvemos el indice, sino retornamos -1
+            if (encontrado) {
+                return indice;
+            } else {
+                return indice;
+            }
         }
-    }
 
-    // recibe el header y se actualiza el header del archivo
-    bool actualizarHeader(const char *nombreArchivo, ArchivoHeader header) {
+        template <class struct2> //
+        bool existeID(const char *nombreArchivo, const int ID) {
 
-        // Si no existe el archivo devolvemos false
-        if (!existeArchivo(nombreArchivo)) {
-            return false;
+            // Verificamos que existe el archivo
+            if (!existeArchivo(nombreArchivo)) {
+                return false;
+            }
 
-        } else { // Si existe el archivo cambiamos el header
-            std::fstream archivo;
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+            struct2 registroTemporal;
 
-            // abrimos el archivo de esta forma para evitar el truncamiento de los datos
-            archivo.open(nombreArchivo, std::ios::in | std::ios::out | std::ios::binary);
-
-            // Verificamos si abrió el archivo
+            // verificamos que se abrió sino devolvemos false;
             if (!archivo.is_open()) {
                 return false;
             }
 
-            // Movemos el puntero de escritura al inicio por seguridad
-            archivo.seekp(0, std::ios::beg);
+            // movemos el puntero de indice despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
 
-            // Escribimos el nuevo header
-            archivo.write(reinterpret_cast<const char *>(&header), sizeof(ArchivoHeader));
+            // Buscamos el ID en los registros
+            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct2))) {
 
-            // Verificamos si la escritura fue correcta
+                // Verificamos si se produjo un fallo
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
+                // Si encontramos una coincidencia devolvemos true
+                if (registroTemporal.ID == ID) {
+                    archivo.close();
+                    return true;
+                }
+            }
+
+            archivo.close();
+            return false;
+        }
+
+        // tipo5 es la estructura y tipo6 es el tipo de dato dentro de la estructura, uno de los miembros
+        template <class struct3, class var2> //
+        bool nombreDuplicado(const char *nombreArchivo, const char *nombre, var2 struct3::*miembro) {
+            // * DESCRIPCION:
+            // se lee como un puntero llamado miembro que apunta a una variable d etipo tipo6 que reside dentro de una
+            // estructura de tipo tipo5
+
+            // Verificamos si el archivo existe
+            if (!existeArchivo(nombreArchivo)) {
+                return false;
+            }
+
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Realizamos una copia de la variable para poder convertirla a minuscula sin problemas
+            char nombreBusquedaAux[TAMANO_NOMBRE];
+            std::strncpy(nombreBusquedaAux, nombre, TAMANO_NOMBRE);
+            Auxiliares::toMinus(nombreBusquedaAux);
+            struct3 registroTemporal;
+
+            // movemos el puntero de indice despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+            // buscamos en el binario
+            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct3))) {
+
+                // verificamos que no hayan errores en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
+                // buscamos si el nombre está duplicado
+                if (std::strcmp(registroTemporal.*miembro, nombre) == 0) {
+                    // * DESCRIPCION:
+                    // como *miembro es un puntero es decir guarda una direccion de memoria, la desreferenciamos con '*'
+                    // por lo tanto lo que indica es que dentro de la estructura real (que aun no sabemos cual es)
+                    // vamos a acceder al campo que nos indica miembro (el que pasaron como argumento)
+                    // si la estructura es equipo y el miembro es nombre entrenador entonces hace equipo::nombreEntrenador
+                    // es decir creamos una variable de tipo equipo y le pasamos como propiedad el nombre del entrenador
+                    archivo.close();
+                    return true;
+                }
+            }
+
+            archivo.close();
+            return false;
+        }
+
+        template <class struct4, class var3> //
+        bool nombreDuplicadoParaActualizar(const char *nombreArchivo, const char *nombre, const int idEquipo, var3 struct4::*miembro) {
+            // si el archivo no existe devolvemos false
+            if (!existeArchivo(nombreArchivo)) {
+                return false;
+            }
+
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // verificamos si el archivo abrió
+            if (!archivo.is_open()) {
+                return false;
+            }
+
+            // creamos una copia para no modificar las variables reales
+            char copiaNuevoNombre[TAMANO_NOMBRE];
+            std::strncpy(copiaNuevoNombre, nombre, TAMANO_NOMBRE);
+            Auxiliares::toMinus(copiaNuevoNombre);
+            struct4 registroTemporal;
+
+            // movemos el puntero de indice despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+            // Realizamos la busqueda
+            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct4))) {
+                // verificamos si no ocurrio un fallo en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
+                // Si estamos revisando el equipo al que pertenecemos lo ignoramos
+                if (registroTemporal.idEquipo == idEquipo) {
+                    continue;
+                }
+
+                // creamos una copia del nombre real para hacer la comparacion en minusculas
+                char nombreAux[TAMANO_NOMBRE];
+                std::strncpy(nombreAux, registroTemporal.*miembro, TAMANO_NOMBRE);
+                Auxiliares::toMinus(nombreAux);
+
+                // comparamos los nombres si es igual devolmemos true sino false
+                if (std::strcmp(nombreAux, copiaNuevoNombre) == 0) {
+                    return true;
+                }
+            }
+
+            archivo.close();
+            return false;
+        }
+
+        // Funcion para cualquier estructura
+        template <class struct5> //
+        bool buscarRegistrosPorId(const char *nombreArchivo, struct5 &buscado, const int ID) {
+            // verificamos que si existe ese archivo
+            if (!existeArchivo(nombreArchivo)) {
+                return false;
+            }
+
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Verificamos que se haya abierto correctamente
+            if (!archivo.is_open()) {
+                return false;
+            }
+
+            // Buscamos el indice fisico
+            size_t indice = buscarIndicePorID<struct5>(nombreArchivo, ID);
+
+            // Si no encontró nada es decir el indice vale -1 retornamos false
+            if (indice == -1) {
+                return false;
+            }
+
+            // calculamos la posicion
+            std::streampos posicion = sizeof(ArchivoHeader) + indice * sizeof(struct5);
+
+            // movemos el punero a esa posicion
+            archivo.seekg(posicion, std::ios::beg);
+
+            // Leemos el registro
+            archivo.read(reinterpret_cast<char *>(&buscado), sizeof(struct5));
+
+            // verificamos que no se hayan producido errores en la lectura
             if (archivo.fail()) {
                 archivo.close();
+                return false;
+            }
+
+            // verificamos que no esté eliminado
+            if (buscado.eliminado) {
                 return false;
             }
 
             archivo.close();
             return true;
         }
-    }
 
-    bool inicializarSistemaArchivos() {
-        return inicializarArchivo(NOMBRE_ARCHIVO_TORNEO) && inicializarArchivo(NOMBRE_ARCHIVO_EQUIPOS) && inicializarArchivo(NOMBRE_ARCHIVO_JUGADORES) &&
-               inicializarArchivo(NOMBRE_ARCHIVO_PARTIDOS);
-    }
+        template <class struct6> //
+        int buscarRegistrosPorSucadena(const char nombreArchivo, struct6 resultados[], const char *subcadena, const int maxResultados) {
+            int cantidadDeRegistrosEncontrados = 0;
+            int error = -1;
+            struct6 registroTemporal;
 
-    template <class struct1> //
-    int buscarIndicePorID(const char *nombreArchivo, int ID) {
-        int indice = -1;
-
-        // Si el archivo no existe devolvemos -1
-        if (!existeArchivo(nombreArchivo)) {
-            return indice;
-        }
-        std::ifstream archivo;
-
-        // Abrimos el archivo en modo lectura
-        archivo.open(nombreArchivo, std::ios::binary);
-
-        // Verificamos que el archivo esté abierto
-        if (!archivo.is_open()) {
-            return indice;
-        }
-
-        // Movemos el puntero de lectura despues del header
-        archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
-
-        struct1 registroTemp;
-        int contadorIndice = 0;
-        bool encontrado = false;
-
-        // Realizamos la busqueda
-        while (archivo.read(reinterpret_cast<char *>(&registroTemp), sizeof(struct1))) {
-
-            // Verficamos que la lectura haya sido correcta
-            if (archivo.fail()) {
-                archivo.close();
-                return indice;
-            }
-
-            // Si el ID coincide activamos la bandera y rompemos el bucle
-            if (registroTemp.ID == ID) {
-                encontrado = true;
-                break;
-            }
-            contadorIndice++;
-        }
-
-        // Verificamos si la lectura fue correcta
-        if (!archivo.fail()) {
-            archivo.close();
-            return indice;
-        }
-
-        indice = contadorIndice;
-        archivo.close();
-
-        // Si lo encontramos devolvemos el indice, sino retornamos -1
-        if (encontrado) {
-            return indice;
-        } else {
-            return indice;
-        }
-    }
-
-    template <class struct2> //
-    bool existeID(const char *nombreArchivo, const int ID) {
-
-        // Verificamos que existe el archivo
-        if (!existeArchivo(nombreArchivo)) {
-            return false;
-        }
-
-        std::ifstream archivo;
-        archivo.open(nombreArchivo, std::ios::binary);
-        struct2 registroTemporal;
-
-        // verificamos que se abrió sino devolvemos false;
-        if (!archivo.is_open()) {
-            return false;
-        }
-
-        // movemos el puntero de indice despues del header
-        archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
-
-        // Buscamos el ID en los registros
-        while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct2))) {
-
-            // Verificamos si se produjo un fallo
-            if (archivo.fail()) {
-                archivo.close();
-                return false;
-            }
-
-            // Si encontramos una coincidencia devolvemos true
-            if (registroTemporal.ID == ID) {
-                archivo.close();
-                return true;
-            }
-        }
-
-        archivo.close();
-        return false;
-    }
-
-    // tipo5 es la estructura y tipo6 es el tipo de dato dentro de la estructura, uno de los miembros
-    template <class struct3, class var2> //
-    bool nombreDuplicado(const char *nombreArchivo, const char *nombre, var2 struct3::*miembro) {
-        // * DESCRIPCION:
-        // se lee como un puntero llamado miembro que apunta a una variable d etipo tipo6 que reside dentro de una
-        // estructura de tipo tipo5
-
-        // Verificamos si el archivo existe
-        if (!existeArchivo(nombreArchivo)) {
-            return false;
-        }
-
-        std::ifstream archivo;
-        archivo.open(nombreArchivo, std::ios::binary);
-
-        // Realizamos una copia de la variable para poder convertirla a minuscula sin problemas
-        char nombreBusquedaAux[TAMANO_NOMBRE];
-        std::strncpy(nombreBusquedaAux, nombre, TAMANO_NOMBRE);
-        Auxiliares::toMinus(nombreBusquedaAux);
-        struct3 registroTemporal;
-
-        // movemos el puntero de indice despues del header
-        archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
-
-        // buscamos en el binario
-        while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct3))) {
-
-            // verificamos que no hayan errores en la lectura
-            if (archivo.fail()) {
-                archivo.close();
-                return false;
-            }
-
-            // buscamos si el nombre está duplicado
-            if (std::strcmp(registroTemporal.*miembro, nombre) == 0) {
-                // * DESCRIPCION:
-                // como *miembro es un puntero es decir guarda una direccion de memoria, la desreferenciamos con '*'
-                // por lo tanto lo que indica es que dentro de la estructura real (que aun no sabemos cual es)
-                // vamos a acceder al campo que nos indica miembro (el que pasaron como argumento)
-                // si la estructura es equipo y el miembro es nombre entrenador entonces hace equipo::nombreEntrenador
-                // es decir creamos una variable de tipo equipo y le pasamos como propiedad el nombre del entrenador
-                archivo.close();
-                return true;
-            }
-        }
-
-        archivo.close();
-        return false;
-    }
-
-    template <class struct4, class var3> //
-    bool nombreDuplicadoParaActualizar(const char *nombreArchivo, const char *nombre, const int idEquipo, var3 struct4::*miembro) {
-        // si el archivo no existe devolvemos false
-        if (!existeArchivo(nombreArchivo)) {
-            return false;
-        }
-
-        std::ifstream archivo;
-        archivo.open(nombreArchivo, std::ios::binary);
-
-        // verificamos si el archivo abrió
-        if (!archivo.is_open()) {
-            return false;
-        }
-
-        // creamos una copia para no modificar las variables reales
-        char copiaNuevoNombre[TAMANO_NOMBRE];
-        std::strncpy(copiaNuevoNombre, nombre, TAMANO_NOMBRE);
-        Auxiliares::toMinus(copiaNuevoNombre);
-        struct4 registroTemporal;
-
-        // movemos el puntero de indice despues del header
-        archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
-
-        // Realizamos la busqueda
-        while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct4))) {
-            // verificamos si no ocurrio un fallo en la lectura
-            if (archivo.fail()) {
-                archivo.close();
-                return false;
-            }
-
-            // Si estamos revisando el equipo al que pertenecemos lo ignoramos
-            if (registroTemporal.idEquipo == idEquipo) {
-                continue;
-            }
-
-            // creamos una copia del nombre real para hacer la comparacion en minusculas
-            char nombreAux[TAMANO_NOMBRE];
-            std::strncpy(nombreAux, registroTemporal.*miembro, TAMANO_NOMBRE);
-            Auxiliares::toMinus(nombreAux);
-
-            // comparamos los nombres si es igual devolmemos true sino false
-            if (std::strcmp(nombreAux, copiaNuevoNombre) == 0) {
-                return true;
-            }
-        }
-
-        archivo.close();
-        return false;
-    }
-
-    // Funcion para cualquier estructura
-    template <class struct5> //
-    bool buscarRegistrosPorId(const char *nombreArchivo, struct5 &buscado, const int ID) {
-        // verificamos que si existe ese archivo
-        if (!existeArchivo(nombreArchivo)) {
-            return false;
-        }
-
-        std::ifstream archivo;
-        archivo.open(nombreArchivo, std::ios::binary);
-
-        // Verificamos que se haya abierto correctamente
-        if (!archivo.is_open()) {
-            return false;
-        }
-
-        // Buscamos el indice fisico
-        size_t indice = buscarIndicePorID<struct5>(nombreArchivo, ID);
-
-        // Si no encontró nada es decir el indice vale -1 retornamos false
-        if (indice == -1) {
-            return false;
-        }
-
-        // calculamos la posicion
-        std::streampos posicion = sizeof(ArchivoHeader) + indice * sizeof(struct5);
-
-        // movemos el punero a esa posicion
-        archivo.seekg(posicion, std::ios::beg);
-
-        // Leemos el registro
-        archivo.read(reinterpret_cast<char *>(&buscado), sizeof(struct5));
-
-        // verificamos que no se hayan producido errores en la lectura
-        if (archivo.fail()) {
-            archivo.close();
-            return false;
-        }
-
-        // verificamos que no esté eliminado
-        if (buscado.eliminado) {
-            return false;
-        }
-
-        archivo.close();
-        return true;
-    }
-
-    template <class struct6> //
-    int buscarRegistrosPorSucadena(const char nombreArchivo, struct6 resultados[], const char *subcadena, const int maxResultados) {
-        int cantidadDeRegistrosEncontrados = 0;
-        int error = -1;
-        struct6 registroTemporal;
-
-        // verificamos que si existe ese archivo
-        if (!existeArchivo(nombreArchivo)) {
-            return error;
-        }
-
-        std::ifstream archivo;
-        archivo.open(nombreArchivo, std::ios::binary);
-
-        // Verificamos que se haya abierto correctamente
-        if (!archivo.is_open()) {
-            return error;
-        }
-
-        // Realizamos copias para no dañar las variables originales
-        char copiaRegistro[TAMANO_NOMBRE];
-        char copiaSubcadena[TAMANO_NOMBRE];
-        std::strncpy(copiaSubcadena, subcadena, TAMANO_NOMBRE);
-        Auxiliares::toMinus(copiaSubcadena);
-
-        // Ubicamos el puntero de posicion despues del header
-        archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
-
-        // Realizamos la lectura del archivo
-        while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct6))) {
-
-            // Verificamos que no haya error al hacer la lectura
-            if (archivo.fail()) {
-                archivo.close();
+            // verificamos que si existe ese archivo
+            if (!existeArchivo(nombreArchivo)) {
                 return error;
             }
 
-            // Si encontramos un registro eliminado lo saltamos
-            if (registroTemporal.eliminado) {
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Verificamos que se haya abierto correctamente
+            if (!archivo.is_open()) {
                 return error;
             }
 
-            // Si aún no llegamos a la cantidad maxima de registros hacemos la comparacion
-            if (cantidadDeRegistrosEncontrados < maxResultados) {
+            // Realizamos copias para no dañar las variables originales
+            char copiaRegistro[TAMANO_NOMBRE];
+            char copiaSubcadena[TAMANO_NOMBRE];
+            std::strncpy(copiaSubcadena, subcadena, TAMANO_NOMBRE);
+            Auxiliares::toMinus(copiaSubcadena);
 
-                // hacemos una copia del nombre del registro
-                std::strncpy(copiaRegistro, registroTemporal.nombre);
-                Auxiliares::toMinus(copiaRegistro);
+            // Ubicamos el puntero de posicion despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
 
-                // lo pasamos a minus para comparar mejor
-                // Buscamos si la subcadena coincide con la copia usando std::strstr
-                if (std::strstr(copiaRegistro, copiaSubcadena) != nullptr) {
-                    resultados[cantidadDeRegistrosEncontrados] = registroTemporal;
-                    cantidadDeRegistrosEncontrados++;
+            // Realizamos la lectura del archivo
+            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct6))) {
+
+                // Verificamos que no haya error al hacer la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    return error;
                 }
 
-            } else {
-                // sino salimos del bucle
-                break;
+                // Si encontramos un registro eliminado lo saltamos
+                if (registroTemporal.eliminado) {
+                    return error;
+                }
+
+                // Si aún no llegamos a la cantidad maxima de registros hacemos la comparacion
+                if (cantidadDeRegistrosEncontrados < maxResultados) {
+
+                    // hacemos una copia del nombre del registro
+                    std::strncpy(copiaRegistro, registroTemporal.nombre);
+                    Auxiliares::toMinus(copiaRegistro);
+
+                    // lo pasamos a minus para comparar mejor
+                    // Buscamos si la subcadena coincide con la copia usando std::strstr
+                    if (std::strstr(copiaRegistro, copiaSubcadena) != nullptr) {
+                        resultados[cantidadDeRegistrosEncontrados] = registroTemporal;
+                        cantidadDeRegistrosEncontrados++;
+                    }
+
+                } else {
+                    // sino salimos del bucle
+                    break;
+                }
             }
+
+            archivo.close();
+            return cantidadDeRegistrosEncontrados;
         }
 
-        archivo.close();
-        return cantidadDeRegistrosEncontrados;
-    }
+        template <class struct7> //
+        int listarRegistros(const char *nombreArchivo, struct7 resultados[], const int maxRegistros) {
+            int cantidadDeRegistrosEncontrados = 0;
+            int error = -1;
+            struct7 registroTemporal;
+            ArchivoHeader header = leerHeader(nombreArchivo);
 
-    template <class struct7> //
-    int listarRegistros(const char *nombreArchivo, struct7 resultados[], const int maxRegistros) {
-        int cantidadDeRegistrosEncontrados = 0;
-        int error = -1;
-        struct7 registroTemporal;
-        ArchivoHeader header = leerHeader(nombreArchivo);
-
-        // verificamos que si existe ese archivo
-        if (!existeArchivo(nombreArchivo)) {
-            return error;
-        }
-
-        std::ifstream archivo;
-        archivo.open(nombreArchivo, std::ios::binary);
-
-        // Verificamos que se haya abierto correctamente
-        if (!archivo.is_open()) {
-            return error;
-        }
-
-        // Verificamos que el header se haya leido correctamente
-        if (header.cantidadRegistros == -1) {
-            return false;
-        }
-
-        // Ubicamos el puntero de posicion despues del header
-        archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
-
-        // Realizamos la lectura del archivo
-        while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct7))) {
-
-            // Verificamos si no hubo un falló en la lectura
-            if (archivo.fail()) {
-                archivo.close();
+            // verificamos que si existe ese archivo
+            if (!existeArchivo(nombreArchivo)) {
                 return error;
             }
 
-            // Si encontramos un archivo que esta eliminado lo saltamos
-            if (registroTemporal.eliminado) {
-                continue;
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Verificamos que se haya abierto correctamente
+            if (!archivo.is_open()) {
+                return error;
             }
 
-            // Si aún no llegamos a la cantidad maxima de registros hacemos la comparacion
-            if (cantidadDeRegistrosEncontrados < maxRegistros) {
-
-                resultados[cantidadDeRegistrosEncontrados] = registroTemporal;
-                cantidadDeRegistrosEncontrados++;
-
-            } else {
-                // sino salimos del bucle
-                break;
+            // Verificamos que el header se haya leido correctamente
+            if (header.cantidadRegistros == -1) {
+                return false;
             }
-        }
 
-        // Verificamos que se hayan leido todos los registros
-        if (header.registrosActivos > cantidadDeRegistrosEncontrados) {
-            return error;
-        }
+            // Ubicamos el puntero de posicion despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
 
-        archivo.close();
-        return cantidadDeRegistrosEncontrados;
-    }
+            // Realizamos la lectura del archivo
+            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct7))) {
+
+                // Verificamos si no hubo un falló en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    return error;
+                }
+
+                // Si encontramos un archivo que esta eliminado lo saltamos
+                if (registroTemporal.eliminado) {
+                    continue;
+                }
+
+                // Si aún no llegamos a la cantidad maxima de registros hacemos la comparacion
+                if (cantidadDeRegistrosEncontrados < maxRegistros) {
+
+                    resultados[cantidadDeRegistrosEncontrados] = registroTemporal;
+                    cantidadDeRegistrosEncontrados++;
+
+                } else {
+                    // sino salimos del bucle
+                    break;
+                }
+            }
+
+            // Verificamos que se hayan leido todos los registros
+            if (header.registrosActivos > cantidadDeRegistrosEncontrados) {
+                return error;
+            }
+
+            archivo.close();
+            return cantidadDeRegistrosEncontrados;
+        }
+    } // namespace
 
     namespace equipos {
 
@@ -2108,6 +2123,105 @@ namespace Logica {
 
         const char *estadoPartidos[] = {"PROGRAMADO", "JUGADO", "CANCELADO"};
 
+        bool hayPartidoProgramadoEntre2(std::ifstream archivo, Partido &partido) {
+
+            // Verificamos que esté aiberto antes de empezar a leer
+            if (!archivo.is_open()) {
+                return false;
+            }
+
+            // Movemos el puntero despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+            Partido pAux;
+
+            // Realizamos la lectura
+            while (archivo.read(reinterpret_cast<char *>(&pAux), sizeof(Partido))) {
+
+                // Verificamos que no se haya producido errores en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
+                bool tienePartidoEntreSi = ((pAux.idEquipoLocal == partido.idEquipoLocal) && (pAux.idEquipoVisitante == partido.idEquipoVisitante)) ||
+                                           ((pAux.idEquipoLocal == partido.idEquipoVisitante) && (pAux.idEquipoVisitante == partido.idEquipoLocal));
+
+                // Si ya hay un partido programado entre ellos
+                if (tienePartidoEntreSi && (std::strcmp(pAux.estado, estadoPartidos[0]) == 0)) {
+                    return false;
+                }
+            }
+        }
+
+        // Retorna array de partidos con ese estado ("PROGRAMADO", "JUGADO", "CANCELADO")
+        // El llamador libera el array con delete[]
+        int listarPartidosPorSuEstado(const char *nombreArchivo, Partido resultados[], const char *estado, const int maxResultados) {
+            int cantidadDeRegistrosEncontrados = 0;
+            int error = -1;
+            Partido registroTemporal;
+            ArchivoHeader header;
+
+            // verificamos que si existe ese archivo
+            if (!existeArchivo(nombreArchivo)) {
+                return error;
+            }
+
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Verificamos que se haya abierto correctamente
+            if (!archivo.is_open()) {
+                return error;
+            }
+
+            if (header.cantidadRegistros == error) {
+                archivo.close();
+                return error;
+            }
+
+            // Ubicamos el puntero de posicion despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+            // Realizamos la lectura del archivo
+            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(Partido))) {
+
+                // Verificamos si no hubo un falló en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    return error;
+                }
+
+                // Si encontramos un archivo que esta eliminado lo saltamos
+                if (registroTemporal.eliminado) {
+                    continue;
+                }
+
+                // Si aún no llegamos a la cantidad maxima de registros hacemos la comparacion
+                if (cantidadDeRegistrosEncontrados < maxResultados) {
+
+                    // comparamos con los estados
+                    if (std::strcmp(resultados[cantidadDeRegistrosEncontrados].estado, estado) == 0) {
+                        resultados[cantidadDeRegistrosEncontrados] = registroTemporal;
+                        cantidadDeRegistrosEncontrados++;
+                    }
+
+                } else {
+                    // sino salimos del bucle
+                    break;
+                }
+            }
+
+            // Verificamos que se hayan leido todos los registros
+            if (header.registrosActivos < cantidadDeRegistrosEncontrados) {
+                archivo.close();
+                return error;
+            }
+
+            archivo.close();
+            return cantidadDeRegistrosEncontrados;
+        }
+
         bool programarPartido(const char *nombreArchivo, Partido &nuevoPartido) {
             int error = -1;
 
@@ -2162,26 +2276,8 @@ namespace Logica {
 
             // * Realizamos una lectura de todos los archivos para verificar que no tengan partidos programados entre sí
 
-            // Movemos el puntero despues del header
-            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
-
-            Partido pAux;
-
-            // Realizamos la lectura
-            while (archivo.read(reinterpret_cast<char *>(&pAux), sizeof(Partido))) {
-
-                // Verificamos que no se haya producido errores en la lectura
-                if (archivo.fail()) {
-                    archivo.close();
-                    return false;
-                }
-                bool tienePartidoEntreSi = ((pAux.idEquipoLocal == nuevoPartido.idEquipoLocal) && (pAux.idEquipoVisitante == nuevoPartido.idEquipoVisitante)) ||
-                                           ((pAux.idEquipoLocal == nuevoPartido.idEquipoVisitante) && (pAux.idEquipoVisitante == nuevoPartido.idEquipoLocal));
-
-                // Si ya hay un partido programado entre ellos
-                if (tienePartidoEntreSi && (std::strcmp(pAux.estado, estadoPartidos[0]) == 0)) {
-                    return false;
-                }
+            if (hayPartidoProgramadoEntre2) {
+                return false;
             }
 
             /*int minimoRequerido = minJugadoresPorDeporte();
@@ -2233,220 +2329,856 @@ namespace Logica {
         // TODO:   Victoria local  → local  +3 pts, +1 victoria  / visitante +1 derrota
         // TODO:   Empate          → ambos  +1 pt,  +1 empate
         // TODO:   Victoria visit. → visit. +3 pts, +1 victoria  / local     +1 derrota
-        Partido *registrarResultado(const char *nombreArchivo, int IDPartido, int puntosLocal, int puntosVisitante) {
+        bool registrarResultado(const char *nombreArchivo, Partido registroPartido) {
+            int error = -1;
+            Partido resultados[MAX_RESULTADOS];
+            // * Validaciones
 
-            if (!sistemaPartidosValido(MiSistema)) {
-                return nullptr;
+            // Verificamos que exista el archivo
+            if (!existeArchivo(nombreArchivo) && !existeArchivo(NOMBRE_ARCHIVO_EQUIPOS) && !existeArchivo(NOMBRE_ARCHIVO_JUGADORES)) {
+                return false;
             }
 
-            // Seguridad
-            if (MiSistema->numEquiposActuales <= 1) {
-                return nullptr;
+            // Leemos el header del archivo de Equipos
+            ArchivoHeader headerEquipos = leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que el header se haya leido correctamente
+            if (headerEquipos.cantidadRegistros == error) {
+                return false;
+            }
+
+            // Si no hay al menos 2 equipos no se puede programar un partido
+            if (headerEquipos.registrosActivos <= 1) {
+                return false;
+            }
+
+            //  Ahora leemos el header de partidos para verificar que hayan partidos
+            ArchivoHeader headerPartidos = leerHeader(nombreArchivo);
+
+            // Verificamos que el header se haya leido correctamente
+            if (headerPartidos.cantidadRegistros == error) {
+                return false;
+            }
+
+            // Si no hay partidos activos no hacemos nada
+            if (headerPartidos.registrosActivos == 0) {
+                return false;
+            }
+
+            std::fstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+
+            // Verificamos que esté abierto
+            if (!archivo.is_open()) {
+                return false;
+            }
+
+            Partido registroTemporal;
+            int contador;
+
+            // Verificamos que haya partidos en estado programado
+            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(Partido))) {
+
+                // Verificamos que la lectura haya sido correcta
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
+                // Verificamos si el estado es programado
+                if (std::strcmp(registroTemporal.estado, estadoPartidos[0]) == 0) {
+                    contador++;
+                }
+            }
+
+            // Verificamos que hay partidos
+            if (contador <= 0) {
+                archivo.close();
+                return false;
             }
 
             // Por seguridad
-            if (puntosLocal < 0 || puntosVisitante < 0) {
-                return nullptr;
+            if (registroPartido.anotacionesLocal < 0 || registroPartido.anotacionesVisitante < 0) {
+                archivo.close();
+                return false;
+                ;
             }
 
-            int posicion = -1;
+            // Ademas verificamos que el numAnotaciones no sea mayor que el maximo
+            if (registroPartido.numAnotaciones > MAX_ANOTACIONES) {
+                archivo.close();
+                return false;
+            }
 
-            // Buscamos la posicion del partido en el array
-            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                // Si conseguimos una coincidencia con el IDPartido
-                if (MiSistema->Partidos[e].ID == IDPartido) {
-                    posicion = e;
+
+            // * 1. Leemos el partido y verificamos que exsite
+
+            // verificamos que el partido si exista (en estado programado);
+            Partido nuevoPartido;
+            bool existePartido = buscarRegistrosPorId<Partido>(nombreArchivo, nuevoPartido, registroPartido.ID);
+
+            // Verificamos si encontro el partido
+            if (!existePartido) {
+                archivo.close();
+                return false;
+            }
+
+            // Si encontró el partido verificamos que esté en estado programado
+            if (std::strcmp(nuevoPartido.estado, estadoPartidos[0]) != 0) {
+                archivo.close();
+                return false;
+            }
+
+            // * 2. Leemos cada Equipo de los binarios
+
+            Equipo eqLocal, eqVisitante;
+            bool existe;
+
+            existe = buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, nuevoPartido.idEquipoLocal);
+
+            // Verificamos por seguridad
+            if (!existe) {
+                archivo.close();
+                return false;
+            }
+
+            existe = buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante, nuevoPartido.idEquipoVisitante);
+
+            // Verificamos por seguridad
+            if (!existe) {
+                archivo.close();
+                return false;
+            }
+
+            // * 3. Determinamos el resultado del partido y actualizamos las estadisticas en memoria de cada equipo
+
+            // Si ocurre un empate en deportes donde no se permiten empates retornamos false
+            if (registroPartido.anotacionesLocal == registroPartido.anotacionesVisitante) {
+                if (std::strcmp(Validadores::deporteActual, "BALONCESTO") == 0 || std::strcmp(Validadores::deporteActual, "TENIS") == 0 ||
+                    std::strcmp(Validadores::deporteActual, "VOLEIBOL") == 0 || std::strcmp(Validadores::deporteActual, "BEISBOL") == 0 ||
+                    std::strcmp(Validadores::deporteActual, "SOFTBOL") == 0) {
+                    archivo.close();
+                    return false;
+                }
+            }
+
+            // Actualizamos las anotaciones/tarjetas del partido
+            nuevoPartido.anotacionesLocal = registroPartido.anotacionesLocal;
+            nuevoPartido.anotacionesVisitante = registroPartido.anotacionesVisitante;
+
+            nuevoPartido.tarjetasAmaLocal = registroPartido.tarjetasAmaLocal;
+            nuevoPartido.tarjetasAmaVisitante = registroPartido.tarjetasAmaVisitante;
+
+            nuevoPartido.tarjetasRojasLocal = registroPartido.tarjetasRojasLocal;
+            nuevoPartido.tarjetasAmaVisitante = registroPartido.tarjetasRojasVisitante;
+
+            // Si el equipo local ganó
+            if (registroPartido.anotacionesLocal > registroPartido.anotacionesVisitante) {
+                eqLocal.victorias++; // Aumentamos las victorias del local
+                eqLocal.puntos += 3; // Aumentamos los puntos del local
+
+                eqVisitante.derrotas++; // Aumentamos las derrotas del visitante
+
+                // Si el equipo visitante ganó
+            } else if (registroPartido.anotacionesVisitante > registroPartido.anotacionesLocal) {
+                eqVisitante.victorias++; // Aumentamos las victorias
+                eqVisitante.puntos += 3; // Aumentamos los puntos
+
+                eqLocal.derrotas++; // Aumentamos las derrotas
+
+                // Si empataron en un deporte permitido
+            } else {
+                eqLocal.empates++;
+                eqLocal.puntos += 1;
+
+                eqVisitante.empates++;
+                eqVisitante.puntos += 1;
+            }
+
+            // Añadimos los puntos a favor y en contra
+            eqLocal.anotacionAFavor += registroPartido.anotacionesLocal;
+            eqLocal.anotacionEnContra += registroPartido.anotacionesVisitante;
+            eqLocal.jugados++;
+
+            eqVisitante.anotacionAFavor += registroPartido.anotacionesVisitante;
+            eqVisitante.anotacionEnContra += registroPartido.anotacionesLocal;
+            eqVisitante.jugados++;
+
+            // * 4. Agregamos el id del partido al array de cada equipo y aumentamos el numero de partidos
+            eqLocal.partidosIDs[eqLocal.cantidadPartidos] = registroPartido.ID;
+            eqVisitante.partidosIDs[eqVisitante.cantidadPartidos] = registroPartido.ID;
+            eqLocal.cantidadPartidos++;
+            eqVisitante.cantidadPartidos++;
+
+            // Agregamos la fecha de modificacion
+            eqLocal.fechaUltimaModificacion = std::time(nullptr);
+            eqVisitante.fechaUltimaModificacion = std::time(nullptr);
+
+            // * 5. Registramos goles/tarjetas y detalle de goles/tarjetas
+            nuevoPartido.numAnotaciones = registroPartido.numAnotaciones;
+            nuevoPartido.numTarjetasAma = registroPartido.numTarjetasAma;
+            nuevoPartido.numTarjetasRojas = registroPartido.numTarjetasRojas;
+
+            // Puedo usar std::copy pero solo usaré for por el momento
+            for (size_t e = 0; e < nuevoPartido.numAnotaciones; e++) {
+                nuevoPartido.anotaciones[e] = registroPartido.anotaciones[e];
+            }
+
+            for (size_t e = 0; e < nuevoPartido.numTarjetasAma; e++) {
+                nuevoPartido.tarjetasA[e] = registroPartido.tarjetasA[e];
+            }
+
+            for (size_t e = 0; e < nuevoPartido.numTarjetasRojas; e++) {
+                nuevoPartido.tarjetaR[e] = registroPartido.tarjetaR[e];
+            }
+
+            // * 6. Actualizamos las estadisticas de los jugadores por cada gol / tarjeta
+
+            std::fstream archivoJugadores;
+            archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::in | std::ios::out);
+
+            // Verificamos que esté abierto
+            if (!archivoJugadores.is_open()) {
+                archivo.close();
+                return false;
+            }
+
+            Jugador jugadorAux;
+
+            // Modificamos los goles
+            for (size_t e = 0; e < registroPartido.numAnotaciones; e++) {
+
+                // Si fue un autogol, saltamos esta iteracion
+                if (registroPartido.anotaciones[e].idJugador == 0) {
+                    continue;
+                }
+
+                // Buscamos el indice
+                size_t indiceBuscado = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, nuevoPartido.anotaciones[e].idJugador);
+
+                // Si ocurrió un error detenemos el proceso
+                if (indiceBuscado == error) {
+                    return false;
+                }
+
+                // Calculamos la posicion a la que nos vamos  a mover
+                std::streampos posicion = sizeof(ArchivoHeader) + indiceBuscado * sizeof(Jugador);
+
+                // Nos movemos a esa posicion
+                archivoJugadores.seekg(posicion, std::ios::beg);
+
+                // Leemos ese registro
+                archivoJugadores.read(reinterpret_cast<char *>(&jugadorAux), sizeof(Jugador));
+
+                if (archivoJugadores.fail()) {
+                    archivoJugadores.close();
+                    archivo.close();
+                    return false;
+                }
+
+                // modificamos los valores
+                jugadorAux.anotaciones++;
+
+                // Nos movemos a la posicion nuevamente
+                archivoJugadores.seekp(posicion, std::ios::beg);
+
+                // Escribimos el jugador
+                archivoJugadores.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
+            }
+
+            // Modificamos las tarjetas amarillas
+            for (size_t e = 0; e < registroPartido.numTarjetasAma; e++) {
+                // Buscamos el indice
+                size_t indiceBuscado = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, nuevoPartido.tarjetasA[e].idJugador);
+
+                // Si ocurrió un error detenemos el proceso
+                if (indiceBuscado == error) {
+                    return false;
+                }
+
+                // Calculamos la posicion a la que nos vamos  a mover
+                std::streampos posicion = sizeof(ArchivoHeader) + indiceBuscado * sizeof(Jugador);
+
+                // Nos movemos a esa posicion
+                archivoJugadores.seekg(posicion, std::ios::beg);
+
+                // Leemos ese registro
+                archivoJugadores.read(reinterpret_cast<char *>(&jugadorAux), sizeof(Jugador));
+
+                if (archivoJugadores.fail()) {
+                    archivoJugadores.close();
+                    archivo.close();
+                    return false;
+                }
+
+                // modificamos los valores
+                jugadorAux.tarjetasAmarillas++;
+
+                // Nos movemos a la posicion nuevamente
+                archivoJugadores.seekp(posicion, std::ios::beg);
+
+                // Escribimos el jugador
+                archivoJugadores.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
+            }
+
+            // Modificamos las tarjetas rojas
+            for (size_t e = 0; e < registroPartido.numTarjetasRojas; e++) {
+                // Buscamos el indice
+                size_t indiceBuscado = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, nuevoPartido.tarjetaR[e].idJugador);
+
+                // Si ocurrió un error detenemos el proceso
+                if (indiceBuscado == error) {
+                    return false;
+                }
+
+                // Calculamos la posicion a la que nos vamos  a mover
+                std::streampos posicion = sizeof(ArchivoHeader) + indiceBuscado * sizeof(Jugador);
+
+                // Nos movemos a esa posicion
+                archivoJugadores.seekg(posicion, std::ios::beg);
+
+                // Leemos ese registro
+                archivoJugadores.read(reinterpret_cast<char *>(&jugadorAux), sizeof(Jugador));
+
+                if (archivoJugadores.fail()) {
+                    archivoJugadores.close();
+                    archivo.close();
+                    return false;
+                }
+
+                // modificamos los valores
+                jugadorAux.tarjetasRojas++;
+
+                // Nos movemos a la posicion nuevamente
+                archivoJugadores.seekp(posicion, std::ios::beg);
+
+                // Escribimos el jugador
+                archivoJugadores.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
+            }
+
+            // Cerramos el archivo
+            archivoJugadores.close();
+
+            // * 7. Cambiamos el estado del partido a jugado
+            std::strncpy(nuevoPartido.estado, estadoPartidos[1], TAMANO_ESTADO); // JUGADO
+            nuevoPartido.fechaUltimaModificacion = std::time(nullptr);
+
+            // * 8. Escribimos cada equipo en su repectivo archivo
+
+            // Abrimos el archivo de equipos
+            std::fstream archivoEquipos;
+            archivoEquipos.open(NOMBRE_ARCHIVO_EQUIPOS, std::ios::binary | std::ios::in | std::ios::out);
+
+            // Verificamos que el archivo abrió
+            if (!archivo.is_open()) {
+                archivo.close();
+                return false;
+            }
+
+            // Buscamos el indice de cada equipo
+            size_t indiceLocal, indiceVisitante;
+            indiceLocal = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal.ID);
+            indiceVisitante = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante.ID);
+
+            // Verificamos que no devuelvan error
+            if (indiceLocal == error || indiceVisitante == error) {
+                archivo.close();
+                return false;
+            }
+
+            // Calculamos las posiciones
+            std::streampos posicionLocal = sizeof(ArchivoHeader) + indiceLocal * sizeof(Equipo);
+            std::streampos posicionVisitante = sizeof(ArchivoHeader) + indiceVisitante * sizeof(Equipo);
+
+            // * Añadimos al Equipo Local
+
+            // Nos movemos a la posicion
+            archivoEquipos.seekp(posicionLocal, std::ios::beg);
+
+            // Escribimos el equipo
+            archivoEquipos.write(reinterpret_cast<const char *>(&eqLocal), sizeof(Equipo));
+
+            // Verificamos si no dió error la escritura
+            if (archivoEquipos.fail()) {
+                archivoEquipos.close();
+                archivo.close();
+                return false;
+            }
+
+            // * Añadimos al Equipo Visitante
+
+            // Nos movemos a la posicion
+            archivoEquipos.seekp(posicionVisitante, std::ios::beg);
+
+            // Escribimos el equipo
+            archivoEquipos.write(reinterpret_cast<const char *>(&eqVisitante), sizeof(Equipo));
+
+            // Verificamos si no dió error
+            if (archivoEquipos.fail()) {
+                archivoEquipos.close();
+                archivo.close();
+                return false;
+            }
+
+            // cerramos el archivo
+            archivoEquipos.close();
+
+            // * 9. Guardamos el partido
+            size_t indice = buscarIndicePorID<Partido>(nombreArchivo, nuevoPartido.ID);
+
+            // Verificamos que no devuelva error
+            if (indice == error) {
+                archivo.close();
+                return false;
+            }
+
+            // Calculamos la posicion
+            std::streampos posicion = sizeof(ArchivoHeader) + indice * sizeof(Partido);
+
+            // Nos movemos a esa posicion
+            archivo.seekp(posicion, std::ios::beg);
+
+            // Sobreescribimos el partido
+            archivo.write(reinterpret_cast<const char *>(&nuevoPartido), sizeof(Partido));
+
+            // Verificamos que no devuelva error
+            if (archivo.fail()) {
+                archivo.close();
+                return false;
+            }
+
+            // Cerramos el archivo
+            archivo.close();
+
+            return true;
+        }
+
+        int listarPartidosPorEquipo(const char *nombreArchivo, const int idEquipo, Partido resultados[], int maxResultados) {
+            int cantidadDeRegistrosEncontrados = 0;
+            int error = -1;
+            Partido registroTemporal;
+            ArchivoHeader header;
+
+            // verificamos que si existe ese archivo
+            if (!existeArchivo(nombreArchivo)) {
+                return error;
+            }
+
+            std::ifstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary);
+
+            // Verificamos que se haya abierto correctamente
+            if (!archivo.is_open()) {
+                return error;
+            }
+
+            // Verificamos que la lectura del header no sea incorrecta
+            if (header.cantidadRegistros == error) {
+                archivo.close();
+                return error;
+            }
+
+            // Ubicamos el puntero de posicion despues del header
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+            // Realizamos la lectura del archivo
+            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(Partido))) {
+
+                // Verificamos si no hubo un fallo en la lectura
+                if (archivo.fail()) {
+                    archivo.close();
+                    return error;
+                }
+
+                // Si encontramos un archivo que esta eliminado lo saltamos
+                if (registroTemporal.eliminado) {
+                    continue;
+                }
+
+                // Si aún no llegamos a la cantidad maxima de registros hacemos la comparacion
+                if (cantidadDeRegistrosEncontrados < maxResultados) {
+
+                    // comparamos con los estados
+                    if (registroTemporal.ID == idEquipo) {
+                        resultados[cantidadDeRegistrosEncontrados] = registroTemporal;
+                        cantidadDeRegistrosEncontrados++;
+                    }
+
+                } else {
+                    // sino salimos del bucle
                     break;
                 }
             }
 
-            // Si no se encontró nada o el partido no está en estado programado
-            if (posicion == -1 || std::strcmp(MiSistema->Partidos[posicion].estado, Logica::partidos::estadoPartidos[0]) != 0) {
-                return nullptr;
+            // Verificamos que se hayan leido todos los registros
+            if (header.registrosActivos < cantidadDeRegistrosEncontrados) {
+                return error;
             }
 
-            // Si ocurre un emparte en deportes donde no se permiten empates retornamos nullptr
-            if (puntosLocal == puntosVisitante) {
-                if (std::strcmp(Validadores::deporteActual, "BALONCESTO") == 0 || std::strcmp(Validadores::deporteActual, "TENIS") == 0 ||
-                    std::strcmp(Validadores::deporteActual, "VOLEIBOL") == 0 || std::strcmp(Validadores::deporteActual, "BEISBOL") == 0 ||
-                    std::strcmp(Validadores::deporteActual, "SOFTBOL") == 0) {
-                    return nullptr;
-                }
-            }
-
-            // Buscamos los equipos mediante sus IDs para validar existencia
-            Equipo *EqLocal = equipos::buscarEquipoPorID(MiSistema, MiSistema->Partidos[posicion].idEquipoLocal);
-            Equipo *EqVisitante = equipos::buscarEquipoPorID(MiSistema, MiSistema->Partidos[posicion].idEquipoVisitante);
-
-            // Validamos que no apunten a nulo antes de cambiar el estado
-            if (EqLocal == nullptr || EqVisitante == nullptr) {
-                return nullptr;
-            }
-
-            // Con la validación realizada, actualizamos el estado y los puntos del partido
-            MiSistema->Partidos[posicion].puntosLocal = puntosLocal;
-            MiSistema->Partidos[posicion].puntosVisitante = puntosVisitante;
-            std::strncpy(MiSistema->Partidos[posicion].estado, Logica::partidos::estadoPartidos[1]); // JUGADO
-
-            // Si el equipo local ganó
-            if (puntosLocal > puntosVisitante) {
-                EqLocal->victorias++; // Aumentamos las victorias
-                EqLocal->puntos += 3; // Aumentamos los puntos
-
-                EqVisitante->derrotas++; // Aumentamos las derrotas
-
-                // Si el equipo visitante ganó
-            } else if (puntosVisitante > puntosLocal) {
-                EqVisitante->victorias++; // Aumentamos las victorias
-                EqVisitante->puntos += 3; // Aumentamos los puntos
-
-                EqLocal->derrotas++; // Aumentamos las derrotas
-
-                // Si empataron en un deporte permitido
-            } else {
-                EqLocal->empates++;
-                EqLocal->puntos += 1;
-
-                EqVisitante->empates++;
-                EqVisitante->puntos += 1;
-            }
-
-            // Añadimos los puntos a favor y en contra
-            EqLocal->puntosAFavor += puntosLocal;
-            EqLocal->puntosEnContra += puntosVisitante;
-            EqLocal->jugados++;
-            EqVisitante->puntosAFavor += puntosVisitante;
-            EqVisitante->puntosEnContra += puntosLocal;
-            EqVisitante->jugados++;
-
-            return &(MiSistema->Partidos[posicion]);
-        }
-
-        Partido **listarPartidosPorEquipo(, int idEquipo, int *cantidad) {
-            *cantidad = 0;
-            if (!sistemaPartidosValido(MiSistema)) {
-                return nullptr;
-            }
-
-            Partido **listaPartidosPorEquipo = new Partido *[MiSistema->numPartidosActuales];
-
-            // Buscamos los partidos en donde haya participado dicho equipo
-            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                // Si encontramos coincidencias en alguno en local o vistante lo almacenamos
-                if (MiSistema->Partidos[e].idEquipoLocal == idEquipo || MiSistema->Partidos[e].idEquipoVisitante == idEquipo) {
-                    listaPartidosPorEquipo[*cantidad] = &(MiSistema->Partidos[e]);
-                    (*cantidad)++;
-                }
-            }
-
-            return listaPartidosPorEquipo;
-        }
-
-        // Retorna array de partidos con ese estado ("PROGRAMADO", "JUGADO", "CANCELADO")
-        // El llamador libera el array con delete[]
-        Partido **listarPartidosPorSuEstado(, const char *estado, int *cantidad) {
-            *cantidad = 0;
-            if (!sistemaPartidosValido(MiSistema)) {
-                return nullptr;
-            }
-
-            Partido **listaPartidosPorEstado = new Partido *[MiSistema->numPartidosActuales];
-
-            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                if (std::strcmp(MiSistema->Partidos[e].estado, estado) == 0) {
-                    listaPartidosPorEstado[*cantidad] = &(MiSistema->Partidos[e]);
-                    (*cantidad)++;
-                }
-            }
-
-            return listaPartidosPorEstado;
+            archivo.close();
+            return cantidadDeRegistrosEncontrados;
         }
 
         // Cancela un partido: cambia estado a "CANCELADO"
         // Si el partido ya fue JUGADO, revierte las estadísticas de ambos equipos
         // Retorna true si se canceló, false si no existe o ya estaba cancelado
-        bool cancelarPartido(, int IDPartido) {
-            if (!sistemaPartidosValido(MiSistema)) {
+        bool cancelarPartido(const char *nombreArchivo, const int idPartido) {
+            int error = -1;
+
+            // verificamos que si existe ese archivo
+            if (!existeArchivo(nombreArchivo)) {
                 return false;
             }
 
-            // Primero buscamos la posicion del partido en memoria
-            int posicion = -1;
-            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                // Si conseguimos una coincidencia
-                if (MiSistema->Partidos[e].ID == IDPartido) {
-                    posicion = e;
-                    break;
+            std::fstream archivo;
+            archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+
+            // Verificamos que el archivo este abierto
+            if (!archivo.is_open()) {
+                return false;
+            }
+
+            // * Buscar y leer el Partido
+
+            Partido pAux;
+            size_t indice = buscarIndicePorID<Partido>(nombreArchivo, idPartido);
+
+            // Verificamos que el indice no sea paramtro de error (que sea -1)
+            if (indice == error) {
+                archivo.close();
+                return false;
+            }
+
+            // Calculamos la posicion
+            std::streampos posicion = sizeof(ArchivoHeader) + indice * sizeof(Partido);
+
+            // Movemos el puntero de lectura a esa posicion
+            archivo.seekg(posicion, std::ios::beg);
+
+            archivo.read(reinterpret_cast<char *>(&pAux), sizeof(Partido));
+
+            // Verificamos que no se produjo un error
+            if (archivo.fail()) {
+                archivo.close();
+                return false;
+            }
+
+            // Por seguridad (No sea el caso de que haya un bug o un error no se)
+            if (pAux.eliminado) {
+                return false;
+            }
+
+            // Si está jugado debemos revertir todo
+            if (std::strcmp(pAux.estado, estadoPartidos[1]) == 0) {
+
+                // * 1. Buscamos los equipos para revertir las estadisticas
+
+                std::fstream archivoEquipos;
+                archivoEquipos.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+
+                // Verificamos que esté abierto
+                if (!archivoEquipos.is_open()) {
+                    return false;
                 }
-            }
 
-            // Si no se encontró nada
-            if (posicion == -1) {
-                return false;
-            }
+                Equipo eqLocal, eqVisitante;
 
-            // Si el estado del partido es CANCELADO no lo procesamos
-            if ((std::strcmp(MiSistema->Partidos[posicion].estado, estadoPartidos[2]) == 0)) {
-                return false;
-            }
+                // Buscamos el indice fisico
+                size_t indiceLocal = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, pAux.idEquipoLocal);
+                size_t indiceVisitante = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, pAux.idEquipoVisitante);
 
-            // Si está PROGRAMADO lo cambiamos a cancelado solamente
-            if ((std::strcmp(MiSistema->Partidos[posicion].estado, estadoPartidos[0]) == 0)) {
-                std::strncpy(MiSistema->Partidos[posicion].estado, estadoPartidos[2]);
+                // Verificamos que la lectura de los indices fue correcta
+                if (indiceLocal == error || indiceVisitante == error) {
+                    return false;
+                }
+
+                // Calculamos la posicion
+                std::streampos posicionLocal = sizeof(ArchivoHeader) + indice * sizeof(Equipo);
+                std::streampos posicionVisitante = sizeof(ArchivoHeader) + indice * sizeof(Equipo);
+
+                // Obtenemos el equipo local primero
+                archivoEquipos.seekg(posicionLocal, std::ios::beg);
+                archivo.read(reinterpret_cast<char *>(&eqLocal), sizeof(Equipo));
+
+                // Verificamos si falló
+                if (archivoEquipos.fail()) {
+                    archivo.close();
+                    archivoEquipos.close();
+                    return false;
+                }
+
+                // Luego el equipo visitante
+                archivoEquipos.seekg(posicionVisitante, std::ios::beg);
+                archivoEquipos.read(reinterpret_cast<char *>(&eqVisitante), sizeof(Equipo));
+
+                // Verificamos si falló
+                if (archivoEquipos.fail()) {
+                    archivo.close();
+                    archivoEquipos.close();
+                    return false;
+                }
+
+                // Si el equipo local ganó
+                if (pAux.anotacionesLocal > pAux.anotacionesVisitante) {
+                    eqLocal.victorias--; // Revertimos las victorias del local
+                    eqLocal.puntos -= 3; // Revertimos los puntos del local
+
+                    eqVisitante.derrotas--; // Revertimos las derrotas del visitante
+
+                    // Si el equipo visitante ganó
+                } else if (pAux.anotacionesVisitante > pAux.anotacionesLocal) {
+                    eqVisitante.victorias--; // Revertimos las victorias
+                    eqVisitante.puntos -= 3; // Revertimos los puntos
+
+                    eqLocal.derrotas--; // Revertimos las derrotas
+
+                    // Si empataron en un deporte permitido
+                } else {
+                    eqLocal.empates--;   // Revertimos los empates
+                    eqLocal.puntos -= 1; // Revertimos los puntos
+
+                    eqVisitante.empates--;   // Revertimos los empates
+                    eqVisitante.puntos -= 1; // Revertimos los puntos
+                }
+
+                // Quitamos los puntos a favor y en contra
+                eqLocal.anotacionAFavor -= pAux.anotacionesLocal;
+                eqLocal.anotacionEnContra -= pAux.anotacionesVisitante;
+                eqLocal.jugados--;
+
+                eqVisitante.anotacionAFavor -= pAux.anotacionesVisitante;
+                eqVisitante.anotacionEnContra -= pAux.anotacionesLocal;
+                eqVisitante.jugados--;
+
+                // Eliminamos el id del partido al array de cada equipo y revertimos el numero de partidos
+                eqLocal.partidosIDs[eqLocal.cantidadPartidos] = 0;
+                eqVisitante.partidosIDs[eqVisitante.cantidadPartidos] = 0;
+                eqLocal.cantidadPartidos--;
+                eqVisitante.cantidadPartidos--;
+
+                // Agregamos la fecha de modificacion
+                eqLocal.fechaUltimaModificacion = std::time(nullptr);
+                eqVisitante.fechaUltimaModificacion = std::time(nullptr);
+
+                // * 2. Buscamos los jugadores para revertir estadisticas
+
+                // Abrimos el archivo de jugadores
+                std::fstream archivoJugadores;
+                archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::out | std::ios::out);
+
+                // Verificamos si falló
+                if (archivoJugadores.fail()) {
+                    archivoEquipos.close();
+                    archivo.close();
+                    return false;
+                }
+
+                // Limpiamos los goles y los detalles de cada gol
+                for (size_t e = 0; e < pAux.numAnotaciones; e++) {
+
+                    Jugador jugadorAux;
+
+                    // Buscamos el índice jugador que realió la anotacion
+                    size_t indiceJugador = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, pAux.anotaciones[e].idJugador);
+
+                    // Calculamos la posicion
+                    std::streampos posicionJugador = sizeof(ArchivoHeader) + indiceJugador * sizeof(Jugador);
+
+                    // Movemos el puntero de lectura
+                    archivoJugadores.seekg(posicionJugador, std::ios::beg);
+
+                    // Realizamos la lectura
+                    archivoJugadores.read(reinterpret_cast<char *>(&jugadorAux), sizeof(Jugador));
+
+                    // Verificamos que no falló
+                    if (archivoJugadores.fail()) {
+                        archivoJugadores.close();
+                        archivoEquipos.close();
+                        archivo.close();
+                    }
+
+                    // Modificamos el valor
+                    jugadorAux.anotaciones--;
+
+                    // Movemos el puntero de escritura
+                    archivo.seekp(posicionJugador, std::ios::beg);
+
+                    // Sobreescribimos el archivo
+                    archivo.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
+
+                    // Verificamos que no falló
+                    if (archivoJugadores.fail()) {
+                        archivoJugadores.close();
+                        archivoEquipos.close();
+                        archivo.close();
+                    }
+
+                    pAux.anotaciones[e] = {0, 0, 0};
+                }
+
+                pAux.anotacionesLocal = 0;
+                pAux.anotacionesVisitante = 0;
+                pAux.numAnotaciones = 0;
+
+                // Limpiamos las tarjetas amarillas y los detalles de cada tarjeta Amarilla
+                for (size_t e = 0; e < pAux.numTarjetasAma; e++) {
+
+                    Jugador jugadorAux;
+
+                    // Buscamos el índice jugador que realió la anotacion
+                    size_t indiceJugador = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, pAux.tarjetasA[e].idJugador);
+
+                    // Calculamos la posicion
+                    std::streampos posicionJugador = sizeof(ArchivoHeader) + indiceJugador * sizeof(Jugador);
+
+                    // Movemos el puntero de lectura
+                    archivoJugadores.seekg(posicionJugador, std::ios::beg);
+
+                    // Realizamos la lectura
+                    archivoJugadores.read(reinterpret_cast<char *>(&jugadorAux), sizeof(Jugador));
+
+                    // Verificamos que no falló
+                    if (archivoJugadores.fail()) {
+                        archivoJugadores.close();
+                        archivoEquipos.close();
+                        archivo.close();
+                    }
+
+                    // Modificamos el valor
+                    jugadorAux.tarjetasAmarillas--;
+
+                    // Movemos el puntero de escritura
+                    archivo.seekp(posicionJugador, std::ios::beg);
+
+                    // Sobreescribimos el archivo
+                    archivo.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
+
+                    // Verificamos que no falló
+                    if (archivoJugadores.fail()) {
+                        archivoJugadores.close();
+                        archivoEquipos.close();
+                        archivo.close();
+                    }
+
+                    pAux.tarjetasA[e] = {0, 0, 0};
+                }
+
+                pAux.tarjetasAmaLocal = 0;
+                pAux.tarjetasAmaVisitante = 0;
+                pAux.numTarjetasAma = 0;
+
+                // Limpiamos las tarjetas rojas y los detalles de cada tarjeta roja
+                for (size_t e = 0; e < pAux.numTarjetasRojas; e++) {
+
+                    Jugador jugadorAux;
+
+                    // Buscamos el índice jugador que realió la anotacion
+                    size_t indiceJugador = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, pAux.tarjetaR[e].idJugador);
+
+                    // Calculamos la posicion
+                    std::streampos posicionJugador = sizeof(ArchivoHeader) + indiceJugador * sizeof(Jugador);
+
+                    // Movemos el puntero de lectura
+                    archivoJugadores.seekg(posicionJugador, std::ios::beg);
+
+                    // Realizamos la lectura
+                    archivoJugadores.read(reinterpret_cast<char *>(&jugadorAux), sizeof(Jugador));
+
+                    // Verificamos que no falló
+                    if (archivoJugadores.fail()) {
+                        archivoJugadores.close();
+                        archivoEquipos.close();
+                        archivo.close();
+                    }
+
+                    // Modificamos el valor
+                    jugadorAux.tarjetasRojas--;
+
+                    // Movemos el puntero de escritura
+                    archivo.seekp(posicionJugador, std::ios::beg);
+
+                    // Sobreescribimos el archivo
+                    archivo.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
+
+                    // Verificamos que no falló
+                    if (archivoJugadores.fail()) {
+                        archivoJugadores.close();
+                        archivoEquipos.close();
+                        archivo.close();
+                    }
+
+                    pAux.tarjetaR[e] = {0, 0, 0};
+                }
+
+                pAux.tarjetasRojasLocal = 0;
+                pAux.tarjetasRojasVisitante = 0;
+                pAux.numTarjetasRojas = 0;
+
+                archivoJugadores.close();
+
+                // * Sobreescribimos los equipos
+
+                // Primero el equipo local
+                archivoEquipos.seekp(posicionLocal, std::ios::beg);
+                archivo.write(reinterpret_cast<const char *>(&eqLocal), sizeof(Equipo));
+
+                // Verificamos si falló
+                if (archivoEquipos.fail()) {
+                    archivo.close();
+                    archivoEquipos.close();
+                    return false;
+                }
+
+                // Luego el equipo visitante
+                archivoEquipos.seekp(posicionVisitante, std::ios::beg);
+                archivoEquipos.write(reinterpret_cast<const char *>(&eqVisitante), sizeof(Equipo));
+
+                // Verificamos si falló
+                if (archivoEquipos.fail()) {
+                    archivo.close();
+                    archivoEquipos.close();
+                    return false;
+                }
+
+                // Cerramos el archivo
+                archivoEquipos.close();
+
+                archivo.close();
                 return true;
-            }
 
-            // Buscamos los equipos para revertir las estadisticas
-            Equipo *EqLocal = equipos::buscarEquipoPorID(MiSistema, MiSistema->Partidos[posicion].idEquipoLocal);
-            Equipo *EqVisitante = equipos::buscarEquipoPorID(MiSistema, MiSistema->Partidos[posicion].idEquipoVisitante);
+                // Si está programado solo lo colocamos como eliminado
+            } else if (std::strcmp(pAux.estado, estadoPartidos[0]) == 0) {
 
-            // Si no se encotraron los equipos
-            if (EqLocal == nullptr || EqVisitante == nullptr) {
-                return false;
-            }
+                // Colocamos el partido como cancelado
+                std::strncpy(pAux.estado, estadoPartidos[2], TAMANO_ESTADO);
 
-            // Verificamos quien gano el partido
+                // No se si deba eliminarlo
+                // pAux.eliminado =true;
 
-            // Si ganó el local
-            if (MiSistema->Partidos[posicion].puntosLocal > MiSistema->Partidos[posicion].puntosVisitante) {
-                // Modificamos primero el equipo local
-                EqLocal->victorias--;
-                EqLocal->puntos -= 3;
+                // Movemos el puntero de escritura a la posicion
+                archivo.seekp(posicion, std::ios::beg);
 
-                // Modificamos el visitante
-                EqVisitante->derrotas--;
+                // Sobreescribimos el archivo
+                archivo.write(reinterpret_cast<const char *>(&pAux), sizeof(Partido));
 
-                // Si ganó el visitante
-            } else if (MiSistema->Partidos[posicion].puntosLocal < MiSistema->Partidos[posicion].puntosVisitante) {
-                // Modificamos primero el equipo visitante
-                EqVisitante->victorias--;
-                EqVisitante->puntos -= 3;
+                // Verificamos que no se produjo un error
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
 
-                // Modificamos el Local
-                EqLocal->derrotas--;
+                archivo.close();
+                return true;
 
-                // Si fue empate
             } else {
-                EqVisitante->empates--;
-                EqVisitante->puntos -= 1;
-                EqLocal->empates--;
-                EqLocal->puntos -= 1;
+
+                archivo.close();
+                return false; // Si está cancelado devolvemos error
             }
+        }
 
-            // Cambiamos el estado a CANCELADO
-            std::strncpy(MiSistema->Partidos[posicion].estado, estadoPartidos[2]); // CANCELADO
-
-            // Revertimos los puntos a favor y en contra
-            EqLocal->puntosAFavor -= MiSistema->Partidos[posicion].puntosLocal;
-            EqLocal->puntosEnContra -= MiSistema->Partidos[posicion].puntosVisitante;
-            EqVisitante->puntosAFavor -= MiSistema->Partidos[posicion].puntosVisitante;
-            EqVisitante->puntosEnContra -= MiSistema->Partidos[posicion].puntosLocal;
-
-            // Restamos los partidos jugados
-            EqLocal->jugados--;
-            EqVisitante->jugados--;
-
-            return true;
+        bool eliminarPartido() {
+            //
         }
     } // namespace partidos
 
@@ -3778,8 +4510,8 @@ namespace Presentacion {
             }
 
             // Variables
-            int IDPartido = 0;
-            int puntosLocal = 0, puntosVisitante = 0;
+            int idPartido = 0;
+            int anotacionesLocal = 0, puntosVisitante = 0;
             bool flagError = false;
             char confirmacion;
             Partido *ptrPartido = nullptr;
@@ -3792,12 +4524,12 @@ namespace Presentacion {
                 std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-                Auxiliares::ingresarDatos(IDPartido, "Ingrese el ID del partido a registrar: ", Validadores::IDvalido);
+                Auxiliares::ingresarDatos(idPartido, "Ingrese el ID del partido a registrar: ", Validadores::IDvalido);
 
                 // Buscamos el partido
-                ptrPartido = Logica::partidos::buscarPartidoPorID(MiSistema, IDPartido);
+                ptrPartido = Logica::partidos::buscarPartidoPorID(MiSistema, idPartido);
                 if (ptrPartido == nullptr) {
-                    std::cout << "Error: El ID de partido '" << IDPartido << "' no está asociado a ningún partido.\n";
+                    std::cout << "Error: El ID de partido '" << idPartido << "' no está asociado a ningún partido.\n";
                     Auxiliares::pausarPrograma();
                     return;
                 } else if (std::strcmp(ptrPartido->estado, Logica::partidos::estadoPartidos[0]) != 0) {
@@ -3827,16 +4559,16 @@ namespace Presentacion {
                 std::cout << "Deporte Actual del Torneo: " << Validadores::deporteActual << "\n";
                 std::cout << "Partido: " << EqLocal->nombre << " VS " << EqVisitante->nombre << "\n\n";
 
-                Auxiliares::ingresarDatos(puntosLocal, "Puntos del equipo LOCAL: ");
+                Auxiliares::ingresarDatos(anotacionesLocal, "Puntos del equipo LOCAL: ");
                 Auxiliares::ingresarDatos(puntosVisitante, "Puntos del equipo VISITANTE: ");
 
-                if (puntosLocal < 0 || puntosVisitante < 0) {
+                if (anotacionesLocal < 0 || puntosVisitante < 0) {
                     std::cout << "Error: Los puntajes no pueden ser valores negativos.\n";
                     Auxiliares::waitfor(2000);
                     flagError = true;
 
                     // Validamos el empate
-                } else if (puntosLocal == puntosVisitante) {
+                } else if (anotacionesLocal == puntosVisitante) {
                     if (std::strcmp(Validadores::deporteActual, "BALONCESTO") == 0 || std::strcmp(Validadores::deporteActual, "TENIS") == 0 ||
                         std::strcmp(Validadores::deporteActual, "VOLEIBOL") == 0 || std::strcmp(Validadores::deporteActual, "BEISBOL") == 0 ||
                         std::strcmp(Validadores::deporteActual, "SOFTBOL") == 0) {
@@ -3851,14 +4583,14 @@ namespace Presentacion {
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          RESUMEN DEL MARCADOR             ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            std::cout << " " << EqLocal->nombre << " (" << puntosLocal << ")  VS  (" << puntosVisitante << ") " << EqVisitante->nombre << "\n\n";
+            std::cout << " " << EqLocal->nombre << " (" << anotacionesLocal << ")  VS  (" << puntosVisitante << ") " << EqVisitante->nombre << "\n\n";
 
             Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de registrar este resultado definitivo? (S/N): ");
             Auxiliares::limpiarPantalla();
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 // Invocamos tu función lógica corregida
-                Partido *partidoRegistrado = Logica::partidos::registrarResultado(MiSistema, IDPartido, puntosLocal, puntosVisitante);
+                Partido *partidoRegistrado = Logica::partidos::registrarResultado(MiSistema, idPartido, anotacionesLocal, puntosVisitante);
 
                 if (partidoRegistrado != nullptr) {
                     std::cout << "\n------------------------------------------------------------------------------\n";
@@ -3866,7 +4598,7 @@ namespace Presentacion {
                     std::cout << "------------------------------------------------------------------------------\n";
                     std::cout << " Partido ID:  " << partidoRegistrado->ID << "\n";
                     std::cout << " Estado:      " << partidoRegistrado->estado << "\n";
-                    std::cout << " Marcador:    " << EqLocal->nombre << " [" << partidoRegistrado->puntosLocal << "] vs [" << partidoRegistrado->puntosVisitante << "] "
+                    std::cout << " Marcador:    " << EqLocal->nombre << " [" << partidoRegistrado->anotacionesLocal << "] vs [" << partidoRegistrado->puntosVisitante << "] "
                               << EqVisitante->nombre << "\n";
                     std::cout << "------------------------------------------------------------------------------\n";
                 } else {
@@ -3897,22 +4629,22 @@ namespace Presentacion {
                 return;
             }
 
-            int IDPartido = 0;
+            int idPartido = 0;
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║            BUSCAR PARTIDO POR ID          ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Recolectamos el ID
-            Auxiliares::ingresarDatos(IDPartido, "Ingrese el ID del partido que desea consultar: ", Validadores::IDvalido);
+            Auxiliares::ingresarDatos(idPartido, "Ingrese el ID del partido que desea consultar: ", Validadores::IDvalido);
             Auxiliares::limpiarPantalla();
             Auxiliares::waitfor(2000);
 
             // Buscamos el partido mediante el ID
-            Partido *partido = Logica::partidos::buscarPartidoPorID(MiSistema, IDPartido);
+            Partido *partido = Logica::partidos::buscarPartidoPorID(MiSistema, idPartido);
 
             // Si no existe, avisamos y salimos
             if (partido == nullptr) {
-                std::cout << "\nError: El ID de partido '" << IDPartido << "' no existe en el sistema.\n";
+                std::cout << "\nError: El ID de partido '" << idPartido << "' no existe en el sistema.\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
@@ -3938,7 +4670,7 @@ namespace Presentacion {
             std::cout << "║ " << std::left << std::setw(14) << "Estado" << ": " << std::setw(32) << partido->estado << "║\n";
             std::cout << "║ " << std::left << std::setw(14) << "Fecha" << ": " << std::setw(32) << partido->fecha << "║\n";
             std::cout << "║                                                  ║\n";
-            std::cout << "║  " << std::left << std::setw(20) << EqLocal->nombre << " " << partido->puntosLocal << " - " << partido->puntosVisitante << "  " << std::setw(20)
+            std::cout << "║  " << std::left << std::setw(20) << EqLocal->nombre << " " << partido->anotacionesLocal << " - " << partido->puntosVisitante << "  " << std::setw(20)
                       << EqVisitante->nombre << " ║\n";
             std::cout << "║      (Local)                  (Visitante)        ║\n";
             std::cout << "║                                                  ║\n";
@@ -3995,7 +4727,7 @@ namespace Presentacion {
                 }
 
                 std::cout << std::left << std::setw(6) << partido->ID << std::left << std::setw(14) << partido->fecha << std::left << std::setw(13) << partido->estado;
-                std::cout << EqLocal->nombre << " [" << partido->puntosLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
+                std::cout << EqLocal->nombre << " [" << partido->anotacionesLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
             }
             std::cout << "--------------------------------------------------------------------------------\n\n";
 
@@ -4071,7 +4803,7 @@ namespace Presentacion {
                     }
 
                     std::cout << std::left << std::setw(6) << partido->ID << std::left << std::setw(14) << partido->fecha << std::left << std::setw(13) << partido->estado;
-                    std::cout << EqLocal->nombre << " [" << partido->puntosLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
+                    std::cout << EqLocal->nombre << " [" << partido->anotacionesLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
                 }
                 std::cout << "--------------------------------------------------------------------------------\n\n";
             }
@@ -4176,7 +4908,7 @@ namespace Presentacion {
                     }
 
                     std::cout << std::left << std::setw(6) << partido->ID << std::left << std::setw(14) << partido->fecha << std::left << std::setw(13) << partido->estado;
-                    std::cout << EqLocal->nombre << " [" << partido->puntosLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
+                    std::cout << EqLocal->nombre << " [" << partido->anotacionesLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
                 }
                 std::cout << "--------------------------------------------------------------------------------\n\n";
             }
@@ -4196,20 +4928,20 @@ namespace Presentacion {
             std::cout << "       ║             CANCELAR PARTIDOS             ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n";
 
-            int IDPartido = -1;
+            int idPartido = -1;
             bool cancelado = false;
             char confirmacion;
 
-            Auxiliares::ingresarDatos(IDPartido, "Ingrese el ID del Partido que desea cancelar: ", Validadores::IDvalido);
+            Auxiliares::ingresarDatos(idPartido, "Ingrese el ID del Partido que desea cancelar: ", Validadores::IDvalido);
             Auxiliares::limpiarPantalla();
             std::cout << "\n Procesando solicitud...";
             Auxiliares::waitfor(1200);
             Auxiliares::limpiarPantalla();
 
-            Partido *PartidoAux = Logica::partidos::buscarPartidoPorID(MiSistema, IDPartido);
+            Partido *PartidoAux = Logica::partidos::buscarPartidoPorID(MiSistema, idPartido);
 
             if (PartidoAux == nullptr) {
-                std::cout << "\nError: El ID '" << IDPartido << "' no pertenece a ningún partido registrado.\n";
+                std::cout << "\nError: El ID '" << idPartido << "' no pertenece a ningún partido registrado.\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
@@ -4228,7 +4960,7 @@ namespace Presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             std::cout << "\n Se borrará el registro del partido: \n\n";
-            std::cout << " Encuentro: " << EqLocal->nombre << " [ " << PartidoAux->puntosLocal << " ]  --  [ " << PartidoAux->puntosVisitante << "] " << EqVisitante->nombre
+            std::cout << " Encuentro: " << EqLocal->nombre << " [ " << PartidoAux->anotacionesLocal << " ]  --  [ " << PartidoAux->puntosVisitante << "] " << EqVisitante->nombre
                       << std::endl;
             std::cout << " Fecha: " << PartidoAux->fecha << std::endl;
             std::cout << " ID: " << PartidoAux->ID << std::endl;
@@ -4241,7 +4973,7 @@ namespace Presentacion {
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 // Llamamos a la logica
-                cancelado = Logica::partidos::cancelarPartido(MiSistema, IDPartido);
+                cancelado = Logica::partidos::cancelarPartido(MiSistema, idPartido);
 
                 if (cancelado) {
                     std::cout << "\n------------------------------------------------------------------------------\n";
@@ -4513,6 +5245,7 @@ namespace Presentacion {
 // ============================================//
 
 int main() {
+
     // Llamamos a la función de configuración de Idioma al inicio
     Auxiliares::configurarIdioma();
 
