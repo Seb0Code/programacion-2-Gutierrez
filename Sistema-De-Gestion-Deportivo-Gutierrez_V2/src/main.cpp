@@ -2072,8 +2072,8 @@ namespace Logica {
             }
 
 
-            Jugador *ptrJugador = buscarJugadorPorID(MiSistema, ID);
-            if (ptrJugador == nullptr) {
+            Jugador *jugadorBuscado.= buscarJugadorPorID(MiSistema, ID);
+            if (jugadorBuscado.== nullptr) {
                 return false;
             }
 
@@ -2083,16 +2083,16 @@ namespace Logica {
             }
 
             // Si el dorsal esta duplicado
-            if (dorsalDuplicadoParaActualizar(MiSistema, jugadorActualizado.dorsal, ID, ptrJugador->idEquipo)) {
+            if (dorsalDuplicadoParaActualizar(MiSistema, jugadorActualizado.dorsal, ID, jugadorBuscado.idEquipo)) {
                 return false;
             }
 
             // En caso de que sí, actualizamos el jugador
             // Solo actualizamos NOMBRE, EDAD, DORSAL O POSICION
-            std::strncpy(ptrJugador->nombre, jugadorActualizado.nombre);
-            std::strncpy(ptrJugador->posicion, jugadorActualizado.posicion);
-            ptrJugador->edad = jugadorActualizado.edad;
-            ptrJugador->dorsal = jugadorActualizado.dorsal;
+            std::strncpy(jugadorBuscado.nombre, jugadorActualizado.nombre);
+            std::strncpy(jugadorBuscado.posicion, jugadorActualizado.posicion);
+            jugadorBuscado.edad = jugadorActualizado.edad;
+            jugadorBuscado.dorsal = jugadorActualizado.dorsal;
 
             return true;
         }*/
@@ -3580,8 +3580,13 @@ namespace Presentacion {
 
                 for (size_t e = 0; e < cantEquiposEncontrados; e++) {
                     std::cout << std::endl << e + 1 << ".\n";
-                    std::cout << "   Nombre: " << (resultados[e]).nombre << std::endl;
-                    std::cout << "   ID: " << resultados[e].ID << std::endl;
+                    std::cout << "   Nombre:                   " << resultados[e].nombre << "\n";
+                    ;
+                    std::cout << "   ID:                       " << resultados[e].ID << "\n";
+                    std::cout << "   Entrenador:               " << resultados[e].entrenador << "\n";
+                    std::cout << "   Ciudad:                   " << resultados[e].ciudad << "\n";
+                    std::cout << "   Cantidad de Partidos:     " << resultados[e].cantidadPartidos << "\n";
+                    std::cout << "   Fecha de Registro:        " << resultados[e].fechaRegistro << "\n";
                 }
                 std::cout << "---------------------------------------------------------------------------\n";
             }
@@ -3917,7 +3922,7 @@ namespace Presentacion {
 
     namespace jugadores {
 
-        void RegistrarJugador(const char *nombreArchivo) {
+        void registrarJugador(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
             int error = -1;
             Jugador nuevo;
@@ -3927,18 +3932,18 @@ namespace Presentacion {
             int opcion = 0;
 
             // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
-            ArchivoHeader headerJugadores = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
 
             // Verificamos que la lectura del header fue correcta
-            if (headerJugadores.cantidadRegistros == error) {
+            if (headerEquipos.cantidadRegistros == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Registro Cancelada\n";
                 Auxiliares::pausarPrograma;
                 return;
             }
 
-            // Si no hay jugadores activos registrados
-            if (headerJugadores.registrosActivos == 0) {
+            // Si no hay equipos activos registrados
+            if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
@@ -3952,7 +3957,7 @@ namespace Presentacion {
             // Verificamos que abrió correctamente
             if (!archivoTorneo.is_open()) {
                 std::cerr << "\nError del Sistema!\n";
-                std::cout << "Registro Cancelada\n";
+                std::cout << "Registro Cancelado\n";
                 Auxiliares::pausarPrograma;
                 return;
             }
@@ -4189,18 +4194,26 @@ namespace Presentacion {
 
             // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
             ArchivoHeader headerJugadores = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
 
             // Verificamos que la lectura del header fue correcta
-            if (headerJugadores.cantidadRegistros == error) {
+            if (headerJugadores.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
-                std::cout << "Registro Cancelada\n";
+                std::cout << "Busqueda Cancelada\n";
                 Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
+                std::cout << "No hay ningún equipo registrado actualmente\n";
+                Auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay jugadores activos registrados
             if (headerJugadores.registrosActivos == 0) {
-                std::cout << "No hay ningún equipo registrado actualmente\n";
+                std::cout << "No hay ningún jugador registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
@@ -4309,20 +4322,37 @@ namespace Presentacion {
             Auxiliares::pausarPrograma();
         }
 
-        void buscarJugadorPorNombre() {
+        void buscarJugadorPorNombre(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
-            char subcadena[100];
-            int cantidadEncontrados = 0;
+            char subcadena[TAMANO_NOMBRE];
+            int cantJugadoresEncontrados = 0;
+            int error = -1;
+            bool cancelado = false;
+            bool encontrado = false;
+            const int maxResultados = MAX_RESULTADOS;
+            Jugador resultados[maxResultados];
 
-            // Si no hay equipos registrados
-            if (MiSistema->numEquiposActuales == 0) {
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerJugadores = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerJugadores.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Busqueda Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            // Si no hay jugadores registrados
-            if (MiSistema->numJugadoresActuales == 0) {
+            // Si no hay jugadores activos registrados
+            if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún jugador registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
@@ -4332,74 +4362,121 @@ namespace Presentacion {
             std::cout << "       ║      BÚSQUEDA DE JUGADORES POR NOMBRE     ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-            Auxiliares::ingresarCadena(subcadena, 100, "Escribe el nombre (o parte del nombre) del jugador que buscas: ", nullptr, Validadores::Nombres);
-            Auxiliares::waitfor(1000);
+            if (!Auxiliares::ingresarCadena(subcadena, 100, "Escribe el nombre (o parte del nombre) del jugador que buscas (escribe 'cancelar' para cancelar): ", &cancelado,
+                                            Validadores::Nombres)) {
+                std::cout << "\nRegistro Cancelado por el usuario.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            Auxiliares::limpiarPantalla();
+            Auxiliares::waitfor(1200);
             std::cout << "Buscando..." << std::endl;
+            Auxiliares::limpiarPantalla();
+            Auxiliares::waitfor(500);
 
             // llamamos a la funcion buscar por nombre y almacenamos el resultado
-            Jugador **listaDePunterosAJugadores = Logica::jugadores::buscarJugadoresPorNombre(MiSistema, subcadena, &cantidadEncontrados);
+            cantJugadoresEncontrados = Logica::buscarRegistrosPorSucadena<Jugador>(nombreArchivo, resultados, subcadena, maxResultados);
 
-            // Si no encontró nada o no devolvió nada
-            if (listaDePunterosAJugadores == nullptr || cantidadEncontrados <= 0) {
+            // Si no encontró nada
+            if (cantJugadoresEncontrados <= 0) {
                 std::cout << "\nNo se encontraron jugadores que coincidan con '" << subcadena << "'.\n";
             } else {
+
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          COINCIDENCIAS ENCONTRADAS        ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                std::cout << " Se encontraron " << cantidadEncontrados << " jugador(es):\n";
+                std::cout << " Se encontraron " << cantJugadoresEncontrados << " jugador(es):\n";
 
-                for (int e = 0; e < cantidadEncontrados; e++) {
+                for (int e = 0; e < cantJugadoresEncontrados; e++) {
+
+                    // Buscamos el nombre del Equipo
+                    Equipo equipoBuscado;
+                    encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoBuscado, resultados[e].idEquipo);
+
+                    // Si no se encontró el equipo
+                    if (!encontrado) {
+                        std::cerr << "Error del Sistema!";
+                        std::cout << "Busqueda Cancelada";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
                     std::cout << "-------------------------------------------------------------\n";
-                    std::cout << "  ID: " << listaDePunterosAJugadores[e]->ID << " | Nombre: " << listaDePunterosAJugadores[e]->nombre << "\n";
-                    std::cout << "  Cédula: " << listaDePunterosAJugadores[e]->cedula << " | Dorsal: [" << listaDePunterosAJugadores[e]->dorsal << "]\n";
-                    std::cout << "  Edad: " << listaDePunterosAJugadores[e]->edad << " años | Posición: " << listaDePunterosAJugadores[e]->posicion << "\n";
-                    std::cout << "  ID Equipo: " << listaDePunterosAJugadores[e]->idEquipo << " | Puntos Anotados: " << listaDePunterosAJugadores[e]->puntosAnotados << "\n";
+                    std::cout << "  ID:                    " << resultados[e].ID << "\n";
+                    std::cout << "  Nombre:                " << resultados[e].nombre << "\n";
+                    std::cout << "  Cédula:                " << resultados[e].cedula << "\n";
+                    std::cout << "  Dorsal:                [" << resultados[e].numeroDorsal << "]\n";
+                    std::cout << "  Edad:                  " << resultados[e].edad << " años \n";
+                    std::cout << "  Posición:              " << resultados[e].posicion << "\n";
+                    std::cout << "  Nombre del Equipo:     " << equipoBuscado.nombre << "\n";
+                    std::cout << "  ID Equipo:             " << resultados[e].idEquipo << "\n";
+                    std::cout << "  Anotaciones:           " << resultados[e].anotaciones << "\n";
+                    std::cout << "  Tarjetas Amarillas:    " << resultados[e].tarjetasAmarillas << "\n";
+                    std::cout << "  Tarjetas Rojas:    " << resultados[e].tarjetasRojas << "\n";
                 }
                 std::cout << "-------------------------------------------------------------\n";
-            }
-
-            // Liberamos la memoria
-            if (listaDePunterosAJugadores != nullptr) {
-                delete[] listaDePunterosAJugadores;
-                listaDePunterosAJugadores = nullptr;
             }
 
             std::cout << "\n";
             Auxiliares::pausarPrograma();
         }
 
-        void mostrarJugadoresPorEquipo() {
+        void mostrarJugadoresPorEquipo(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
             int idEquipo = 0;
-            int cantidadEncontrados = 0;
+            int cantJugadoresEncontrados = 0;
+            const int maxResultados = MAX_RESULTADOS;
+            Jugador listaDeJugadores[maxResultados];
+            int error = -1;
+            bool cancelado = false;
+            bool encontrado = false;
 
-            // Si no hay equipos registrados
-            if (MiSistema->numEquiposActuales == 0) {
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerJugadores = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerJugadores.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Registro Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            // Si no hay jugadores registrados
-            if (MiSistema->numJugadoresActuales == 0) {
+            // Si no hay jugadores activos registrados
+            if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún jugador registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
+
 
             // Pedimos el ID del equipo a consultar
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║      MOSTRAR JUGADORES POR EQUIPO         ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-            Auxiliares::ingresarDatos(idEquipo, "Ingrese el ID del Equipo: ", nullptr, Validadores::IDvalido);
+            if (!Auxiliares::ingresarDatos(idEquipo, "Ingrese el ID del Equipo: ", &cancelado, Validadores::IDvalido)) {
+                std::cout << "\nOperación Cancelada por el usuario.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
 
             // Buscamos el equipo primero
-            Equipo *equipoBuscado = Logica::equipos::buscarEquipoPorID(MiSistema, idEquipo);
+            Equipo equipoBuscado;
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoBuscado, idEquipo);
 
             // Si no encontramos un equipo con ese ID enviamos error
-            if (equipoBuscado == nullptr) {
-                std::cout << "\nError: El equipo con ID '" << idEquipo << "' no existe.\n";
+            if (!encontrado) {
+                std::cerr << "\nError: El equipo con ID '" << idEquipo << "' no existe.\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
@@ -4409,104 +4486,140 @@ namespace Presentacion {
             std::cout << "\nBuscando jugadores...\n\n";
 
             // obtenemos la lista de punteros
-            Jugador **listaJugadores = Logica::jugadores::listarJugadoresPorEquipo(MiSistema, idEquipo, &cantidadEncontrados);
+            cantJugadoresEncontrados = Logica::jugadores::listarJugadoresPorEquipo(nombreArchivo, idEquipo, listaDeJugadores, maxResultados);
 
             Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(2000);
+            Auxiliares::waitfor(1000);
 
             // Si no obtenemos nada
-            if (listaJugadores == nullptr || cantidadEncontrados == 0) {
-                std::cout << "El equipo '" << equipoBuscado->nombre << "' actualmente no tiene jugadores registrados.\n";
+            if (cantJugadoresEncontrados == 0) {
+                std::cout << "El equipo '" << equipoBuscado.nombre << "' actualmente no tiene jugadores registrados.\n";
             } else {
                 std::cout << "╔═════════════════════════════════════════════════════════════════════════════════╗\n";
-                std::cout << "║ EQUIPO: " << std::left << std::setw(71) << equipoBuscado->nombre << " ║\n";
-                std::cout << "║ ID DEL EQUIPO: " << std::left << std::setw(64) << equipoBuscado->ID << " ║\n";
+                std::cout << "║ EQUIPO: " << std::left << std::setw(71) << equipoBuscado.nombre << " ║\n";
+                std::cout << "║ ID DEL EQUIPO: " << std::left << std::setw(64) << equipoBuscado.ID << " ║\n";
                 std::cout << "╠════╦══════════════════════════════════════════╦═══════════════╦═════╦═══════════╣\n";
                 std::cout << "║ ID ║ Nombre                                   ║ Posición      ║ Edad║ Dorsal    ║\n";
                 std::cout << "╠════╬══════════════════════════════════════════╬═══════════════╬═════╬═══════════╣\n";
 
                 // Imprimimos los jugadores
-                for (size_t e = 0; e < cantidadEncontrados; e++) {
-                    std::cout << "║ " << std::right << std::setw(2) << listaJugadores[e]->ID << " ║ " << std::left << std::setw(40) << listaJugadores[e]->nombre << " ║ "
-                              << std::left << std::setw(13) << listaJugadores[e]->posicion << " ║ " << std::right << std::setw(3) << listaJugadores[e]->edad << " ║ [" << std::right
-                              << std::setw(2) << listaJugadores[e]->dorsal << "]      ║\n";
+                for (size_t e = 0; e < cantJugadoresEncontrados; e++) {
+                    std::cout << "║ " << std::right << std::setw(2) << listaDeJugadores[e].ID << " ║ " << std::left << std::setw(40) << listaDeJugadores[e].nombre << " ║ "
+                              << std::left << std::setw(13) << listaDeJugadores[e].posicion << " ║ " << std::right << std::setw(3) << listaDeJugadores[e].edad << " ║ ["
+                              << std::right << std::setw(2) << listaDeJugadores[e].numeroDorsal << "]      ║\n";
                 }
                 std::cout << "╚════╩══════════════════════════════════════════╩═══════════════╩═════╩═══════════╝\n";
-                std::cout << " Total de jugadores en el equipo: " << cantidadEncontrados << "\n";
-            }
-
-            // liberamos
-            if (listaJugadores != nullptr) {
-                delete[] listaJugadores;
-                listaJugadores = nullptr;
+                std::cout << " Total de jugadores en el equipo: " << cantJugadoresEncontrados << "\n";
             }
 
             std::cout << "\n";
             Auxiliares::pausarPrograma();
         }
 
-        void mostrarListaDeJugadores() {
+        void mostrarListaDeJugadores(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
-            int cantidadEncontrados = 0;
+            int cantJugadoresEncontrados = 0;
+            int error = -1;
+            const int maxResultados = MAX_RESULTADOS;
+            Jugador listaDeJugadores[maxResultados];
+            bool encontrado = false;
 
-            // Si no hay equipos registrados
-            if (MiSistema->numEquiposActuales == 0) {
+            // Leemos el header del archivo de Equipos para saber el numero de reisgtros activos
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operación Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(1500);
-            std::cout << "Cargando todos los jugadores...\n\n";
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(2500);
+            // Leemos el torneo
+            Torneo torneo;
+            std::ifstream archivoTorneo;
+            archivoTorneo.open(NOMBRE_ARCHIVO_TORNEO, std::ios::binary);
 
-            // Llamamos a tu función lógica (asumiendo que sigue el mismo patrón de firmas)
-            Jugador **listaJugadores = Logica::jugadores::listarJugadores(MiSistema, &cantidadEncontrados);
+            // Verificamos que abrió correctamente
+            if (!archivoTorneo.is_open()) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operación Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Ubicamos el puntero de lectura al inicio
+            archivoTorneo.seekg(0, std::ios::beg);
+
+            // Leemos el el torneo
+            archivoTorneo.read(reinterpret_cast<char *>(&torneo), sizeof(Torneo));
+
+            // Verificamos si la lectura fue exitosa
+            if (archivoTorneo.fail()) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operación Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Cerrmaos el archivo
+            archivoTorneo.close();
+            Auxiliares::waitfor(1000);
+
+            // Llamamos a tu función lógica
+            cantJugadoresEncontrados = Logica::listarRegistros<Jugador>(nombreArchivo, listaDeJugadores, maxResultados);
 
             // Validamos si el sistema tiene jugadores cargados
-            if (listaJugadores == nullptr || cantidadEncontrados == 0) {
+            if (cantJugadoresEncontrados == 0) {
                 std::cout << "No existen jugadores registrados en el sistema actualmente.\n";
             } else {
+
+                std::cout << "Cargando todos los jugadores...\n\n";
+                Auxiliares::limpiarPantalla();
+                Auxiliares::waitfor(1000);
+
                 std::cout << "╔═══════════════════════════════════════════════════════════════════════════════════╗\n";
                 std::cout << "║ SPORT G&C TOURNAMENTS                                                             ║\n";
-                std::cout << "║ TORNEO: " << std::left << std::setw(73) << MiSistema->torneo.nombre << " ║\n";
+                std::cout << "║ TORNEO: " << std::left << std::setw(73) << torneo.nombre << " ║\n";
                 std::cout << "║ LISTA DE JUGADORES REGISTRADOS                                                    ║\n";
                 std::cout << "╠════╦══════════════════════╦══════════════════════╦═══════════════╦═════╦══════════╣\n";
                 std::cout << "║ ID ║ Nombre               ║ Equipo               ║ Posición      ║ Edad║ Dorsal   ║\n";
                 std::cout << "╠════╬══════════════════════╬══════════════════════╬═══════════════╬═════╬══════════╣\n";
 
                 // Imprimimos cada jugador en el sistema
-                for (size_t e = 0; e < cantidadEncontrados; e++) {
+                for (size_t e = 0; e < cantJugadoresEncontrados; e++) {
+
                     // Buscamos el equipo en cada iteracion
-                    Equipo *equipoAux = Logica::equipos::buscarEquipoPorID(MiSistema, listaJugadores[e]->idEquipo);
-                    if (equipoAux == nullptr) {
+                    Equipo equipoBuscado;
+                    encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoBuscado, listaDeJugadores[e].idEquipo);
+
+                    if (!encontrado) {
                         Auxiliares::limpiarPantalla();
-                        std::cout << "Error Inesperado en el Sistema\n";
+                        std::cout << "Error del Sistema!\n";
                         Auxiliares::pausarPrograma();
                         return;
                     }
 
-                    std::cout << "║ " << std::right << std::setw(2) << listaJugadores[e]->ID << " ║ " << std::left << std::setw(20) << listaJugadores[e]->nombre << " ║ "
-                              << std::left << std::setw(20) << equipoAux->nombre << " ║ " << std::left << std::setw(13) << listaJugadores[e]->posicion << " ║ " << std::right
-                              << std::setw(3) << listaJugadores[e]->edad << " ║ [" << std::right << std::setw(2) << listaJugadores[e]->dorsal << "]     ║\n";
+                    std::cout << "║ " << std::right << std::setw(2) << listaDeJugadores[e].ID << " ║ " << std::left << std::setw(20) << listaDeJugadores[e].nombre << " ║ "
+                              << std::left << std::setw(20) << equipoBuscado.nombre << " ║ " << std::left << std::setw(13) << listaDeJugadores[e].posicion << " ║ " << std::right
+                              << std::setw(3) << listaDeJugadores[e].edad << " ║ [" << std::right << std::setw(2) << listaDeJugadores[e].numeroDorsal << "]     ║\n";
                 }
                 std::cout << "╚════╩══════════════════════╩══════════════════════╩═══════════════╩═════╩══════════╝\n";
-                std::cout << " Total de jugadores registrados en el sistema: " << cantidadEncontrados << "\n";
-            }
-
-            // Liberamos la memoria
-            if (listaJugadores != nullptr) {
-                delete[] listaJugadores;
-                listaJugadores = nullptr;
+                std::cout << " Total de jugadores registrados en el sistema: " << cantJugadoresEncontrados << "\n";
             }
 
             std::cout << "\n";
             Auxiliares::pausarPrograma();
         }
 
-        void ActualizarJugador() {
+        void actualizarJugador() {
             Auxiliares::limpiarPantalla();
             // Datos Actualizables:
             // Nombre, Edad, Dorsal, Posicion
@@ -4685,20 +4798,36 @@ namespace Presentacion {
             Auxiliares::pausarPrograma();
         }
 
-        void EliminarJugador() {
+        void eliminarJugador(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
             int ID = 0;
             char confirmacion;
+            int error = -1;
+            bool cancelado = false;
+            Jugador jugadorBuscado;
+            bool encontrado = false;
 
-            // Si no hay equipos registrados
-            if (MiSistema->numEquiposActuales == 0) {
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerJugadores = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerJugadores.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operacion Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            // Si no hay jugadores registrados
-            if (MiSistema->numJugadoresActuales == 0) {
+            // Si no hay jugadores activos registrados
+            if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún jugador registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
@@ -4709,30 +4838,46 @@ namespace Presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Recolectamos el ID
-            Auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que deseas eliminar: ", nullptr, Validadores::IDvalido);
-
-            // Buscamos al jugador para mostrar sus datos en pantalla antes de continuar
-            Jugador *ptrJugador = Logica::jugadores::buscarJugadorPorID(MiSistema, ID);
-
-            if (ptrJugador == nullptr) {
-                std::cout << "\nError: El ID '" << ID << "' no pertenece a ningún jugador registrado.\n";
+            if (!Auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que deseas eliminar (ingresa 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                std::cout << "\nOperacion Cancelada por el usuario\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
+            // Buscamos al jugador para mostrar sus datos en pantalla antes de continuar
+            encontrado = Logica::buscarRegistrosPorId<Jugador>(nombreArchivo, jugadorBuscado, ID);
+
+            // Si no encontro el jugador con ese ID
+            if (!encontrado) {
+                std::cerr << "\nError: El ID '" << ID << "' no pertenece a ningún jugador registrado.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Verificamos que no tenga puntos anotados
+            if (jugadorBuscado.anotaciones > 0) {
+                std::cout << "\nError el jugador " << jugadorBuscado.nombre << " no puede tener anotaciones en el torneo\n";
+            }
+
             // Buscamos el equipo al que pertenece
-            Equipo *ptrEquipo = Logica::equipos::buscarEquipoPorID(MiSistema, ptrJugador->idEquipo);
+            Equipo equipoBuscado;
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(nombreArchivo, equipoBuscado, jugadorBuscado.idEquipo);
+
+            // Si no ecnontro el equipo del jugador
+            if (!encontrado) {
+                std::cerr << "\nError del Sistema!\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
 
             // Mostramos el jugador que se va a eliminar
             std::cout << "\n Se eliminará el siguiente jugador del sistema:\n";
             std::cout << " -----------------------------------------------\n";
-            std::cout << " Nombre:     " << ptrJugador->nombre << "\n";
-            std::cout << " Posición:   " << ptrJugador->posicion << "\n";
-            std::cout << " Dorsal:     " << ptrJugador->dorsal << "\n";
-            std::cout << " Puntos:     " << ptrJugador->puntosAnotados << "\n";
-
-            // Validacion por si acaso ocurre un error imprevisto (no debería)
-            std::cout << " Equipo:     " << (ptrEquipo == nullptr ? "ERROR" : ptrEquipo->nombre) << "\n";
+            std::cout << " Nombre:     " << jugadorBuscado.nombre << "\n";
+            std::cout << " Posición:   " << jugadorBuscado.posicion << "\n";
+            std::cout << " Dorsal:     " << jugadorBuscado.numeroDorsal << "\n";
+            std::cout << " Anotaciones:     " << jugadorBuscado.anotaciones << "\n";
+            std::cout << " Equipo:     " << equipoBuscado.nombre << "\n";
             std::cout << " -----------------------------------------------\n\n";
 
             Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de eliminar este jugador? (S/N): ");
@@ -4741,19 +4886,19 @@ namespace Presentacion {
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
 
                 // Llamamos a la logica
-                bool eliminado = Logica::jugadores::eliminarJugador(MiSistema, ID);
+                bool eliminado = Logica::jugadores::eliminarJugador(nombreArchivo, ID);
 
                 if (eliminado) {
                     std::cout << "\n------------------------------------------------------------------------------\n";
                     std::cout << "           Jugador eliminado con éxito\n";
                     std::cout << "------------------------------------------------------------------------------\n";
                 } else {
-                    std::cout << "\nError: No se pudo eliminar al jugador.\nVerifique que no tenga puntos anotados en el torneo.\n";
+                    std::cerr << "\nError: No se pudo eliminar al jugador.\n";
                 }
             } else if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'N') {
                 std::cout << "\nElimnación de datos cancelada\n";
             } else {
-                std::cout << "\nError: Opción inválida (S/N).\nEliminación de datos cancelada.\n";
+                std::cerr << "\nError: Opción inválida (S/N).\nEliminación de datos cancelada.\n";
             }
             Auxiliares::pausarPrograma();
         }
