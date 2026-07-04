@@ -1088,7 +1088,7 @@ namespace Logica {
 
         // tipo5 es la estructura y tipo6 es el tipo de dato dentro de la estructura, uno de los miembros
         template <class struct3, class var2> //
-        bool nombreDuplicado(const char *nombreArchivo, const char *nombre, var2 struct3::*miembro) {
+        bool cadenaDuplicada(const char *nombreArchivo, const char *nombre, var2 struct3::*miembro) {
             // * DESCRIPCION:
             // se lee como un puntero llamado miembro que apunta a una variable d etipo tipo6 que reside dentro de una
             // estructura de tipo tipo5
@@ -1137,7 +1137,7 @@ namespace Logica {
         }
 
         template <class struct4, class var3> //
-        bool nombreDuplicadoParaActualizar(const char *nombreArchivo, const char *nombre, const int idEquipo, var3 struct4::*miembro) {
+        bool cadenaDuplicadaParaActualizar(const char *nombreArchivo, const char *nombre, const int idEquipo, var3 struct4::*miembro) {
             // si el archivo no existe devolvemos false
             if (!existeArchivo(nombreArchivo)) {
                 return false;
@@ -1619,7 +1619,7 @@ namespace Logica {
             }
 
             // Verificamos los duplicados
-            if (nombreDuplicadoParaActualizar(MiSistema, nombre, ID)) {
+            if (cadenaDuplicadaParaActualizar(MiSistema, nombre, ID)) {
                 return false;
             }
 
@@ -1749,11 +1749,10 @@ namespace Logica {
 
     namespace jugadores {
 
-        bool DorsalDuplicado(const char *nombreArchivo, const int dorsal, const int idEquipo, bool &error, bool actualizar) {
+        bool DorsalDuplicado(const char *nombreArchivo, const int dorsal, const int idEquipo) {
 
             // Verificamos que exista el archivo
             if (!existeArchivo(nombreArchivo)) {
-                error = true;
                 return false;
             }
 
@@ -1762,7 +1761,6 @@ namespace Logica {
 
             // Verificamos que se haya abierto
             if (!archivo.is_open()) {
-                error = true;
                 return false;
             }
 
@@ -1777,7 +1775,6 @@ namespace Logica {
                 // Verificamos si no hubo error en la lectura
                 if (archivo.fail()) {
                     archivo.close();
-                    error = true;
                     return false;
                 }
 
@@ -2081,7 +2078,7 @@ namespace Logica {
             }
 
             // Si el nombre esta duplicado
-            if (nombreDuplicadoParaActualizar(MiSistema, jugadorActualizado.nombre, ID)) {
+            if (cadenaDuplicadaParaActualizar(MiSistema, jugadorActualizado.nombre, ID)) {
                 return false;
             }
 
@@ -3294,7 +3291,7 @@ namespace Presentacion {
                 }
 
                 // Validamos nombre duplicado
-                if (Logica::nombreDuplicado<Equipo>(nombreArchivo, nuevo.nombre, &Equipo::nombre)) {
+                if (Logica::cadenaDuplicada<Equipo>(nombreArchivo, nuevo.nombre, &Equipo::nombre)) {
                     std::cerr << "Error, el nombre '" << nuevo.nombre << "' ya está en uso\n";
                     flagError = true;
                     Auxiliares::waitfor(3000);
@@ -3318,7 +3315,7 @@ namespace Presentacion {
                 }
 
                 // Validamos nombre duplicado
-                if (Logica::nombreDuplicado(NOMBRE_ARCHIVO_EQUIPOS, nuevo.entrenador, &Equipo::entrenador)) {
+                if (Logica::cadenaDuplicada(NOMBRE_ARCHIVO_EQUIPOS, nuevo.entrenador, &Equipo::entrenador)) {
                     std::cerr << "Error, el nombre '" << nuevo.entrenador << "' ya direge otro equipo\n";
                     flagError = true;
                     Auxiliares::waitfor(3000);
@@ -3756,7 +3753,7 @@ namespace Presentacion {
                 std::cout << "       ║            ACTUALIZAR EQUIPOS             ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
                 Auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nuevo nombre del Equipo: ", nullptr, Validadores::Nombres);
-                if (Logica::equipos::nombreDuplicadoParaActualizar(MiSistema, nombreAux, ID)) {
+                if (Logica::equipos::cadenaDuplicadaParaActualizar(MiSistema, nombreAux, ID)) {
                     std::cout << "Error: ya hay otro equipo con el nombre '" << nombreAux << "'\n";
                     flagError = true;
                 }
@@ -3929,30 +3926,53 @@ namespace Presentacion {
             bool cancelado = false;
             int opcion = 0;
 
-            // Leemos el header del archivo de equipo para saber el numero de reisgtros activos
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
             ArchivoHeader headerJugadores = Logica::leerHeader(nombreArchivo);
 
             // Verificamos que la lectura del header fue correcta
             if (headerJugadores.cantidadRegistros == error) {
                 std::cerr << "\nError del Sistema!\n";
-                std::cout << "Busqueda Cancelada\n";
+                std::cout << "Registro Cancelada\n";
                 Auxiliares::pausarPrograma;
                 return;
             }
 
-            // Si no hay equipos activos registrados
+            // Si no hay jugadores activos registrados
             if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            // Si no hay equipos registrados
-            if (headerJugadores.registrosActivos == 0) {
-                std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+            // Leemos el torneo
+            Torneo torneo;
+            std::ifstream archivoTorneo;
+            archivoTorneo.open(NOMBRE_ARCHIVO_TORNEO, std::ios::binary);
+
+            // Verificamos que abrió correctamente
+            if (!archivoTorneo.is_open()) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Registro Cancelada\n";
+                Auxiliares::pausarPrograma;
                 return;
             }
+
+            // Ubicamos el puntero de lectura al inicio
+            archivoTorneo.seekg(0, std::ios::beg);
+
+            // Leemos el el torneo
+            archivoTorneo.read(reinterpret_cast<char *>(&torneo), sizeof(Torneo));
+
+            // Verificamos si la lectura fue exitosa
+            if (archivoTorneo.fail()) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Registro Cancelado\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Cerrmaos el archivo
+            archivoTorneo.close();
 
             // Recolectamos el ID del equipo
             do {
@@ -3968,7 +3988,7 @@ namespace Presentacion {
                 }
 
                 /// Si el ID no existe dentro de los equipos
-                if (!Logica::existeID<Jugador>(nombreArchivo, nuevo.idEquipo)) {
+                if (!Logica::existeID<Equipo>(nombreArchivo, nuevo.idEquipo)) {
                     std::cout << "Error el ID '" << nuevo.idEquipo << "' no pertenece a ningun equipo\n";
                     flagError = true;
                     Auxiliares::waitfor(2500);
@@ -3984,11 +4004,16 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR           ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nombre del Jugador: ", nullptr, Validadores::Nombres);
+                if (!Auxiliares::ingresarCadena(nuevo.nombre, TAMANO_NOMBRE, "Ingrese el nombre del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                Validadores::Nombres)) {
+                    std::cout << "\nRegistro cancelado por el usuario.\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
 
                 // Validamos nombre duplicado
-                if (Logica::jugadores::nombreDuplicado(MiSistema, nombreAux)) {
-                    std::cout << "Error, el nombre '" << nombreAux << "' ya está en uso.\n";
+                if (Logica::cadenaDuplicada<Jugador>(nombreArchivo, nuevo.nombre, &Jugador::nombre)) {
+                    std::cout << "Error, el nombre '" << nuevo.nombre << "' ya está en uso.\n";
                     flagError = true;
                     Auxiliares::waitfor(3000);
                     continue;
@@ -4001,7 +4026,11 @@ namespace Presentacion {
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarDatos(edadAux, "Ingrese la edad del Jugador: ", nullptr, Validadores::Edad);
+            if (!Auxiliares::ingresarDatos(nuevo.edad, "Ingrese la edad del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::Edad)) {
+                std::cout << "\nRegistro cancelado por el usuario.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
             Auxiliares::waitfor(1500);
 
             // Recolectamos la cedula
@@ -4011,11 +4040,15 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarCadena(cedulaAux, 20, "Ingrese la cedula del jugador: ", nullptr, Validadores::Cedulas);
+                if (!Auxiliares::ingresarCadena(nuevo.cedula, TAMANO_CEDULA, "Ingrese la cedula del jugador (ingrese 'cancelar' para cancelar): ", nullptr, Validadores::Cedulas)) {
+                    std::cout << "\nRegistro cancelado por el usuario.\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
 
                 // Validamos nombre duplicado
-                if (Logica::jugadores::CedulaRepetida(MiSistema, cedulaAux)) {
-                    std::cout << " Error, la cedula '" << cedulaAux << "' ya le pertenece a otro jugador\n";
+                if (Logica::cadenaDuplicada(nombreArchivo, nuevo.cedula, &Jugador::cedula)) {
+                    std::cout << " Error, la cedula '" << nuevo.cedula << "' ya le pertenece a otro jugador\n";
                     flagError = true;
                     Auxiliares::waitfor(3000);
                     continue;
@@ -4030,20 +4063,20 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                std::cout << " Deporte actual del Torneo: " << MiSistema->torneo.deporte << "\n\n";
+                std::cout << " Deporte actual del Torneo: " << torneo.deporte << "\n\n";
 
                 const char **matrizDeporteActual = nullptr;
 
                 for (size_t i = 0; i < Validadores::totalDeportes; i++) {
                     // Recorremos el array de matrices y verificamos lo que hay en la posicion 0
-                    if (std::strcmp(Validadores::MapaDeportes[i][0], MiSistema->torneo.deporte) == 0) {
+                    if (std::strcmp(Validadores::MapaDeportes[i][0], torneo.deporte) == 0) {
                         matrizDeporteActual = Validadores::MapaDeportes[i];
                         break;
                     }
                 }
 
                 // Mostramos las posiciones disponibles de esa fila
-                std::cout << " Seleccione la posición del jugador:\n";
+                std::cout << "\n Seleccione la posición del jugador:\n";
 
                 // Para saber el numero de posiciones del deporte
                 int contadorPosiciones = 0;
@@ -4054,14 +4087,18 @@ namespace Presentacion {
                 }
                 std::cout << "\n";
 
-                Auxiliares::ingresarDatos(opcion, "Seleccione una opción: ");
+                if (!Auxiliares::ingresarDatos(opcion, "Seleccione una opción (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << "\nRegistro cancelado por el usuario.\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
 
                 // Verificamos que esté en el rango de opciones
                 if (opcion >= 1 && opcion <= contadorPosiciones) {
                     // si es correcta guardamos la posicion
-                    std::strncpy(posicionAux, matrizDeporteActual[opcion]);
+                    std::strncpy(nuevo.posicion, matrizDeporteActual[opcion], TAMANO_POSICION);
                 } else {
-                    std::cout << "Error: Opción inválida. Por favor, intente de nuevo.\n";
+                    std::cerr << "Error: Opción inválida. Por favor, intente de nuevo.\n";
                     flagError = true;
                     Auxiliares::waitfor(2000);
                 }
@@ -4073,23 +4110,33 @@ namespace Presentacion {
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(fechaAux, 11, "Ingrese la fecha de Registro del Jugador: ", nullptr, Validadores::fechaValidaRegistroDeJugadorOEquipo);
+            if (!Auxiliares::ingresarCadena(nuevo.fechaRegistro, 11, "Ingrese la fecha de Registro del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                            Validadores::fechaValidaRegistroDeJugadorOEquipo)) {
+                std::cout << "\nRegistro cancelado por el usuario.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
             Auxiliares::waitfor(2000);
             Auxiliares::limpiarPantalla();
 
             // Recolectamos el dorsal del Jugador
-
             do {
                 flagError = false;
-                Equipo *eqAux = Logica::equipos::buscarEquipoPorID(MiSistema, idEquipoAux);
+                Equipo equipoBuscado;
+                bool existe = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoBuscado, nuevo.idEquipo);
                 Auxiliares::limpiarPantalla();
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarDatos(dorsal, "Ingrese el Dorsal del jugador: ", nullptr, Validadores::Dorsal);
-                if (Logica::jugadores::DorsalDuplicado(MiSistema, dorsal, idEquipoAux)) {
-                    std::cout << "Error el dorsal '" << dorsal << "' ya está ocupado en el equipo '" << eqAux->nombre << "'.\n";
-                    Auxiliares::waitfor(2500);
+
+                if (!Auxiliares::ingresarDatos(nuevo.numeroDorsal, "Ingrese el Dorsal del jugador (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::Dorsal)) {
+                    std::cout << "\nRegistro cancelado por el usuario.\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                if (Logica::jugadores::DorsalDuplicado(nombreArchivo, nuevo.numeroDorsal, nuevo.idEquipo)) {
+                    std::cout << "Error el dorsal '" << nuevo.numeroDorsal << "' ya está ocupado en el equipo '" << equipoBuscado.nombre << "'.\n";
                     flagError = true;
                 }
                 Auxiliares::waitfor(2000);
@@ -4102,12 +4149,12 @@ namespace Presentacion {
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 // agregamos el jugador
-                nuevo = Logica::jugadores::agregarJugador(MiSistema, idEquipoAux, nombreAux, cedulaAux, posicionAux, edadAux, dorsal, fechaAux);
+                bool registrado = Logica::jugadores::registrarJugador(nombreArchivo, nuevo);
                 Auxiliares::waitfor(1200);
                 Auxiliares::limpiarPantalla();
                 // Si no se agregó
-                if (nuevo == nullptr) {
-                    std::cout << "ERROR al registrar al jugador.\n";
+                if (!registrado) {
+                    std::cerr << "Error al registrar al jugador.\n";
                     Auxiliares::pausarPrograma();
                     return;
                 }
@@ -4115,38 +4162,82 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║       JUGADOR REGISTRADO CON ÉXITO        ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                std::cout << " Torneo: " << MiSistema->torneo.nombre << std::endl;
-                std::cout << " ID del Jugador: " << nuevo->ID << std::endl;
-                std::cout << " Nombre del Jugador: " << nuevo->nombre << std::endl;
-                std::cout << " Cédula: " << nuevo->cedula << std::endl;
-                std::cout << " Edad: " << nuevo->edad << " años" << std::endl;
-                std::cout << " Posición: " << nuevo->posicion << std::endl;
-                std::cout << " Dorsal: " << nuevo->dorsal << std::endl;
-                std::cout << " ID del Equipo asignado: " << nuevo->idEquipo << std::endl;
-                std::cout << " Fecha de Registro: " << nuevo->fechaRegistro << std::endl;
+                std::cout << " Torneo: " << torneo.nombre;
+                std::cout << "\n ID del Jugador: " << nuevo.ID;
+                std::cout << "\n Nombre del Jugador: " << nuevo.nombre;
+                std::cout << "\n Cédula: " << nuevo.cedula;
+                std::cout << "\n Edad: " << nuevo.edad << " años";
+                std::cout << "\n Posición: " << nuevo.posicion;
+                std::cout << "\n Dorsal: " << nuevo.numeroDorsal;
+                std::cout << "\n ID del Equipo asignado: " << nuevo.idEquipo;
+                std::cout << "\n Fecha de Registro: " << nuevo.fechaRegistro;
             } else if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'N') {
-                std::cout << "Registro de Jugador Cancelado.\n";
+                std::cout << " Registro de Jugador Cancelado.\n";
             } else {
-                std::cout << "ERROR: Opción incorrecta (S/N).\nRegistro de Jugador Cancelado.\n";
+                std::cerr << " ERROR: Opción incorrecta (S/N).\nRegistro de Jugador Cancelado.\n";
             }
             Auxiliares::pausarPrograma();
         }
 
-        void buscarJugadorID() {
+        void buscarJugadorID(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
             int ID = 0;
-            Jugador *jugadorBuscado = nullptr;
+            int error = -1;
+            bool encontrado = false;
+            bool cancelado = false;
+            Jugador jugadorBuscado;
 
-            // Si no hay equipos registrados
-            if (MiSistema->numEquiposActuales == 0) {
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerJugadores = Logica::leerHeader(nombreArchivo);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerJugadores.cantidadRegistros == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Registro Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay jugadores activos registrados
+            if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
+            // Leemos el torneo
+            Torneo torneo;
+            std::ifstream archivoTorneo;
+            archivoTorneo.open(NOMBRE_ARCHIVO_TORNEO, std::ios::binary);
+
+            // Verificamos que abrió correctamente
+            if (!archivoTorneo.is_open()) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Registro Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Ubicamos el puntero de lectura al inicio
+            archivoTorneo.seekg(0, std::ios::beg);
+
+            // Leemos el el torneo
+            archivoTorneo.read(reinterpret_cast<char *>(&torneo), sizeof(Torneo));
+
+            // Verificamos si la lectura fue exitosa
+            if (archivoTorneo.fail()) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Registro Cancelado\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Cerramos el archivo
+            archivoTorneo.close();
+
             // Si no hay jugadores registrados
-            if (MiSistema->numJugadoresActuales == 0) {
-                std::cout << "No hay ningún jugador registrado actualmente\n";
+            if (headerJugadores.registrosActivos == 0) {
+                std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
@@ -4155,30 +4246,64 @@ namespace Presentacion {
             std::cout << "       ║       BUSQUEDA DE JUGADORES POR ID        ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-            Auxiliares::ingresarDatos(ID, "Ingrese el ID: ", nullptr, Validadores::IDvalido);
+            if (!Auxiliares::ingresarDatos(ID, "Ingrese el ID (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                std::cout << "\nRegistro Cancelado por el usuario.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
 
-            jugadorBuscado = Logica::jugadores::buscarJugadorPorID(MiSistema, ID);
+            encontrado = Logica::buscarRegistrosPorId<Jugador>(nombreArchivo, jugadorBuscado, ID);
+
+            Auxiliares::waitfor(800);
+            Auxiliares::limpiarPantalla();
+            std::cout << "\nBuscando...\n";
+            Auxiliares::waitfor(1500);
+
 
             // si no encontro un jugador
-            if (jugadorBuscado == nullptr) {
-                std::cout << "Error no hay ningun jugador registrado con el ID '" << ID << "'\n";
+            if (!encontrado) {
+                std::cerr << "Error no hay ningun jugador registrado con el ID '" << ID << "'\n";
             } else {
+
+
+                // Buscamos el equipo del jugador
+                Equipo equipoBuscado;
+                encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoBuscado, jugadorBuscado.idEquipo);
+
+                // Verificamos que el equipo fue enoncontrado
+                if (!encontrado) {
+                    std::cout << "\nError del Sistema!\n";
+                    std::cout << "Busqueda Cancelada\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                // Listamos los datos
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            JUGADOR ENCONTRADO             ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
                 std::cout << "-------------------------------------------------------------\n";
-                std::cout << "  ID del Jugador:       " << jugadorBuscado->ID << "\n";
-                std::cout << "  Nombre:               " << jugadorBuscado->nombre << "\n";
-                std::cout << "  Cédula:               " << jugadorBuscado->cedula << "\n";
-                std::cout << "  Edad:                 " << jugadorBuscado->edad << " años\n";
-                std::cout << "  Posición:             " << jugadorBuscado->posicion << "\n";
-                std::cout << "  Dorsal:               " << jugadorBuscado->dorsal << "\n";
-                std::cout << "  ID Equipo Asignado:   " << jugadorBuscado->idEquipo << "\n";
-                std::cout << "  Fecha de Registro:    " << jugadorBuscado->fechaRegistro << "\n";
+                std::cout << "  Torneo:                 " << Auxiliares::toMayus(torneo.nombre) << "\n";
+                std::cout << "  Deporte:                " << torneo.deporte << "\n";
+                std::cout << "-------------------------------------------------------------\n";
+                std::cout << "  Informacion del Jugador: \n";
+                std::cout << "    ID del Jugador:       " << jugadorBuscado.ID << "\n";
+                std::cout << "    Nombre:               " << jugadorBuscado.nombre << "\n";
+                std::cout << "    Cédula:               " << jugadorBuscado.cedula << "\n";
+                std::cout << "    Edad:                 " << jugadorBuscado.edad << " años \n";
+                std::cout << "    Posición:             " << jugadorBuscado.posicion << "\n";
+                std::cout << "    Dorsal:               " << jugadorBuscado.numeroDorsal << "\n";
+                std::cout << "    Fecha de Registro:    " << jugadorBuscado.fechaRegistro << "\n";
+                std::cout << "-------------------------------------------------------------\n";
+                std::cout << "  Informacion del Equipo: \n";
+                std::cout << "    ID Equipo:            " << jugadorBuscado.idEquipo << "\n";
+                std::cout << "    Equipo:               " << equipoBuscado.nombre << "\n";
                 std::cout << "-------------------------------------------------------------\n";
                 std::cout << "  Estadísticas en el Torneo:\n";
-                std::cout << "    Puntos Anotados:    " << jugadorBuscado->puntosAnotados << "\n";
+                std::cout << "    Anotaciones:          " << jugadorBuscado.anotaciones << "\n";
+                std::cout << "    Tarjetas Amarillas:   " << jugadorBuscado.tarjetasAmarillas << "\n";
+                std::cout << "    Tarjetas Rojas:       " << jugadorBuscado.tarjetasRojas << "\n";
                 std::cout << "-------------------------------------------------------------\n";
             }
             Auxiliares::pausarPrograma();
@@ -4433,7 +4558,7 @@ namespace Presentacion {
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
                 Auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nuevo nombre del Jugador: ", nullptr, Validadores::Nombres);
 
-                if (Logica::jugadores::nombreDuplicadoParaActualizar(MiSistema, nombreAux, ID)) {
+                if (Logica::jugadores::cadenaDuplicadaParaActualizar(MiSistema, nombreAux, ID)) {
                     std::cout << "Error: ya hay otro jugador con el nombre '" << nombreAux << "'\n";
                     flagError = true;
                     Auxiliares::waitfor(2500);
@@ -5772,7 +5897,7 @@ int main() {
                             break;
 
                         case 1: // Registrar nuevos jugadores
-                            Presentacion::jugadores::RegistrarJugador(ptrMiSistema);
+                            Presentacion::jugadores::RegistrarJugador(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 2: // Menu Buscar jugadores
