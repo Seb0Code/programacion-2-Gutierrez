@@ -43,6 +43,8 @@ const int MAX_RESULTADOS = 100;
 const int MAX_ANOTACIONES = 22;
 const int MAX_TARJETAS_AMARILLAS = 30;
 const int MAX_TARJETAS_ROJAS = 8;
+const int MINUTO_MINIMO = 1;
+const int MINUTO_MAXIMO = 120;
 
 namespace fs = std::filesystem;
 
@@ -71,7 +73,7 @@ struct Jugador {
 
     // Estadísticas individuales (se actualizan al registrar goles en partidos)
     int anotaciones;
-    int tarjetasAmarillas;
+    int tarjetaAmarillas;
     int tarjetasRojas;
 
     // Metadata de control
@@ -146,11 +148,11 @@ struct Partido {
     int tarjetasRojasVisitante;
 
     // Detalle de goles (NUEVO en Proyecto 2)
-    Anotacion anotaciones[MAX_ANOTACIONES];            // Máximo 22 goles por partido
-    tarjetaAmarilla tarjetasA[MAX_TARJETAS_AMARILLAS]; // Máximo 30 tarjetas A por partido
-    tarjetaRoja tarjetaR[MAX_TARJETAS_ROJAS];          // Máximo 8 tarjetas R por partido
+    Anotacion anotaciones[MAX_ANOTACIONES];           // Máximo 22 goles por partido
+    tarjetaAmarilla tarjetaA[MAX_TARJETAS_AMARILLAS]; // Máximo 30 tarjetas A por partido
+    tarjetaRoja tarjetaR[MAX_TARJETAS_ROJAS];         // Máximo 8 tarjetas R por partido
     int numAnotaciones;
-    int numTarjetasAma;
+    int numtarjetaAma;
     int numTarjetasRojas;
 
     // Metadata de control
@@ -524,6 +526,14 @@ namespace Validadores {
     // ====================================================================================//
     //  Validaciones principales                                                           //
     // ====================================================================================//
+
+    bool minuto(const int variable, char *mensajeError) {
+        if (variable < MINUTO_MINIMO || variable > MINUTO_MAXIMO) {
+            std::strncpy(mensajeError, "El minuto debe estar entre ", TAMANO_MENSAJE_ERROR);
+            return false;
+        }
+        return true;
+    }
 
     bool Positivo(const int variable, char *mensajeError) {
         if (variable < 0) {
@@ -1903,7 +1913,7 @@ namespace Logica {
 
             // * Inicializamos las estadisticas
             nuevoJugador.anotaciones = 0;
-            nuevoJugador.tarjetasAmarillas = 0;
+            nuevoJugador.tarjetaAmarillas = 0;
             nuevoJugador.tarjetasRojas = 0;
 
             // * Inicializamos las fechas de creacion y ultima modificacion
@@ -2595,7 +2605,7 @@ namespace Logica {
 
             // * 5. Registramos goles/tarjetas y detalle de goles/tarjetas
             nuevoPartido.numAnotaciones = registroPartido.numAnotaciones;
-            nuevoPartido.numTarjetasAma = registroPartido.numTarjetasAma;
+            nuevoPartido.numtarjetaAma = registroPartido.numtarjetaAma;
             nuevoPartido.numTarjetasRojas = registroPartido.numTarjetasRojas;
 
             // Puedo usar std::copy pero solo usaré for por el momento
@@ -2603,8 +2613,8 @@ namespace Logica {
                 nuevoPartido.anotaciones[e] = registroPartido.anotaciones[e];
             }
 
-            for (size_t e = 0; e < nuevoPartido.numTarjetasAma; e++) {
-                nuevoPartido.tarjetasA[e] = registroPartido.tarjetasA[e];
+            for (size_t e = 0; e < nuevoPartido.numtarjetaAma; e++) {
+                nuevoPartido.tarjetaA[e] = registroPartido.tarjetaA[e];
             }
 
             for (size_t e = 0; e < nuevoPartido.numTarjetasRojas; e++) {
@@ -2666,9 +2676,9 @@ namespace Logica {
             }
 
             // Modificamos las tarjetas amarillas
-            for (size_t e = 0; e < registroPartido.numTarjetasAma; e++) {
+            for (size_t e = 0; e < registroPartido.numtarjetaAma; e++) {
                 // Buscamos el indice
-                size_t indiceBuscado = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, nuevoPartido.tarjetasA[e].idJugador);
+                size_t indiceBuscado = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, nuevoPartido.tarjetaA[e].idJugador);
 
                 // Si ocurrió un error detenemos el proceso
                 if (indiceBuscado == error) {
@@ -2691,7 +2701,7 @@ namespace Logica {
                 }
 
                 // modificamos los valores
-                jugadorAux.tarjetasAmarillas++;
+                jugadorAux.tarjetaAmarillas++;
 
                 // Nos movemos a la posicion nuevamente
                 archivoJugadores.seekp(posicion, std::ios::beg);
@@ -3100,12 +3110,12 @@ namespace Logica {
                 pAux.numAnotaciones = 0;
 
                 // Limpiamos las tarjetas amarillas y los detalles de cada tarjeta Amarilla
-                for (size_t e = 0; e < pAux.numTarjetasAma; e++) {
+                for (size_t e = 0; e < pAux.numtarjetaAma; e++) {
 
                     Jugador jugadorAux;
 
                     // Buscamos el índice jugador que realió la anotacion
-                    size_t indiceJugador = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, pAux.tarjetasA[e].idJugador);
+                    size_t indiceJugador = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, pAux.tarjetaA[e].idJugador);
 
                     // Calculamos la posicion
                     std::streampos posicionJugador = sizeof(ArchivoHeader) + indiceJugador * sizeof(Jugador);
@@ -3124,7 +3134,7 @@ namespace Logica {
                     }
 
                     // Modificamos el valor
-                    jugadorAux.tarjetasAmarillas--;
+                    jugadorAux.tarjetaAmarillas--;
 
                     // Movemos el puntero de escritura
                     archivo.seekp(posicionJugador, std::ios::beg);
@@ -3139,12 +3149,12 @@ namespace Logica {
                         archivo.close();
                     }
 
-                    pAux.tarjetasA[e] = {0, 0, 0};
+                    pAux.tarjetaA[e] = {0, 0, 0};
                 }
 
                 pAux.tarjetasAmaLocal = 0;
                 pAux.tarjetasAmaVisitante = 0;
-                pAux.numTarjetasAma = 0;
+                pAux.numtarjetaAma = 0;
 
                 // Limpiamos las tarjetas rojas y los detalles de cada tarjeta roja
                 for (size_t e = 0; e < pAux.numTarjetasRojas; e++) {
@@ -4315,7 +4325,7 @@ namespace Presentacion {
                 std::cout << "-------------------------------------------------------------\n";
                 std::cout << "  Estadísticas en el Torneo:\n";
                 std::cout << "    Anotaciones:          " << jugadorBuscado.anotaciones << "\n";
-                std::cout << "    Tarjetas Amarillas:   " << jugadorBuscado.tarjetasAmarillas << "\n";
+                std::cout << "    Tarjetas Amarillas:   " << jugadorBuscado.tarjetaAmarillas << "\n";
                 std::cout << "    Tarjetas Rojas:       " << jugadorBuscado.tarjetasRojas << "\n";
                 std::cout << "-------------------------------------------------------------\n";
             }
@@ -4412,7 +4422,7 @@ namespace Presentacion {
                     std::cout << "  Nombre del Equipo:     " << equipoBuscado.nombre << "\n";
                     std::cout << "  ID Equipo:             " << resultados[e].idEquipo << "\n";
                     std::cout << "  Anotaciones:           " << resultados[e].anotaciones << "\n";
-                    std::cout << "  Tarjetas Amarillas:    " << resultados[e].tarjetasAmarillas << "\n";
+                    std::cout << "  Tarjetas Amarillas:    " << resultados[e].tarjetaAmarillas << "\n";
                     std::cout << "  Tarjetas Rojas:    " << resultados[e].tarjetasRojas << "\n";
                 }
                 std::cout << "-------------------------------------------------------------\n";
@@ -4906,27 +4916,43 @@ namespace Presentacion {
     } // namespace jugadores
 
     namespace partidos {
-        void programarPartido() {
+        void programarPartido(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
-            if (MiSistema->numEquiposActuales == 0) {
-                std::cout << "No hay Equipos Disponibles para programar un partido\n";
+            int error = -1;
+            bool cancelado = false;
+            bool encontrado = false;
+            Equipo eqLocal, eqVisitante;
+
+            // Leemos el header del archivo de equipo para saber el numero de reisgtros activos
+            ArchivoHeader headerEquipos = Logica::leerHeader(nombreArchivo);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerEquipos.cantidadRegistros == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Busqueda Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay mas equipos activos registrados
+            if (headerEquipos.registrosActivos == 0) {
+                std::cout << "\nNo hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            if (MiSistema->numEquiposActuales <= 1) {
-                std::cout << "No se puede programar un partido con un solo equipo\n";
+            if (headerEquipos.registrosActivos <= 1) {
+                std::cout << "\nNo es posible programar un partido con solo un equipo\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
             // Calculamos el minimo de jugadores en el deporte actual para organizar un partido
             int minimoDeJugadores = Logica::partidos::minJugadoresPorDeporte();
-            int IDLocal = 0, IDVisitante = 0;
+            Partido nuevoPartido;
             bool flagError = false;
-            char fecha[11];
-            char descripcion[200];
             char confirmacion;
+            bool programado = false;
 
             // Recolectamos el ID LOCAL
             do {
@@ -4935,11 +4961,16 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           PROGRAMAR PARTIDO               ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarDatos(IDLocal, "Ingrese el ID del equipo local: ", nullptr, Validadores::IDvalido);
+                if (!Auxiliares::ingresarDatos(nuevoPartido.idEquipoLocal, "Ingrese el ID del equipo local (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                               Validadores::IDvalido)) {
+                    std::cout << "\nOperacion Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
 
                 // Si el ID no corresponde a ningun equipo
-                if (!Logica::equipos::existeID(MiSistema, IDLocal)) {
-                    std::cout << "Error el ID '" << IDLocal << "' no está asociado a ningún equipo\n";
+                if (!Logica::existeID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, nuevoPartido.idEquipoLocal)) {
+                    std::cout << "Error el ID '" << nuevoPartido.idEquipoLocal << "' no está asociado a ningún equipo\n";
                     Auxiliares::waitfor(2000);
                     flagError = true;
                 }
@@ -4953,37 +4984,55 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           PROGRAMAR PARTIDO               ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarDatos(IDVisitante, "Ingrese el ID del equipo visitante: ", nullptr, Validadores::IDvalido);
+                if (!Auxiliares::ingresarDatos(nuevoPartido.idEquipoVisitante, "Ingrese el ID del equipo visitante (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                               Validadores::IDvalido)) {
+                    std::cout << "\nOperacion Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
 
                 // Si el ID no corresponde a ningun equipo
-                if (!Logica::equipos::existeID(MiSistema, IDVisitante)) {
-                    std::cout << "Error el ID '" << IDVisitante << "' no está asociado a ningún equipo\n";
+                if (!Logica::existeID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, nuevoPartido.idEquipoVisitante)) {
+                    std::cerr << "Error el ID '" << nuevoPartido.idEquipoVisitante << "' no está asociado a ningún equipo\n";
                     Auxiliares::waitfor(2000);
                     flagError = true;
                 }
 
                 // Si el ID VISITANTE es el mismo que el ID del local
-                if (IDLocal == IDVisitante) {
-                    std::cout << "Error no se puede programar un partido entre un mismo equipo\n";
+                if (nuevoPartido.idEquipoLocal == nuevoPartido.idEquipoVisitante) {
+                    std::cerr << "Error no se puede programar un partido entre un mismo equipo\n";
                     Auxiliares::waitfor(2000);
                     flagError = true;
                 }
             } while (flagError);
 
             Auxiliares::limpiarPantalla();
-            Equipo *EqLocal = Logica::equipos::buscarEquipoPorID(MiSistema, IDLocal);
-            Equipo *EqVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, IDVisitante);
 
-            // Validacion de nullptr de respaldo (no debería activarse)
-            if (EqLocal == nullptr || EqVisitante == nullptr) {
-                std::cout << "Error Inesperado \n";
+            // Buscamos el equipo local
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqLocal, nuevoPartido.idEquipoLocal);
+
+            // Verificamos si fue encontrado
+            if (!encontrado) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operación Cancelada\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Buscamos el equipo visitante
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqVisitante, nuevoPartido.idEquipoVisitante);
+
+            // Verificamos si fue encontrado
+            if (!encontrado) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operación Cancelada\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
             /*
             // Si no cumplen con el minimo de jugadores
-            if ((EqLocal->numJugadores < minimoDeJugadores) || (EqVisitante->numJugadores < minimoDeJugadores)) {
+            if ((eqLocal.numJugadores < minimoDeJugadores) || (eqVisitante.numJugadores < minimoDeJugadores)) {
                 std::cout << "Error no se puede programar un partido.\n";
                 std::cout << "Los equipos no cumplen con el minimo de jugadores establecido\n\n";
                 std::cout << "Deporte: " << MiSistema->torneo.deporte << std::endl;
@@ -4994,31 +5043,70 @@ namespace Presentacion {
                 return;
             }*/
 
+            // Abrimos el archivo de Partidos
+            Partido partidoAux;
+            std::fstream archivoPartidos;
+            archivoPartidos.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+
+            // Verificamos si abrió el archivo
+            if (archivoPartidos.is_open()) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operación Cancelada\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Ubicamos el puntero de lectura despues del header
+            archivoPartidos.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
             // Si ya tienen un partido programado
-            for (size_t e = 0; e < MiSistema->numPartidosActuales; e++) {
-                bool partidoEntreSi = (((MiSistema->Partidos[e].idEquipoLocal == IDLocal) && (MiSistema->Partidos[e].idEquipoVisitante == IDVisitante)) ||
-                                       ((MiSistema->Partidos[e].idEquipoLocal == IDVisitante) && (MiSistema->Partidos[e].idEquipoVisitante == IDLocal)));
-                if (partidoEntreSi && (std::strcmp(MiSistema->Partidos[e].estado, Logica::partidos::estadoPartidos[0]) == 0)) {
-                    std::cout << "Error ya hay un partido programado entre el equipo " << EqLocal->nombre << "' y '" << EqVisitante->nombre << std::endl;
+            while (archivoPartidos.read(reinterpret_cast<char *>(&partidoAux), sizeof(Partido))) {
+
+                // Verificamos que la lectura sea correcta
+                if (archivoPartidos.fail()) {
+                    std::cerr << "\nError del Sistema!\n";
+                    std::cout << "Operación Cancelada\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                bool partidoEntreSi = (((partidoAux.idEquipoLocal == nuevoPartido.idEquipoLocal) && (partidoAux.idEquipoVisitante == nuevoPartido.idEquipoVisitante)) ||
+                                       ((partidoAux.idEquipoLocal == nuevoPartido.idEquipoVisitante) && (partidoAux.idEquipoVisitante == nuevoPartido.idEquipoLocal)));
+                if (partidoEntreSi && (std::strcmp(partidoAux.estado, Logica::partidos::estadoPartidos[0]) == 0)) {
+                    std::cerr << "Error ya hay un partido programado entre el equipo " << eqLocal.nombre << "' y '" << eqVisitante.nombre << std::endl;
                     Auxiliares::pausarPrograma();
                     return;
                 }
             }
 
-            // Pedimos la fecha flagError = false;
+            // Cerramos el archivo de Partidos
+            archivoPartidos.close();
+
+            // Pedimos la fecha
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║           PROGRAMAR PARTIDO               ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            std::cout << "Encuentro: " << EqLocal->nombre << " VS " << EqVisitante->nombre << "\n\n";
-            Auxiliares::ingresarCadena(fecha, 11, "Ingrese la fecha del partido (YYYY-MM-DD): ", nullptr, Validadores::fechaValidaRegistroDePartidos);
+            std::cout << "Encuentro: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+            if (!Auxiliares::ingresarCadena(nuevoPartido.fecha, TAMANO_FECHA, "Ingrese la fecha del partido (YYYY-MM-DD) (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                            Validadores::fechaValidaRegistroDePartidos)) {
+                std::cout << "\nOperacion Cancelada por el Usuario\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
             Auxiliares::waitfor(750);
             Auxiliares::limpiarPantalla();
 
             // Pedimos la descripcion
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║           PROGRAMAR PARTIDO               ║\n";
-            std::cout << "       ╚═══════════════════════════════════════════╝\n\n"; // Usamos nombre torneo por el alfanumerico
-            Auxiliares::ingresarCadena(descripcion, 200, "Ingrese la descripción del partido: ", nullptr, Validadores::nombreTorneo);
+            std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            if (!Auxiliares::ingresarCadena(nuevoPartido.descripcion, 200, "Ingrese la descripción del partido (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                            Validadores::nombreTorneo)) {
+                std::cout << "\nOperacion Cancelada por el Usuario\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
             Auxiliares::waitfor(750);
             Auxiliares::limpiarPantalla();
 
@@ -5028,49 +5116,91 @@ namespace Presentacion {
             Auxiliares::limpiarPantalla();
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
-                Partido *nuevoPartido = Logica::partidos::programarPartido(MiSistema, IDLocal, IDVisitante, fecha, descripcion);
+                programado = Logica::partidos::programarPartido(nombreArchivo, nuevoPartido);
 
-                if (nuevoPartido != nullptr) {
+                if (programado) {
                     std::cout << "\n------------------------------------------------------------------------------\n";
                     std::cout << "                ¡Partido programado con éxito!\n";
-                    std::cout << "                " << EqLocal->nombre << "  VS  " << EqVisitante->nombre << "\n";
-                    std::cout << "                Fecha: " << nuevoPartido->fecha << std::endl;
-                    std::cout << "                ID Asignado: " << nuevoPartido->ID << std::endl;
+                    std::cout << "                " << eqLocal.nombre << "  VS  " << eqVisitante.nombre << "\n";
+                    std::cout << "                Fecha: " << nuevoPartido.fecha << std::endl;
+                    std::cout << "                ID Asignado: " << nuevoPartido.ID << std::endl;
                     std::cout << "------------------------------------------------------------------------------\n";
                 } else {
-                    std::cout << "\nSe produjo un error a la hora de programar el partido.\n";
+                    std::cerr << "\nSe produjo un error a la hora de programar el partido.\n";
                 }
             } else if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'N') {
                 std::cout << "\nLa programación del partido ha sido cancelada.\n";
             } else {
-                std::cout << "\nError: Opción inválida (S/N).\nLa programación del partido ha sido cancelada.";
+                std::cerr << "\nError: Opción inválida (S/N).\nLa programación del partido ha sido cancelada.";
             }
 
             Auxiliares::pausarPrograma();
         }
 
-        void registrarResultado() {
+        void registrarResultado(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
+            int error = -1;
 
-            // Si no hay equipos registrados
-            if (MiSistema->numEquiposActuales == 0) {
+            // Buscamos y leemos el nombre del torneo
+            Torneo torneo;
+            std::ifstream archivoTorneo;
+            archivoTorneo.open(nombreArchivo, std::ios::binary);
+
+            // si se produjo un error
+            if (!archivoTorneo.is_open()) {
+                std::cerr << "\nError del Sistema!\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Movemos el puntero de letura al principio por seguridad
+            archivoTorneo.seekg(0, std::ios::beg);
+
+            // Realizamos la lectura
+            archivoTorneo.read(reinterpret_cast<char *>(&torneo), sizeof(Torneo));
+
+            // Si la lectura tuvo problemas
+            if (archivoTorneo.fail()) {
+                std::cerr << "\nError del Sistema!\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Cerramos el archivo de torneos
+            archivoTorneo.close();
+
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerPartidos = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Busqueda Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
-            // Si no hay partidos
-            if (MiSistema->numPartidosActuales == 0) {
-                std::cout << "Error: No hay partidos registrados en el sistema.\n";
+
+            // Si no hay partidos activos registrados
+            if (headerPartidos.registrosActivos == 0) {
+                std::cout << "No hay ningún partido programado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
             // Variables
-            int idPartido = 0;
-            int anotacionesLocal = 0, puntosVisitante = 0;
             bool flagError = false;
             char confirmacion;
-            Partido *ptrPartido = nullptr;
+            bool cancelado = false;
+            bool encontrado = false;
+            Partido registroPartido, partidoAux;
 
             // Recopilamos el ID del partido a registrar
             do {
@@ -5080,107 +5210,553 @@ namespace Presentacion {
                 std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-                Auxiliares::ingresarDatos(idPartido, "Ingrese el ID del partido a registrar: ", Validadores::IDvalido);
-
-                // Buscamos el partido
-                ptrPartido = Logica::partidos::buscarPartidoPorID(MiSistema, idPartido);
-                if (ptrPartido == nullptr) {
-                    std::cout << "Error: El ID de partido '" << idPartido << "' no está asociado a ningún partido.\n";
+                if (!Auxiliares::ingresarDatos(registroPartido.ID, "Ingrese el ID del partido a registrar (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                               Validadores::IDvalido)) {
+                    std::cout << "\nOperacion Cancelada por el Usuario\n";
                     Auxiliares::pausarPrograma();
                     return;
-                } else if (std::strcmp(ptrPartido->estado, Logica::partidos::estadoPartidos[0]) != 0) {
-                    std::cout << "Error: El partido ya fue JUGADO o no se encuentra en estado PROGRAMADO.\n";
+                }
+
+                // Buscamos el partido
+                encontrado = Logica::buscarRegistrosPorId<Partido>(nombreArchivo, partidoAux, registroPartido.ID);
+                if (!encontrado) {
+                    std::cerr << "Error: El ID de partido '" << registroPartido.ID << "' no está asociado a ningún partido.\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                } else if (std::strcmp(partidoAux.estado, Logica::partidos::estadoPartidos[0]) != 0) {
+                    std::cerr << "Error: El partido ya fue JUGADO o no se encuentra en estado PROGRAMADO.\n";
                     Auxiliares::waitfor(2000);
                     flagError = true;
                 }
 
             } while (flagError);
 
-            Equipo *EqLocal = Logica::equipos::buscarEquipoPorID(MiSistema, ptrPartido->idEquipoLocal);
-            Equipo *EqVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, ptrPartido->idEquipoVisitante);
+            // Buscamos los equipos
+            Equipo eqLocal, eqVisitante;
 
-            if (EqLocal == nullptr || EqVisitante == nullptr) {
-                std::cout << "Error Inesperado\n";
+            // Buscamos el equipo local
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqLocal, partidoAux.idEquipoLocal);
+
+            // Verificamos que fue encontrado
+            if (!encontrado) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operacion Cancelada\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            // Recolectamos los puntos del partido
+            // Buscamos el equipo visitante
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqVisitante, partidoAux.idEquipoVisitante);
+
+            // Verificamos que fue encontrado
+            if (!encontrado) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Operacion Cancelada\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Recolectamos las anotaciones del partido
             do {
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                std::cout << "       ║           REGISTRAR ANOTACIONES           ║\n";
+                std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+
+                // Pedimos las del equipo local
+                if (!Auxiliares::ingresarDatos(registroPartido.anotacionesLocal, "Número de Anotaciones del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << "Operacion Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                Auxiliares::waitfor(500);
+                Auxiliares::limpiarPantalla();
+
                 Auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                std::cout << "Deporte Actual del Torneo: " << Validadores::deporteActual << "\n";
-                std::cout << "Partido: " << EqLocal->nombre << " VS " << EqVisitante->nombre << "\n\n";
+                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
-                Auxiliares::ingresarDatos(anotacionesLocal, "Puntos del equipo LOCAL: ");
-                Auxiliares::ingresarDatos(puntosVisitante, "Puntos del equipo VISITANTE: ");
+                // Pedimos las del equipo Visitante
+                if (!Auxiliares::ingresarDatos(registroPartido.anotacionesVisitante,
+                                               "Número de Anotaciones del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << "Operacion Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
 
-                if (anotacionesLocal < 0 || puntosVisitante < 0) {
-                    std::cout << "Error: Los puntajes no pueden ser valores negativos.\n";
+                // Verificamos que sean positivos
+                if (registroPartido.anotacionesLocal < 0 || registroPartido.anotacionesVisitante < 0) {
+                    std::cerr << "Error: El número de anotaciones no puede ser un valor negativo.\n";
                     Auxiliares::waitfor(2000);
                     flagError = true;
-
+                    continue;
                     // Validamos el empate
-                } else if (anotacionesLocal == puntosVisitante) {
+                } else if (registroPartido.anotacionesLocal == registroPartido.anotacionesVisitante) {
+
                     if (std::strcmp(Validadores::deporteActual, "BALONCESTO") == 0 || std::strcmp(Validadores::deporteActual, "TENIS") == 0 ||
                         std::strcmp(Validadores::deporteActual, "VOLEIBOL") == 0 || std::strcmp(Validadores::deporteActual, "BEISBOL") == 0 ||
                         std::strcmp(Validadores::deporteActual, "SOFTBOL") == 0) {
                         std::cout << "Error: En el deporte " << Validadores::deporteActual << " no se permiten empates. Registre el marcador final con prórroga.\n";
                         Auxiliares::waitfor(3000);
                         flagError = true;
+                        continue;
                     }
                 }
+
+                // Obtenemos el numero de anotaciones totales
+                registroPartido.numAnotaciones = registroPartido.anotacionesLocal + registroPartido.anotacionesVisitante;
+
+                // Verificamos que el numero de anotaciones no supere el máximo permitido
+                if (registroPartido.numAnotaciones > MAX_ANOTACIONES) {
+                    std::cout << "Error: El número de anotaciones no puede ser mayor al maximo permitido (" << MAX_ANOTACIONES << ").\n";
+                    Auxiliares::waitfor(2000);
+                    flagError = true;
+                    continue;
+                }
+
+                // * Registramos el detalle de cada gol
+
+                // Registramos las anotaciones del local
+                for (size_t e = 0; e < registroPartido.anotacionesLocal; e++) {
+                    Auxiliares::waitfor(300);
+                    Auxiliares::limpiarPantalla();
+                    flagError = false;
+                    std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                    std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
+                    std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                    std::cout << "\n ---------- Detalle de las Anotaciones del Equipo Local ---------- \n";
+                    std::cout << " Anotacion " << e + 1 << "/" << registroPartido.anotacionesLocal;
+
+                    // Pedimos el minuto en el que anotó el gol
+                    if (!Auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, "Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                   Validadores::minuto)) {
+                        std::cout << " Operación Cancelada por el Usuario\n";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
+                    do {
+                        flagError = false;
+                        // Pedimos el ID del jugador que anotó el gol
+                        if (!Auxiliares::ingresarDatos(registroPartido.anotaciones[e].idJugador,
+                                                       "Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                            std::cout << " Operación Cancelada por el Usuario\n";
+                            Auxiliares::pausarPrograma();
+                            return;
+                        }
+
+                        if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.anotaciones[e].idJugador)) {
+                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            Auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                    } while (flagError);
+
+                    std::strncpy(registroPartido.anotaciones[e].equipo, "LOCAL", TAMANO_LOCAL_O_VISITANTE);
+                }
+
+                // Registramos las anotaciones del visitante
+                for (size_t e = registroPartido.anotacionesLocal; e < registroPartido.numAnotaciones; e++) {
+                    Auxiliares::waitfor(300);
+                    Auxiliares::limpiarPantalla();
+                    flagError = false;
+                    std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                    std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
+                    std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                    std::cout << "\n ---------- Detalle de las Anotaciones del Equipo Visitante ---------- \n";
+                    std::cout << " Anotacion " << (e - registroPartido.anotacionesLocal) + 1 << "/" << registroPartido.anotacionesVisitante;
+
+                    // Pedimos el minuto en el que anotó el gol
+                    if (!Auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, "Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                   Validadores::minuto)) {
+                        std::cout << " Operación Cancelada por el Usuario\n";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
+                    do {
+                        flagError = false;
+                        // Pedimos el ID del jugador que anotó el gol
+                        if (!Auxiliares::ingresarDatos(registroPartido.anotaciones[e].idJugador,
+                                                       "Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                            std::cout << " Operación Cancelada por el Usuario\n";
+                            Auxiliares::pausarPrograma();
+                            return;
+                        }
+
+                        if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.anotaciones[e].idJugador)) {
+                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            Auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                    } while (flagError);
+
+                    std::strncpy(registroPartido.anotaciones[e].equipo, "VISITANTE", TAMANO_LOCAL_O_VISITANTE);
+                }
+
             } while (flagError);
 
+            // Recoletamos las tarjetas amarillas
+            do {
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                std::cout << "       ║             REGISTRAR TARJETAS            ║\n";
+                std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+
+                // Pedimos las del equipo local
+                if (!Auxiliares::ingresarDatos(registroPartido.tarjetasAmaLocal,
+                                               "Número de Tarjetas Amarillas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << "Operacion Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                Auxiliares::waitfor(500);
+                Auxiliares::limpiarPantalla();
+
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
+                std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+
+                // Pedimos las del equipo Visitante
+                if (!Auxiliares::ingresarDatos(registroPartido.tarjetasAmaVisitante,
+                                               "Número de Tarjetas Amarillas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << "Operacion Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                // Verificamos que sean positivos
+                if (registroPartido.tarjetasAmaLocal < 0 || registroPartido.tarjetasAmaVisitante < 0) {
+                    std::cout << "Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
+                    Auxiliares::waitfor(2000);
+                    flagError = true;
+                    continue;
+                    // Validamos el empate
+                }
+
+                // Obtenemos el numero de tarjetas Amarillas totales
+                registroPartido.numtarjetaAma = registroPartido.tarjetasAmaLocal + registroPartido.tarjetasAmaVisitante;
+
+                // Verificamos que el numero de TARJETAS amarillas no supere el máximo permitido
+                if (registroPartido.numtarjetaAma > MAX_TARJETAS_AMARILLAS) {
+                    std::cout << "Error: El número de tarjetas Amarillas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_AMARILLAS << ").\n";
+                    Auxiliares::waitfor(2000);
+                    flagError = true;
+                    continue;
+                }
+
+                // * Registramos el detalle de cada tarjeta amarillas
+
+                // Registramos las tarjetas amarillas del local
+                for (size_t e = 0; e < registroPartido.tarjetasAmaLocal; e++) {
+                    Auxiliares::waitfor(300);
+                    Auxiliares::limpiarPantalla();
+                    flagError = false;
+                    std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                    std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
+                    std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                    std::cout << "\n ---------- Detalle de las Tarjetas Amarillas del Equipo Local ---------- \n";
+                    std::cout << " Tarjeta A " << e + 1 << "/" << registroPartido.tarjetasAmaLocal;
+
+                    // Pedimos el minuto en el que anotó el gol
+                    if (!Auxiliares::ingresarDatos(registroPartido.tarjetaA[e].minuto,
+                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::minuto)) {
+                        std::cout << " Operación Cancelada por el Usuario\n";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
+                    do {
+                        flagError = false;
+                        // Pedimos el ID del jugador que le sacaron la tarjeta amarilla
+                        if (!Auxiliares::ingresarDatos(registroPartido.tarjetaA[e].idJugador,
+                                                       "Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                            std::cout << " Operación Cancelada por el Usuario\n";
+                            Auxiliares::pausarPrograma();
+                            return;
+                        }
+
+                        if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaA[e].idJugador)) {
+                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            Auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                    } while (flagError);
+
+                    std::strncpy(registroPartido.tarjetaA[e].equipo, "LOCAL", TAMANO_LOCAL_O_VISITANTE);
+                }
+
+                // Registramos las tarjetas amarillas del visitante
+                for (size_t e = registroPartido.tarjetasAmaLocal; e < registroPartido.numtarjetaAma; e++) {
+                    Auxiliares::waitfor(300);
+                    Auxiliares::limpiarPantalla();
+                    flagError = false;
+                    std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                    std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
+                    std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                    std::cout << "\n ---------- Detalle de las Tarjetas Amarillas del Equipo Visitante ---------- \n";
+                    std::cout << " Tarjeta A " << (e - registroPartido.tarjetasAmaLocal) + 1 << "/" << registroPartido.tarjetasAmaVisitante;
+
+                    // Pedimos el minuto en el que anotó el gol
+                    if (!Auxiliares::ingresarDatos(registroPartido.tarjetaA[e].minuto,
+                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::minuto)) {
+                        std::cout << " Operación Cancelada por el Usuario\n";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
+                    do {
+                        flagError = false;
+                        // Pedimos el ID del jugador que tiene tarjeta amarilla
+                        if (!Auxiliares::ingresarDatos(registroPartido.tarjetaA[e].idJugador,
+                                                       "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                            std::cout << " Operación Cancelada por el Usuario\n";
+                            Auxiliares::pausarPrograma();
+                            return;
+                        }
+
+                        if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaA[e].idJugador)) {
+                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            Auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                    } while (flagError);
+
+                    std::strncpy(registroPartido.tarjetaA[e].equipo, "VISITANTE", TAMANO_LOCAL_O_VISITANTE);
+                }
+
+            } while (flagError);
+
+            // Recolectamos las tarjetas rojas
+            do {
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                std::cout << "       ║             REGISTRAR TARJETAS            ║\n";
+                std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+
+                // Pedimos las del equipo local
+                if (!Auxiliares::ingresarDatos(registroPartido.tarjetasRojasLocal, "Número de Tarjetas Rojas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << "Operacion Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                Auxiliares::waitfor(500);
+                Auxiliares::limpiarPantalla();
+
+                Auxiliares::limpiarPantalla();
+                flagError = false;
+                std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
+                std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+
+                // Pedimos las del equipo Visitante
+                if (!Auxiliares::ingresarDatos(registroPartido.tarjetasRojasVisitante,
+                                               "Número de Tarjetas Rojas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << "Operacion Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                // Verificamos que sean positivos
+                if (registroPartido.tarjetasRojasLocal < 0 || registroPartido.tarjetasRojasVisitante < 0) {
+                    std::cout << "Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
+                    Auxiliares::waitfor(2000);
+                    flagError = true;
+                    continue;
+                }
+
+                // Obtenemos el numero de tarjetas Rojas totales
+                registroPartido.numTarjetasRojas = registroPartido.tarjetasRojasLocal + registroPartido.tarjetasRojasVisitante;
+
+                // Verificamos que el numero de tarjetas Rojas no supere el máximo permitido
+                if (registroPartido.numTarjetasRojas > MAX_TARJETAS_ROJAS) {
+                    std::cout << "Error: El número de tarjetas Rojas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_ROJAS << ").\n";
+                    Auxiliares::waitfor(2000);
+                    flagError = true;
+                    continue;
+                }
+
+                // * Registramos el detalle de cada tarjeta roja
+
+                // Registramos las tarjetas rojas del local
+                for (size_t e = 0; e < registroPartido.tarjetasRojasLocal; e++) {
+                    Auxiliares::waitfor(300);
+                    Auxiliares::limpiarPantalla();
+                    flagError = false;
+                    std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                    std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
+                    std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                    std::cout << "\n ---------- Detalle de las Tarjetas Rojas del Equipo Local ---------- \n";
+                    std::cout << " Tarjeta R " << e + 1 << "/" << registroPartido.tarjetasRojasLocal;
+
+                    // Pedimos el minuto en el que se produjo la tarjeta roja
+                    if (!Auxiliares::ingresarDatos(registroPartido.tarjetaR[e].minuto,
+                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::minuto)) {
+                        std::cout << " Operación Cancelada por el Usuario\n";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
+                    do {
+                        flagError = false;
+                        // Pedimos el ID del jugador que le sacaron la tarjeta roja
+                        if (!Auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
+                                                       "Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                            std::cout << " Operación Cancelada por el Usuario\n";
+                            Auxiliares::pausarPrograma();
+                            return;
+                        }
+
+                        // Si no existe un jugador con ese ID
+                        if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaR[e].idJugador)) {
+                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            Auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                    } while (flagError);
+
+                    std::strncpy(registroPartido.tarjetaR[e].equipo, "LOCAL", TAMANO_LOCAL_O_VISITANTE);
+                }
+
+                // Registramos las tarjetas amarillas del visitante
+                for (size_t e = registroPartido.tarjetasRojasLocal; e < registroPartido.numTarjetasRojas; e++) {
+                    Auxiliares::waitfor(300);
+                    Auxiliares::limpiarPantalla();
+
+                    flagError = false;
+                    std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                    std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
+                    std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+                    std::cout << "\n ---------- Detalle de las Tarjetas Amarillas del Equipo Visitante ---------- \n";
+                    std::cout << " Tarjeta A " << (e - registroPartido.tarjetasRojasLocal) + 1 << "/" << registroPartido.tarjetasRojasVisitante;
+
+                    // Pedimos el minuto el que le sacaron la tarjeta roja
+                    if (!Auxiliares::ingresarDatos(registroPartido.tarjetaR[e].minuto,
+                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::minuto)) {
+                        std::cout << " Operación Cancelada por el Usuario\n";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
+                    do {
+                        flagError = false;
+                        // Pedimos el ID del jugador que le sacaron la tarjeta Roja
+                        if (!Auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
+                                                       "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                            std::cout << " Operación Cancelada por el Usuario\n";
+                            Auxiliares::pausarPrograma();
+                            return;
+                        }
+
+                        if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaR[e].idJugador)) {
+                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            Auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                    } while (flagError);
+
+                    std::strncpy(registroPartido.tarjetaR[e].equipo, "VISITANTE", TAMANO_LOCAL_O_VISITANTE);
+                }
+
+            } while (flagError);
+
+            // Mostramos el marcador
             Auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          RESUMEN DEL MARCADOR             ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            std::cout << " " << EqLocal->nombre << " (" << anotacionesLocal << ")  VS  (" << puntosVisitante << ") " << EqVisitante->nombre << "\n\n";
+            std::cout << " " << eqLocal.nombre << " " << registroPartido.anotacionesLocal << "  -  " << registroPartido.anotacionesVisitante << " " << eqVisitante.nombre << "\n\n";
 
             Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de registrar este resultado definitivo? (S/N): ");
             Auxiliares::limpiarPantalla();
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 // Invocamos tu función lógica corregida
-                Partido *partidoRegistrado = Logica::partidos::registrarResultado(MiSistema, idPartido, anotacionesLocal, puntosVisitante);
+                bool registrado = Logica::partidos::registrarResultado(nombreArchivo, registroPartido);
 
-                if (partidoRegistrado != nullptr) {
+                if (registrado) {
                     std::cout << "\n------------------------------------------------------------------------------\n";
                     std::cout << "                  ¡Resultado registrado con éxito!\n";
                     std::cout << "------------------------------------------------------------------------------\n";
-                    std::cout << " Partido ID:  " << partidoRegistrado->ID << "\n";
-                    std::cout << " Estado:      " << partidoRegistrado->estado << "\n";
-                    std::cout << " Marcador:    " << EqLocal->nombre << " [" << partidoRegistrado->anotacionesLocal << "] vs [" << partidoRegistrado->puntosVisitante << "] "
-                              << EqVisitante->nombre << "\n";
+                    std::cout << " Partido ID:  " << registroPartido.ID << "\n";
+                    std::cout << " Estado:      " << registroPartido.estado << "\n";
+                    std::cout << " Marcador:    " << eqLocal.nombre << " " << registroPartido.anotacionesLocal << "  -  " << registroPartido.anotacionesVisitante << " "
+                              << eqVisitante.nombre << "\n";
                     std::cout << "------------------------------------------------------------------------------\n";
                 } else {
-                    std::cout << "\nError: No se pudo registrar el partido.\n";
+                    std::cerr << "\nError: No se pudo registrar el partido.\n";
                 }
             } else if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'N') {
                 std::cout << "\nRegistro de resultado cancelado.\n";
             } else {
-                std::cout << "\nError: Opción inválida (S/N).\nRegistro de resultado cancelado.\n";
+                std::cerr << "\nError: Opción inválida (S/N).\nRegistro de resultado cancelado.\n";
             }
             Auxiliares::pausarPrograma();
         }
 
-        void buscarPartidoPorID() {
+        void buscarPartidoPorID(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
+            bool cancelado = false;
+            bool encontrado = false;
+            int error = -1;
+            Partido partidoBuscado;
 
-            // Si no hay equipos registrados
-            if (MiSistema->numEquiposActuales == 0) {
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerPartidos = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Busqueda Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            // Si no hay partidos
-            if (MiSistema->numPartidosActuales == 0) {
-                std::cout << "Error: No hay partidos registrados en el sistema.\n";
+            // Si no hay partidos activos registrados
+            if (headerPartidos.registrosActivos == 0) {
+                std::cout << "No hay ningún partido programado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
@@ -5191,26 +5767,45 @@ namespace Presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Recolectamos el ID
-            Auxiliares::ingresarDatos(idPartido, "Ingrese el ID del partido que desea consultar: ", Validadores::IDvalido);
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(2000);
-
-            // Buscamos el partido mediante el ID
-            Partido *partido = Logica::partidos::buscarPartidoPorID(MiSistema, idPartido);
-
-            // Si no existe, avisamos y salimos
-            if (partido == nullptr) {
-                std::cout << "\nError: El ID de partido '" << idPartido << "' no existe en el sistema.\n";
+            if (!Auxiliares::ingresarDatos(idPartido, "Ingrese el ID del partido que desea consultar (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                std::cout << "Operación Cancelada por el Usuario\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            // Buscamos los equipos para mostrar nombres reales en la presentacion
-            Equipo *EqLocal = Logica::equipos::buscarEquipoPorID(MiSistema, partido->idEquipoLocal);
-            Equipo *EqVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, partido->idEquipoVisitante);
+            Auxiliares::limpiarPantalla();
+            Auxiliares::waitfor(500);
 
-            if (EqLocal == nullptr || EqVisitante == nullptr) {
-                std::cout << "\nError: No se logró recolectar los datos de los equipos.\n";
+            // Buscamos el partido mediante el ID
+            encontrado = Logica::buscarRegistrosPorId<Partido>(nombreArchivo, partidoBuscado, idPartido);
+
+            // Si no existe, avisamos y salimos
+            if (!encontrado) {
+                std::cerr << "\nError: El ID de partido '" << idPartido << "' no existe en el sistema.\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            Equipo eqLocal, eqVisitante;
+
+            // Buscamos los equipos para mostrar nombres reales en la presentacion
+
+            // Buscamos el Local
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, partidoBuscado.idEquipoLocal);
+
+            // Si no existe, avisamos y salimos
+            if (!encontrado) {
+                std::cerr << "\nError del Sistema!\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Buscamos el visitante
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante, partidoBuscado.idEquipoVisitante);
+
+            // Si no existe, avisamos y salimos
+            if (!encontrado) {
+                std::cerr << "\nError del Sistema!\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
@@ -5237,161 +5832,271 @@ namespace Presentacion {
             Auxiliares::pausarPrograma();
         }
 
-        void listarTodosLosPartidos() {
+        void listarTodosLosPartidos(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
+            int error = -1;
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerPartidos = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
 
-            // Si no hay equipos registrados
-            if (MiSistema->numEquiposActuales == 0) {
+            // Verificamos que la lectura del header fue correcta
+            if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Busqueda Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
-            // Si no hay partidos
-            if (MiSistema->numPartidosActuales == 0) {
-                std::cout << "Error: No hay partidos registrados en el sistema.\n";
+            // Si no hay partidos activos registrados
+            if (headerPartidos.registrosActivos == 0) {
+                std::cout << "No hay ningún partido programado actualmente\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
             int cantPartidos = 0;
-            Partido **listaDePartidos = Logica::partidos::listarPartidos(MiSistema, &cantPartidos);
-            if (listaDePartidos == nullptr) {
-                std::cout << "Error del Sistema\n";
-            } else if (cantPartidos == 0) {
+            const int maxResultados = MAX_RESULTADOS;
+            Partido listaDePartidos[maxResultados];
+
+            // Obtenemos la lista de partidos
+            cantPartidos = Logica::listarRegistros<Partido>(nombreArchivo, listaDePartidos, maxResultados);
+
+            if (cantPartidos == 0) {
                 std::cout << "No se encontró ningún partido\n";
+                Auxiliares::pausarPrograma();
+                return;
+            } else if (cantPartidos == -1) {
+                std::cerr << "\nError del Sistema!\n";
+                Auxiliares::pausarPrograma();
+                return;
             }
 
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║            LISTADO DE PARTIDOS            ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-            std::cout << std::left << std::setw(6) << "ID" << std::left << std::left << std::setw(14) << "Fecha" << std::left << std::setw(13) << "Estado"
+            std::cout << std::left << std::setw(6) << "ID" << std::left << std::setw(14) << "Fecha" << std::left << std::setw(13) << "Estado"
                       << "Encuentro y Resultado\n";
             std::cout << "--------------------------------------------------------------------------------\n";
 
             // Recorremos para imprimir los mensajes
             for (size_t e = 0; e < cantPartidos; e++) {
-                Partido *partido = listaDePartidos[e];
-                Equipo *EqLocal = Logica::equipos::buscarEquipoPorID(MiSistema, partido->idEquipoLocal);
-                Equipo *EqVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, partido->idEquipoVisitante);
-                if (EqLocal == nullptr || EqVisitante == nullptr) {
-                    Auxiliares::limpiarPantalla();
-                    std::cout << "Error Inesperado del Sistema\n";
+
+                // Buscamos los equipos
+                bool encontrado = false;
+
+                Equipo eqLocal, eqVisitante;
+
+                // Buscamos el equipo local
+                encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, listaDePartidos[e].idEquipoLocal);
+
+                // Verificamos que si lo encontró
+                if (!encontrado) {
+                    std::cerr << "\nError del Sistema!\n";
                     Auxiliares::pausarPrograma();
                     return;
                 }
 
-                std::cout << std::left << std::setw(6) << partido->ID << std::left << std::setw(14) << partido->fecha << std::left << std::setw(13) << partido->estado;
-                std::cout << EqLocal->nombre << " [" << partido->anotacionesLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
+                // Buscamos el equipo visitante
+                encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante, listaDePartidos[e].idEquipoVisitante);
+
+                // Verificamos que si lo encontró
+                if (!encontrado) {
+                    std::cerr << "\nError del Sistema!\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                std::cout << std::left << std::setw(6) << listaDePartidos[e].ID << std::left << std::setw(14) << listaDePartidos[e].fecha << std::left << std::setw(13)
+                          << listaDePartidos[e].estado;
+                std::cout << eqLocal.nombre << " " << listaDePartidos[e].anotacionesLocal << "  -  " << listaDePartidos[e].anotacionesVisitante << " " << eqVisitante.nombre
+                          << "\n";
             }
             std::cout << "--------------------------------------------------------------------------------\n\n";
 
-            if (listaDePartidos != nullptr) {
-                delete[] listaDePartidos;
-                listaDePartidos = nullptr;
-            }
 
             Auxiliares::pausarPrograma();
         }
 
-        void buscarPartidosPorEquipo() {
+        void buscarPartidosPorEquipo(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
-
-            if (MiSistema->numEquiposActuales == 0) {
-                std::cout << "\n Error: No hay ningun equipo registrado actualmente.\n\n";
-                Auxiliares::pausarPrograma();
-                return;
-            }
-
-            if (MiSistema->numPartidosActuales == 0) {
-                std::cout << "\n Error: No hay partidos registrados en el sistema actualmente.\n\n";
-                Auxiliares::pausarPrograma();
-                return;
-            }
 
             int idEquipo = -1;
-            std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            std::cout << "       ║        HISTORIAL DE PARTIDOS POR EQUIPO   ║\n";
-            std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+            bool cancelado = false;
+            int cantPartidos = 0;
+            const int maxResultados = MAX_RESULTADOS;
+            Partido listaDePartidos[maxResultados];
+            int error = -1;
+            bool flagError = false;
+            bool encontrado = false;
 
-            Auxiliares::ingresarDatos(idEquipo, "Ingrese el ID del equipo a consultar: ", Validadores::IDvalido);
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerPartidos = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Busqueda Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
+                std::cout << "No hay ningún equipo registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Si no hay partidos activos registrados
+            if (headerPartidos.registrosActivos == 0) {
+                std::cout << "No hay ningún partido programado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            do {
+                flagError = false;
+                std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                std::cout << "       ║        HISTORIAL DE PARTIDOS POR EQUIPO   ║\n";
+                std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
+
+                // Pedimos al usuario el id
+                if (!Auxiliares::ingresarDatos(idEquipo, "Ingrese el ID del equipo a consultar (ingresa 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                    std::cout << "\nOperación Cancelada por el Usuario\n";
+                    Auxiliares::pausarPrograma();
+                    return;
+                }
+
+                // Verificamos si ese id existe
+                if (!Logica::existeID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, idEquipo)) {
+                    std::cout << "El id " << idEquipo << " no le pertenece a ningún equipo\n";
+                    flagError = true;
+                    Auxiliares::pausarPrograma();
+                    continue;
+                }
+
+            } while (flagError);
+
+
             Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(2500);
+            Auxiliares::waitfor(500);
+            std::cout << "\nBuscando...\n";
+            Auxiliares::waitfor(1200);
+            Auxiliares::limpiarPantalla();
 
             // Validamos si el equipo existe para poder usarlo
-            Equipo *EqBuscado = Logica::equipos::buscarEquipoPorID(MiSistema, idEquipo);
-            if (EqBuscado == nullptr) {
-                std::cout << "\n Error: El ID de equipo '" << idEquipo << "' no existe en el sistema.\n\n";
+            Equipo equipoBuscado;
+            encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoBuscado, idEquipo);
+
+            if (!encontrado) {
+                std::cout << "\n Error del sistema.\n";
                 Auxiliares::pausarPrograma();
                 return;
             }
 
             // Inicializamos la cantidad de partidos en 0 y buscamos la lista de partidos
-            int cantPartidos = 0;
-            Partido **listaDePartidosPorEq = Logica::partidos::listarPartidosPorEquipo(MiSistema, idEquipo, &cantPartidos);
+            cantPartidos = Logica::partidos::listarPartidosPorEquipo(nombreArchivo, idEquipo, listaDePartidos, maxResultados);
 
-            if (listaDePartidosPorEq == nullptr) {
-                std::cout << "\n Error: Ocurrió un error a la hora de mostrar la lista de partidos por equipo.\n\n";
+            if (cantPartidos == error) {
+                std::cerr << "\n Error: Ocurrió un error a la hora de mostrar la lista de partidos por equipo.\n\n";
             } else if (cantPartidos == 0) {
                 // Si la lógica creó el arreglo pero el equipo no tiene partidos
-                std::cout << "\n El equipo '" << EqBuscado->nombre << "' no tiene partidos registrados todavia.\n\n";
+                std::cout << "\n El equipo '" << equipoBuscado.nombre << "' no tiene partidos registrados todavia.\n\n";
             } else {
                 // Entra aquí si se encontraron partidos para el equipo
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           PARTIDOS ENCONTRADOS            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n";
-                std::cout << " Historial para: " << EqBuscado->nombre << "\n\n";
+                std::cout << " Historial para: " << equipoBuscado.nombre << "\n\n";
                 std::cout << std::left << std::setw(6) << "ID" << std::left << std::setw(14) << "Fecha" << std::left << std::setw(13) << "Estado"
                           << "Encuentro y Resultado\n";
                 std::cout << "--------------------------------------------------------------------------------\n";
 
                 // Recorremos e imprimimos todos los partidos del equipo
-                for (int i = 0; i < cantPartidos; i++) {
-                    Partido *partido = listaDePartidosPorEq[i];
-                    Equipo *EqLocal = Logica::equipos::buscarEquipoPorID(MiSistema, partido->idEquipoLocal);
-                    Equipo *EqVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, partido->idEquipoVisitante);
-                    if (EqLocal == nullptr || EqVisitante == nullptr) {
-                        Auxiliares::limpiarPantalla();
-                        std::cout << "Error Inesperado del Sistema\n";
+                for (size_t e = 0; e < cantPartidos; e++) {
+
+                    // Buscamos los equipos
+                    Equipo eqLocal, eqVisitante;
+
+                    // Buscamos el local
+                    encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, listaDePartidos[e].idEquipoLocal);
+
+                    // Verificamos que fue encontrado
+                    if (!encontrado) {
+                        std::cerr << "\nError del Sistema!\n";
                         Auxiliares::pausarPrograma();
                         return;
                     }
 
-                    std::cout << std::left << std::setw(6) << partido->ID << std::left << std::setw(14) << partido->fecha << std::left << std::setw(13) << partido->estado;
-                    std::cout << EqLocal->nombre << " [" << partido->anotacionesLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
+                    // buscamos el Visitante
+                    encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante, listaDePartidos[e].idEquipoVisitante);
+
+                    // Verificamos que fue encontrado
+                    if (!encontrado) {
+                        std::cerr << "\nError del Sistema!\n";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
+                    std::cout << std::left << std::setw(6) << listaDePartidos[e].ID << std::left << std::setw(14) << listaDePartidos[e].fecha << std::left << std::setw(13)
+                              << listaDePartidos[e].estado;
+                    std::cout << eqLocal.nombre << " " << listaDePartidos[e].anotacionesLocal << "  -  " << listaDePartidos[e].anotacionesVisitante << " " << eqVisitante.nombre
+                              << "\n";
                 }
                 std::cout << "--------------------------------------------------------------------------------\n\n";
-            }
-
-            // Liberamos
-            if (listaDePartidosPorEq != nullptr) {
-                delete[] listaDePartidosPorEq;
-                listaDePartidosPorEq = nullptr;
             }
 
             Auxiliares::pausarPrograma();
         }
 
-        void listarPartidosPorEstado() {
+        void listarPartidosPorEstado(const char *nombreArchivo) {
             Auxiliares::limpiarPantalla();
 
-            if (MiSistema->numEquiposActuales == 0) {
-                std::cout << "\n Error: No hay ningun equipo registrado actualmente.\n\n";
-                Auxiliares::pausarPrograma();
-                return;
-            }
-
-            if (MiSistema->numPartidosActuales == 0) {
-                std::cout << "\n Error: No hay partidos registrados en el sistema actualmente.\n\n";
-                Auxiliares::pausarPrograma();
-                return;
-            }
-
+            int idEquipo = -1;
+            bool cancelado = false;
+            int cantPartidos = 0;
+            const int maxResultados = MAX_RESULTADOS;
+            Partido listaDePartidos[maxResultados];
+            int error = -1;
             bool flagError = false;
+            bool encontrado = false;
+            char estado[TAMANO_ESTADO];
             int opcion = -1;
-            char estado[12];
-            int cantidad = 0;
+
+            // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
+            ArchivoHeader headerPartidos = Logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = Logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
+
+            // Verificamos que la lectura del header fue correcta
+            if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
+                std::cerr << "\nError del Sistema!\n";
+                std::cout << "Busqueda Cancelada\n";
+                Auxiliares::pausarPrograma;
+                return;
+            }
+
+            // Si no hay equipos disponibles
+            if (headerEquipos.registrosActivos == 0) {
+                std::cout << "No hay ningún equipo registrado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Si no hay partidos activos registrados
+            if (headerPartidos.registrosActivos == 0) {
+                std::cout << "No hay ningún partido programado actualmente\n";
+                Auxiliares::pausarPrograma();
+                return;
+            }
 
             do {
                 Auxiliares::limpiarPantalla();
@@ -5404,19 +6109,20 @@ namespace Presentacion {
                 std::cout << "---------------------------------------------\n";
                 std::cout << " 0. PROGRAMADO\n 1. JUGADO\n 2. CANCELADO\n\n";
                 std::cout << "---------------------------------------------\n";
-                Auxiliares::ingresarDatos(opcion, "Ingrese el tipo de estado de partido que desea consultar: ", Validadores::Positivo);
+                Auxiliares::ingresarDatos(opcion, "Ingrese el tipo de estado de partido que desea consultar (ingrese 'canelar' para cancelar): ", &cancelado,
+                                          Validadores::Positivo);
 
                 switch (opcion) {
                     case 0: // Configuramos en PROGRAMADO
-                        std::strncpy(estado, Logica::partidos::estadoPartidos[0]);
+                        std::strncpy(estado, Logica::partidos::estadoPartidos[0], TAMANO_ESTADO);
                         break;
 
                     case 1: // Configuramos en JUGADO
-                        std::strncpy(estado, Logica::partidos::estadoPartidos[1]);
+                        std::strncpy(estado, Logica::partidos::estadoPartidos[1], TAMANO_ESTADO);
                         break;
 
                     case 2: // Configuramos en CANCELADO
-                        std::strncpy(estado, Logica::partidos::estadoPartidos[2]);
+                        std::strncpy(estado, Logica::partidos::estadoPartidos[2], TAMANO_ESTADO);
                         break;
 
                     default:
@@ -5427,17 +6133,17 @@ namespace Presentacion {
             } while (flagError);
 
             Auxiliares::limpiarPantalla();
+            Auxiliares::waitfor(500);
             std::cout << "Buscando..." << std::endl;
-            Auxiliares::waitfor(1500);
+            Auxiliares::waitfor(1200);
             Auxiliares::limpiarPantalla();
 
             // Listamos todos los partidos
-            Partido **listaDePartidos = Logica::partidos::listarPartidosPorSuEstado(MiSistema, estado, &cantidad);
+            cantPartidos = Logica::partidos::listarPartidosPorSuEstado(nombreArchivo, listaDePartidos, estado, maxResultados);
 
-            if (listaDePartidos == nullptr) {
-                std::cout << "\n Error: Ocurrió un error en el Sistema.\n\n";
-            } else if (cantidad == 0) {
-                // Mensaje sutil si el arreglo se creó pero no hay registros con ese estado
+            if (cantPartidos == -1) {
+                std::cerr << "\n Error del Sistema.\n";
+            } else if (cantPartidos == 0) {
                 std::cout << "\n No se encontro ningun partido en estado '" << estado << "' actualmente.\n\n";
             } else {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
@@ -5445,26 +6151,39 @@ namespace Presentacion {
                 std::cout << "       ╚═══════════════════════════════════════════╝\n";
                 std::cout << " Partidos en estado: " << estado << "\n\n";
 
-                // Cabecera de columnas fijas usando setw
                 std::cout << std::left << std::setw(6) << "ID" << std::left << std::setw(14) << "Fecha" << std::left << std::setw(13) << "Estado"
                           << "Encuentro y Resultado\n";
                 std::cout << "--------------------------------------------------------------------------------\n";
 
                 // Bucle de impresión de registros
-                for (int i = 0; i < cantidad; i++) {
-                    Partido *partido = listaDePartidos[i];
-                    Equipo *EqLocal = Logica::equipos::buscarEquipoPorID(MiSistema, partido->idEquipoLocal);
-                    Equipo *EqVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, partido->idEquipoVisitante);
+                for (size_t e = 0; e < cantPartidos; e++) {
+                    // Buscamos los equipos
+                    Equipo eqLocal, eqVisitante;
 
-                    if (EqLocal == nullptr || EqVisitante == nullptr) {
-                        Auxiliares::limpiarPantalla();
-                        std::cout << "Error Inesperado del Sistema\n";
+                    // Buscamos el local
+                    encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, listaDePartidos[e].idEquipoLocal);
+
+                    // Verificamos que fue encontrado
+                    if (!encontrado) {
+                        std::cerr << "\nError del Sistema!\n";
                         Auxiliares::pausarPrograma();
                         return;
                     }
 
-                    std::cout << std::left << std::setw(6) << partido->ID << std::left << std::setw(14) << partido->fecha << std::left << std::setw(13) << partido->estado;
-                    std::cout << EqLocal->nombre << " [" << partido->anotacionesLocal << "] vs [" << partido->puntosVisitante << "] " << EqVisitante->nombre << "\n";
+                    // buscamos el Visitante
+                    encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante, listaDePartidos[e].idEquipoVisitante);
+
+                    // Verificamos que fue encontrado
+                    if (!encontrado) {
+                        std::cerr << "\nError del Sistema!\n";
+                        Auxiliares::pausarPrograma();
+                        return;
+                    }
+
+                    std::cout << std::left << std::setw(6) << listaDePartidos[e].ID << std::left << std::setw(14) << listaDePartidos[e].fecha << std::left << std::setw(13)
+                              << listaDePartidos[e].estado;
+                    std::cout << eqLocal.nombre << " " << listaDePartidos[e].anotacionesLocal << "  -  " << listaDePartidos[e].anotacionesVisitante << " " << eqVisitante.nombre
+                              << "\n";
                 }
                 std::cout << "--------------------------------------------------------------------------------\n\n";
             }
@@ -6042,14 +6761,14 @@ int main() {
                             break;
 
                         case 1: // Registrar nuevos jugadores
-                            Presentacion::jugadores::RegistrarJugador(NOMBRE_ARCHIVO_JUGADORES);
+                            Presentacion::jugadores::registrarJugador(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 2: // Menu Buscar jugadores
                             do {
                                 opcionMenuBusq = -1;
                                 Presentacion::menu::menuBuscarJugador();
-                                Auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", Validadores::Positivo);
+                                Auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", nullptr, Validadores::Positivo);
 
                                 switch (opcionMenuBusq) {
                                     case 0: // Volver al menu anterior
@@ -6057,11 +6776,11 @@ int main() {
                                         break;
 
                                     case 1: // Busqueda por ID
-                                        Presentacion::jugadores::buscarJugadorID(ptrMiSistema);
+                                        Presentacion::jugadores::buscarJugadorID(NOMBRE_ARCHIVO_JUGADORES);
                                         break;
 
                                     case 2: // Busqueda por nombre
-                                        Presentacion::jugadores::buscarJugadorPorNombre(ptrMiSistema);
+                                        Presentacion::jugadores::buscarJugadorPorNombre(NOMBRE_ARCHIVO_JUGADORES);
                                         break;
 
                                     default:
@@ -6071,19 +6790,19 @@ int main() {
                             break;
 
                         case 3: // Actualizar Jugador
-                            Presentacion::jugadores::ActualizarJugador(ptrMiSistema);
+                            Presentacion::jugadores::actualizarJugador(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 4: // Listar todos los jugadores
-                            Presentacion::jugadores::mostrarListaDeJugadores(ptrMiSistema);
+                            Presentacion::jugadores::mostrarListaDeJugadores(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 5: // Listar Jugadores por Equipos
-                            Presentacion::jugadores::mostrarJugadoresPorEquipo(ptrMiSistema);
+                            Presentacion::jugadores::mostrarJugadoresPorEquipo(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 6: // Eliminar jugador
-                            Presentacion::jugadores::EliminarJugador(ptrMiSistema);
+                            Presentacion::jugadores::eliminarJugador(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         default:
@@ -6110,11 +6829,11 @@ int main() {
                             break;
 
                         case 1: // Programar Partidos
-                            Presentacion::partidos::programarPartido(ptrMiSistema);
+                            Presentacion::partidos::programarPartido(NOMBRE_ARCHIVO_PARTIDOS);
                             break;
 
                         case 2: // Registrar el Resultado de un partido
-                            Presentacion::partidos::registrarResultado(ptrMiSistema);
+                            Presentacion::partidos::registrarResultado(NOMBRE_ARCHIVO_PARTIDOS);
                             break;
 
                         case 3: // Buscar partidos
@@ -6129,11 +6848,11 @@ int main() {
                                         break;
 
                                     case 1: // Busqueda por Equipo
-                                        Presentacion::partidos::buscarPartidosPorEquipo(ptrMiSistema);
+                                        Presentacion::partidos::buscarPartidosPorEquipo(NOMBRE_ARCHIVO_PARTIDOS);
                                         break;
 
                                     case 2: // Busqueda por ID
-                                        Presentacion::partidos::buscarPartidoPorID(ptrMiSistema);
+                                        Presentacion::partidos::buscarPartidoPorID(NOMBRE_ARCHIVO_PARTIDOS);
                                         break;
 
                                     default:
@@ -6154,11 +6873,11 @@ int main() {
                                         break;
 
                                     case 1: // Listar todos los partidos
-                                        Presentacion::partidos::listarTodosLosPartidos(ptrMiSistema);
+                                        Presentacion::partidos::listarTodosLosPartidos(NOMBRE_ARCHIVO_PARTIDOS);
                                         break;
 
                                     case 2: // Listar partidos por estado
-                                        Presentacion::partidos::listarPartidosPorEstado(ptrMiSistema);
+                                        Presentacion::partidos::listarPartidosPorEstado(NOMBRE_ARCHIVO_PARTIDOS);
                                         break;
 
                                     default:
@@ -6168,7 +6887,7 @@ int main() {
                             break;
 
                         case 5: // Cancelar Partidos
-                            Presentacion::partidos::cancelarPartido(ptrMiSistema);
+                            Presentacion::partidos::cancelarPartido(NOMBRE_ARCHIVO_PARTIDOS);
                             break;
 
                         default:
