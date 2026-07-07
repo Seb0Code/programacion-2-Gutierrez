@@ -177,11 +177,11 @@ struct Torneo {
 };
 
 // ============================================//
-//   3. FUNCIONES AUXILIARES                   //
+//   3. FUNCIONES aUXILIARES                   //
 // ============================================//
 
 // grupo de funciones que no inciden como tal en el sistema pero que mejoran su funcionamiento
-namespace Auxiliares {
+namespace auxiliares {
 
     // funcion que se encarga de configurar el idioma para aceptar caracteres del lenguaje español
     void configurarIdioma() {
@@ -337,7 +337,7 @@ namespace Auxiliares {
 
             if (entrada.size() >= tamañoMaximo) {
                 std::cout << "ERROR: Excediste el limite de caracteres permitido (" << tamañoMaximo - 1 << "). Intente de nuevo.\n\n";
-                Auxiliares::waitfor(3000);
+                auxiliares::waitfor(3000);
                 continue;
             }
 
@@ -371,13 +371,13 @@ namespace Auxiliares {
         std::cin.get();
     }
 
-} // namespace Auxiliares
+} // namespace auxiliares
 
 // ============================================//
-//   4. VALIDADORES                            //
+//   4. vALIDADORES                            //
 // ============================================//
 
-namespace Validadores {
+namespace validadores {
 
     // =======================================================================================//
     // Declaracion de arrays y variables que serán usados para algunas validaciones          //
@@ -421,7 +421,7 @@ namespace Validadores {
     void definirDeporteActual(const char *deporte) {
         std::strncpy(deporteActual, deporte, 50);
         // La aseguramos en mayúsculas de una vez
-        Auxiliares::toMayus(deporteActual);
+        auxiliares::toMayus(deporteActual);
     }
 
     // definimos las fechas para las futuras validaciones de datos
@@ -433,7 +433,7 @@ namespace Validadores {
     //  Validaciones auxiliares (no se debe poder acceder a ellas desde fuera del namespace)  //
     // =======================================================================================//
 
-    // encapsula todas las funciones que solo funcionan como auxiliares a otras funciones Validadores principales
+    // encapsula todas las funciones que solo funcionan como auxiliares a otras funciones validadores principales
     namespace {
         // funcion para hallar el tamaño de un char que no tiene permitido modificar el char ni el parametro tamaño
         bool TamañoValido(const char *texto, const int tamañoCorrecto) {
@@ -779,7 +779,7 @@ namespace Validadores {
         // Creamos una copia porque no se puede modificar la MiSistema y la convertimos a mayuscula
         char copiaDeporte[50];
         std::strncpy(copiaDeporte, deporte, sizeof(Torneo::deporte));
-        Auxiliares::toMayus(copiaDeporte);
+        auxiliares::toMayus(copiaDeporte);
 
         for (size_t e = 0; e < sizeof(Deportes) / sizeof(Deportes[0]); e++) {
             if (std::strcmp(copiaDeporte, Deportes[e]) == 0) {
@@ -804,7 +804,7 @@ namespace Validadores {
 
         char copiaPosicion[50];
         std::strncpy(copiaPosicion, posicion, sizeof(Jugador::posicion));
-        Auxiliares::toMayus(copiaPosicion);
+        auxiliares::toMayus(copiaPosicion);
 
         for (size_t i = 0; i < totalDeportes; i++) {
             if (std::strcmp(deporteActual, MapaDeportes[i][0]) == 0) {
@@ -824,7 +824,7 @@ namespace Validadores {
         return false;
     }
 
-} // namespace Validadores
+} // namespace validadores
 
 // ============================================//
 //   5. CAPA DE LOGICA                         //
@@ -1114,7 +1114,7 @@ namespace Logica {
             // Realizamos una copia de la variable para poder convertirla a minuscula sin problemas
             char nombreBusquedaAux[TAMANO_NOMBRE];
             std::strncpy(nombreBusquedaAux, nombre, TAMANO_NOMBRE);
-            Auxiliares::toMinus(nombreBusquedaAux);
+            auxiliares::toMinus(nombreBusquedaAux);
             struct3 registroTemporal;
 
             // movemos el puntero de indice despues del header
@@ -1164,7 +1164,7 @@ namespace Logica {
             // creamos una copia para no modificar las variables reales
             char copiaNuevoNombre[TAMANO_NOMBRE];
             std::strncpy(copiaNuevoNombre, nombre, TAMANO_NOMBRE);
-            Auxiliares::toMinus(copiaNuevoNombre);
+            auxiliares::toMinus(copiaNuevoNombre);
             struct4 registroTemporal;
 
             // movemos el puntero de indice despues del header
@@ -1186,7 +1186,7 @@ namespace Logica {
                 // creamos una copia del nombre real para hacer la comparacion en minusculas
                 char nombreAux[TAMANO_NOMBRE];
                 std::strncpy(nombreAux, registroTemporal.*miembro, TAMANO_NOMBRE);
-                Auxiliares::toMinus(nombreAux);
+                auxiliares::toMinus(nombreAux);
 
                 // comparamos los nombres si es igual devolmemos true sino false
                 if (std::strcmp(nombreAux, copiaNuevoNombre) == 0) {
@@ -1269,7 +1269,7 @@ namespace Logica {
             char copiaRegistro[TAMANO_NOMBRE];
             char copiaSubcadena[TAMANO_NOMBRE];
             std::strncpy(copiaSubcadena, subcadena, TAMANO_NOMBRE);
-            Auxiliares::toMinus(copiaSubcadena);
+            auxiliares::toMinus(copiaSubcadena);
 
             // Ubicamos el puntero de posicion despues del header
             archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
@@ -1293,7 +1293,7 @@ namespace Logica {
 
                     // hacemos una copia del nombre del registro
                     std::strncpy(copiaRegistro, registroTemporal.nombre, TAMANO_NOMBRE);
-                    Auxiliares::toMinus(copiaRegistro);
+                    auxiliares::toMinus(copiaRegistro);
 
                     // lo pasamos a minus para comparar mejor
                     // Buscamos si la subcadena coincide con la copia usando std::strstr
@@ -1453,7 +1453,7 @@ namespace Logica {
             char copiaRegistro[100];
             char copiaSubcadena[100];
             std::strncpy(copiaSubcadena, subcadena);
-            Auxiliares::toMinus(copiaSubcadena);
+            auxiliares::toMinus(copiaSubcadena);
 
 
             // incializamos el contador en 0
@@ -1465,7 +1465,7 @@ namespace Logica {
             for (size_t e = 0; e < MiSistema->numEquiposActuales; e++) {
                 // hacemos una copia del nombre del equipo
                 std::strncpy(copiaRegistro, MiSistema->Equipos[e].nombre, sizeof(copiaRegistro));
-                Auxiliares::toMinus(copiaRegistro);
+                auxiliares::toMinus(copiaRegistro);
 
                 // lo pasamos a minus para comparar mejor
                 // Buscamos si la subcadena coincide con la copia usando std::strstr
@@ -2200,9 +2200,9 @@ namespace Logica {
     namespace partidos {
 
         int minJugadoresPorDeporte() {
-            for (size_t e = 0; e < Validadores::totalDeportes; e++) {
-                if (std::strcmp(Validadores::Deportes[e], Validadores::deporteActual) == 0) {
-                    return Validadores::MinimoJugadoresPorDeporte[e];
+            for (size_t e = 0; e < validadores::totalDeportes; e++) {
+                if (std::strcmp(validadores::Deportes[e], validadores::deporteActual) == 0) {
+                    return validadores::MinimoJugadoresPorDeporte[e];
                 }
             }
             return 1;
@@ -2543,9 +2543,9 @@ namespace Logica {
 
             // Si ocurre un empate en deportes donde no se permiten empates retornamos false
             if (registroPartido.anotacionesLocal == registroPartido.anotacionesVisitante) {
-                if (std::strcmp(Validadores::deporteActual, "BALONCESTO") == 0 || std::strcmp(Validadores::deporteActual, "TENIS") == 0 ||
-                    std::strcmp(Validadores::deporteActual, "VOLEIBOL") == 0 || std::strcmp(Validadores::deporteActual, "BEISBOL") == 0 ||
-                    std::strcmp(Validadores::deporteActual, "SOFTBOL") == 0) {
+                if (std::strcmp(validadores::deporteActual, "BALONCESTO") == 0 || std::strcmp(validadores::deporteActual, "TENIS") == 0 ||
+                    std::strcmp(validadores::deporteActual, "VOLEIBOL") == 0 || std::strcmp(validadores::deporteActual, "BEISBOL") == 0 ||
+                    std::strcmp(validadores::deporteActual, "SOFTBOL") == 0) {
                     archivo.close();
                     return false;
                 }
@@ -3274,10 +3274,10 @@ namespace Logica {
 } // namespace Logica
 
 // ============================================//
-//   6. PRESENTACION                           //
+//   6. pRESENTACION                           //
 // ============================================//
 
-namespace Presentacion {
+namespace presentacion {
 
     namespace equipos {
 
@@ -3290,12 +3290,12 @@ namespace Presentacion {
 
             // Recolectamos el nombre del Equipo
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO EQUIPO           ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                if (!Auxiliares::ingresarCadena(nuevo.nombre, sizeof(Equipo::nombre), "Ingrese el nombre del Equipo: ", &cancelado, Validadores::Nombres)) {
+                if (!auxiliares::ingresarCadena(nuevo.nombre, sizeof(Equipo::nombre), "Ingrese el nombre del Equipo: ", &cancelado, validadores::Nombres)) {
                     std::cout << "\nRegistro cancelado por el usuario.\n";
                     return;
                 }
@@ -3304,23 +3304,23 @@ namespace Presentacion {
                 if (Logica::cadenaDuplicada<Equipo>(nombreArchivo, nuevo.nombre, &Equipo::nombre)) {
                     std::cerr << "Error, el nombre '" << nuevo.nombre << "' ya está en uso\n";
                     flagError = true;
-                    Auxiliares::waitfor(3000);
+                    auxiliares::waitfor(3000);
                     continue;
                 }
-                Auxiliares::waitfor(2000);
+                auxiliares::waitfor(2000);
             } while (flagError);
 
 
             // Recolectamos el nombre del entrenador del nuevo Equipo
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO EQUIPO           ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                if (!Auxiliares::ingresarCadena(nuevo.entrenador, sizeof(Equipo::entrenador), "Ingrese el nombre del Entrenador: ", &cancelado, Validadores::Nombres)) {
+                if (!auxiliares::ingresarCadena(nuevo.entrenador, sizeof(Equipo::entrenador), "Ingrese el nombre del Entrenador: ", &cancelado, validadores::Nombres)) {
                     std::cout << "\nRegistro cancelado por el usuario.\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -3328,48 +3328,48 @@ namespace Presentacion {
                 if (Logica::cadenaDuplicada(NOMBRE_ARCHIVO_EQUIPOS, nuevo.entrenador, &Equipo::entrenador)) {
                     std::cerr << "Error, el nombre '" << nuevo.entrenador << "' ya direge otro equipo\n";
                     flagError = true;
-                    Auxiliares::waitfor(3000);
+                    auxiliares::waitfor(3000);
                     continue;
                 }
-                Auxiliares::waitfor(2000);
+                auxiliares::waitfor(2000);
             } while (flagError);
 
             // Recolectamos la fecha de registro del equipo
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          REGISTRAR NUEVO EQUIPO           ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            if (!Auxiliares::ingresarCadena(nuevo.fechaRegistro, sizeof(Equipo::fechaRegistro), "Ingrese la fecha de Registro del Equipo: ", &cancelado,
-                                            Validadores::fechaValidaRegistroDeJugadorOEquipo)) {
+            if (!auxiliares::ingresarCadena(nuevo.fechaRegistro, sizeof(Equipo::fechaRegistro), "Ingrese la fecha de Registro del Equipo: ", &cancelado,
+                                            validadores::fechaValidaRegistroDeJugadorOEquipo)) {
                 std::cout << "\nRegistro cancelado por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
-            Auxiliares::waitfor(2000);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(2000);
+            auxiliares::limpiarPantalla();
 
             // Recolectamos la ciudad del Equipo
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          REGISTRAR NUEVO EQUIPO           ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            if (!Auxiliares::ingresarCadena(nuevo.ciudad, 50, "Ingrese el nombre de la Ciudad del Equipo: ", &cancelado, Validadores::Nombres)) {
+            if (!auxiliares::ingresarCadena(nuevo.ciudad, 50, "Ingrese el nombre de la Ciudad del Equipo: ", &cancelado, validadores::Nombres)) {
                 std::cout << "\nRegistro cancelado por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
-            Auxiliares::waitfor(2000);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(2000);
+            auxiliares::limpiarPantalla();
 
             // Pedimos la confirmacion al usuario
-            if (!Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea registrar este equipo? (S/N)", &cancelado)) {
+            if (!auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea registrar este equipo? (S/N)", &cancelado)) {
                 std::cout << "\nRegistro cancelado por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
 
                 // Abrimos el archivo de equipos
                 std::fstream archivoEquipos;
@@ -3379,7 +3379,7 @@ namespace Presentacion {
                 if (!archivoEquipos.is_open()) {
                     std::cerr << "\nError del Sistema!\n";
                     std::cout << "Registro Cancelado\n";
-                    Auxiliares::pausarPrograma;
+                    auxiliares::pausarPrograma;
                     return;
                 }
 
@@ -3393,7 +3393,7 @@ namespace Presentacion {
                     std::cerr << "\nError del Sistema\n";
                     std::cout << "Registro Cancelado\n";
                     archivoEquipos.close();
-                    Auxiliares::pausarPrograma;
+                    auxiliares::pausarPrograma;
                     return;
                 }
 
@@ -3409,7 +3409,7 @@ namespace Presentacion {
                     std::cout << "Registro Cancelado\n";
                     archivoTorneo.close();
                     archivoEquipos.close();
-                    Auxiliares::pausarPrograma;
+                    auxiliares::pausarPrograma;
                     return;
                 }
 
@@ -3427,7 +3427,7 @@ namespace Presentacion {
                     std::cerr << "\nError del Ssitema\n";
                     std::cout << "Registro Cancelado\n";
                     archivoEquipos.close();
-                    Auxiliares::pausarPrograma;
+                    auxiliares::pausarPrograma;
                     return;
                 }
 
@@ -3448,14 +3448,14 @@ namespace Presentacion {
                 std::cout << "Id del Equipo: " << nuevo.ID << std::endl;
 
             } else if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'N') {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 std::cout << "\nRegistro de Equipo Cancelado\n";
             } else {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 std::cerr << "\nError: No se ingresó una opción correcta (S/N)\n";
                 std::cout << "\nRegistro de Equipo Cancelado\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void buscarEquipoPorID(const char *nombreArchivo) {
@@ -3464,7 +3464,7 @@ namespace Presentacion {
             int error = -1;
             bool equipoEncontrado = false;
             Equipo equipoBuscado;
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
 
             // Leemos el header del archivo de equipo para saber el numero de reisgtros activos
             ArchivoHeader headerEquipos = Logica::leerHeader(nombreArchivo);
@@ -3473,14 +3473,14 @@ namespace Presentacion {
             if (headerEquipos.cantidadRegistros == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos activos registrados
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3488,9 +3488,9 @@ namespace Presentacion {
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║        BUSQUEDA DE EQUIPOS POR ID         ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            if (!Auxiliares::ingresarDatos(ID, "Ingrese el ID (escriba 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+            if (!auxiliares::ingresarDatos(ID, "Ingrese el ID (escriba 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                 std::cout << "\nBusqueda cancelada por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3498,9 +3498,9 @@ namespace Presentacion {
             equipoEncontrado = Logica::buscarRegistrosPorId<Equipo>(nombreArchivo, equipoBuscado, ID);
 
             // Limpiamos la pantalla
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\nBuscando...\n";
-            Auxiliares::waitfor(1500);
+            auxiliares::waitfor(1500);
 
             // Si no fue encontrado enviamos mensaje de error de busqueda, si se encontro mostramos los datos
             if (!equipoEncontrado) {
@@ -3525,11 +3525,11 @@ namespace Presentacion {
                 std::cout << "    Puntos en Contra:  " << equipoBuscado.anotacionEnContra << "\n";
             }
             std::cout << "-------------------------------------------------------------\n\n";
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void buscarEquiposPorSubCadena(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             bool cancelado = false;
             int cantEquiposEncontrados = 0;
             int error = -1;
@@ -3544,14 +3544,14 @@ namespace Presentacion {
             if (headerEquipos.cantidadRegistros == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos activos registrados
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3559,23 +3559,23 @@ namespace Presentacion {
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║      BUSQUEDA DE EQUIPOS POR NOMBRE       ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            if (!Auxiliares::ingresarCadena(subcadena, TAMANO_NOMBRE, "Escribe el nombre (o parte del nombre) del equipo que buscas (ingresa 'cancelar' para cancelar): ",
-                                            &cancelado, Validadores::Nombres)) {
+            if (!auxiliares::ingresarCadena(subcadena, TAMANO_NOMBRE, "Escribe el nombre (o parte del nombre) del equipo que buscas (ingresa 'cancelar' para cancelar): ",
+                                            &cancelado, validadores::Nombres)) {
                 std::cout << "\nBusqueda cancelada por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Limpiamos la pantalla
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
 
             std::cout << "\nBuscando...\n";
 
             // Llamamos a la funcion de busqueda
             cantEquiposEncontrados = Logica::buscarRegistrosPorSucadena<Equipo>(nombreArchivo, resultados, subcadena, maxResultados);
 
-            Auxiliares::waitfor(1500);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1500);
+            auxiliares::limpiarPantalla();
 
             // Si no se enocontro ningun equipo
             if (cantEquiposEncontrados <= 0) {
@@ -3601,11 +3601,11 @@ namespace Presentacion {
                 std::cout << "---------------------------------------------------------------------------\n";
             }
 
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void listarEquipos(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
 
             // Inicializamos las variables a utilizar
             int cantEquipos = 0;
@@ -3642,12 +3642,12 @@ namespace Presentacion {
                 std::cout << "----------------------------------------------------------------------------------------- \n";
             }
 
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void mostrarTablaDePosiciones(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(1200);
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1200);
 
             // Inicializamos las variables a utilizar
             int cantEquipos = 0;
@@ -3662,7 +3662,7 @@ namespace Presentacion {
             // si se produjo un error
             if (!archivoTorneo.is_open()) {
                 std::cerr << "\nError del Sistema!\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
@@ -3675,7 +3675,7 @@ namespace Presentacion {
             // Si la lectura tuvo problemas
             if (archivoTorneo.fail()) {
                 std::cerr << "\nError del Sistema!\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3685,12 +3685,12 @@ namespace Presentacion {
             // Armamos la tabla de posiciones
             cantEquipos = Logica::equipos::tablaDePosiciones(nombreArchivo, tablaDePosiciones, maxResultados);
 
-            Auxiliares::waitfor(7500);
+            auxiliares::waitfor(7500);
 
             // CArgando la tabla de posiciones
             std::cout << "\nCargando la tabla de posiciones...\n";
 
-            Auxiliares::waitfor(1200);
+            auxiliares::waitfor(1200);
 
             // Si no hay resultados no mostramos nada, sino mostramos la tabla con los equipos
             if (cantEquipos == 0) {
@@ -3699,7 +3699,7 @@ namespace Presentacion {
 
                 // Mostramos la tabla de posiciones
                 char nombreTorneo[TAMANO_NOMBRE];
-                Auxiliares::toMayus(torneo.nombre);
+                auxiliares::toMayus(torneo.nombre);
                 std::cout << "╔═════════════════════════════════════════════════════════════════════════════════════╗\n";
                 std::cout << "║                             TABLA DE POSICIONES                                     ║\n";
                 std::cout << "║               " << std::left << std::setw(70) << torneo.nombre << "║\n";
@@ -3719,7 +3719,7 @@ namespace Presentacion {
                 std::cout << "            D=Derrotas  GF=puntos a Favor  GC=puntos en Contra\n\n";
             }
 
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void eliminatorias() {
@@ -3727,7 +3727,7 @@ namespace Presentacion {
         }
 
         void actualizarEquipo() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             // Datos Actualizables:
             // Nombre del Equipo, Nombre del Entrenador, Nombre de la Ciudad
 
@@ -3743,7 +3743,7 @@ namespace Presentacion {
             // Si no hay equipos registrados
             if (MiSistema->numEquiposActuales == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3751,29 +3751,29 @@ namespace Presentacion {
             std::cout << "       ║            ACTUALIZAR EQUIPOS             ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
             // Pedimos el ID del equipo que desean actualizar
-            Auxiliares::ingresarDatos(ID, "Ingresa el ID del equipo que desea actualizar: ", nullptr, Validadores::IDvalido);
+            auxiliares::ingresarDatos(ID, "Ingresa el ID del equipo que desea actualizar: ", nullptr, validadores::IDvalido);
 
             // si no Existe el ID
             if (!Logica::equipos::existeID(MiSistema, ID)) {
                 std::cout << "Error el ID '" << ID << "' no pertenece a ningún equipo registrado\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             do {
                 flagError = false;
-                Auxiliares::waitfor(1500);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(1500);
+                auxiliares::limpiarPantalla();
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            ACTUALIZAR EQUIPOS             ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nuevo nombre del Equipo: ", nullptr, Validadores::Nombres);
+                auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nuevo nombre del Equipo: ", nullptr, validadores::Nombres);
                 if (Logica::equipos::cadenaDuplicadaParaActualizar(MiSistema, nombreAux, ID)) {
                     std::cout << "Error: ya hay otro equipo con el nombre '" << nombreAux << "'\n";
                     flagError = true;
                 }
-                Auxiliares::waitfor(1500);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(1500);
+                auxiliares::limpiarPantalla();
             } while (flagError);
 
             do {
@@ -3781,23 +3781,23 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            ACTUALIZAR EQUIPOS             ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarCadena(entrenadorAux, 100, "Ingrese el nuevo nombre del Entrenador del Equipo: ", nullptr, Validadores::Nombres);
+                auxiliares::ingresarCadena(entrenadorAux, 100, "Ingrese el nuevo nombre del Entrenador del Equipo: ", nullptr, validadores::Nombres);
                 if (Logica::equipos::nombreEntrenadorDuplicadoParaActualizar(MiSistema, entrenadorAux, ID)) {
                     std::cout << "Ya el entrenador '" << entrenadorAux << "' dirige otro equipo\n";
                     flagError = true;
                 }
-                Auxiliares::waitfor(1500);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(1500);
+                auxiliares::limpiarPantalla();
             } while (flagError);
 
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║            ACTUALIZAR EQUIPOS             ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(ciudadAux, 100, "Ingrese el nuevo de la Ciudad del Equipo: ", nullptr, Validadores::Nombres);
-            Auxiliares::waitfor(1500);
-            Auxiliares::limpiarPantalla();
+            auxiliares::ingresarCadena(ciudadAux, 100, "Ingrese el nuevo de la Ciudad del Equipo: ", nullptr, validadores::Nombres);
+            auxiliares::waitfor(1500);
+            auxiliares::limpiarPantalla();
 
-            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea aplicar estos cambios? (S/N): ");
+            auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea aplicar estos cambios? (S/N): ");
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 actualizado = Logica::equipos::actualizarEquipo(MiSistema, ID, nombreAux, entrenadorAux, ciudadAux);
                 if (!actualizado) {
@@ -3816,11 +3816,11 @@ namespace Presentacion {
                 std::cout << "Error: No se ingresó una opción correcta (S/N)\n";
                 std::cout << "Actualización de Datos Cancelada\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void eliminarEquipo(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
 
             int error = -1;
             bool eliminado = false;
@@ -3838,14 +3838,14 @@ namespace Presentacion {
             if (headerEquipos.cantidadRegistros == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Eliminación Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos activos registrados
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3854,20 +3854,20 @@ namespace Presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Pedimos el ID del equipo que desean actualizar
-            if (!Auxiliares::ingresarDatos(ID, "Ingresa el ID del equipo que desea eliminar (ingresa 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+            if (!auxiliares::ingresarDatos(ID, "Ingresa el ID del equipo que desea eliminar (ingresa 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                 std::cout << "\nRegistro cancelado por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // si no Existe el ID
             if (!Logica::existeID<Equipo>(nombreArchivo, ID)) {
                 std::cerr << "Error el ID '" << ID << "' no pertenece a ningún equipo registrado\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
-            Auxiliares::waitfor(1500);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1500);
+            auxiliares::limpiarPantalla();
 
             // buscamos el equipo mediante el ID ingresado
             encontrado = Logica::buscarRegistrosPorId<Equipo>(nombreArchivo, equipoAux, ID);
@@ -3875,7 +3875,7 @@ namespace Presentacion {
             // si no se encontró ningun equipo
             if (!encontrado) {
                 std::cerr << "Error, no se encontró el equipo que se desea eliminar";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3883,7 +3883,7 @@ namespace Presentacion {
             if (equipoAux.cantidadPartidos > 0) {
                 std::cout << " ADVERTENCIA: El equipo tiene " << equipoAux.cantidadPartidos << " partidos asociados.\n";
                 std::cout << " No puede ser eliminado hasta que cancele los partidos del equipo\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3893,7 +3893,7 @@ namespace Presentacion {
             if (equipoAux.numJugadores > 0) {
                 std::cout << " ADVERTENCIA: El equipo tiene " << equipoAux.numJugadores << " jugadores.\n";
                 std::cout << " No puede ser eliminado\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3908,7 +3908,7 @@ namespace Presentacion {
             std::cout << "Entrenador: " << equipoAux.entrenador << std::endl;
             std::cout << "Ciudad: " << equipoAux.ciudad << std::endl;
 
-            Auxiliares::ingresarDatos(confirmacion, "¿Desea eliminar el equipo? (S/N): ");
+            auxiliares::ingresarDatos(confirmacion, "¿Desea eliminar el equipo? (S/N): ");
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 eliminado = Logica::equipos::eliminarEquipo(nombreArchivo, ID);
                 if (!eliminado) {
@@ -3925,7 +3925,7 @@ namespace Presentacion {
                 std::cerr << "Error: No se ingresó una opción correcta (S/N)\n";
                 std::cout << "Eliminacion de Equipo Cancelada\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
     } // namespace equipos
@@ -3933,7 +3933,7 @@ namespace Presentacion {
     namespace jugadores {
 
         void registrarJugador(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             int error = -1;
             Jugador nuevo;
             bool flagError = false;
@@ -3948,14 +3948,14 @@ namespace Presentacion {
             if (headerEquipos.cantidadRegistros == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Registro Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos activos registrados
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -3968,7 +3968,7 @@ namespace Presentacion {
             if (!archivoTorneo.is_open()) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Registro Cancelado\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
@@ -3982,7 +3982,7 @@ namespace Presentacion {
             if (archivoTorneo.fail()) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Registro Cancelado\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
@@ -3995,10 +3995,10 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                if (!Auxiliares::ingresarDatos(nuevo.idEquipo, "Ingrese el ID del equipo al que pertenece el jugador (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                               Validadores::IDvalido)) {
+                if (!auxiliares::ingresarDatos(nuevo.idEquipo, "Ingrese el ID del equipo al que pertenece el jugador (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                               validadores::IDvalido)) {
                     std::cout << "\nRegistro cancelado por el usuario.\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -4006,23 +4006,23 @@ namespace Presentacion {
                 if (!Logica::existeID<Equipo>(nombreArchivo, nuevo.idEquipo)) {
                     std::cout << "Error el ID '" << nuevo.idEquipo << "' no pertenece a ningun equipo\n";
                     flagError = true;
-                    Auxiliares::waitfor(2500);
+                    auxiliares::waitfor(2500);
                     continue;
                 }
-                Auxiliares::waitfor(1500);
+                auxiliares::waitfor(1500);
             } while (flagError);
 
             // Recolectamos el nombre del Jugador
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR           ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                if (!Auxiliares::ingresarCadena(nuevo.nombre, TAMANO_NOMBRE, "Ingrese el nombre del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                                Validadores::Nombres)) {
+                if (!auxiliares::ingresarCadena(nuevo.nombre, TAMANO_NOMBRE, "Ingrese el nombre del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                validadores::Nombres)) {
                     std::cout << "\nRegistro cancelado por el usuario.\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -4030,34 +4030,34 @@ namespace Presentacion {
                 if (Logica::cadenaDuplicada<Jugador>(nombreArchivo, nuevo.nombre, &Jugador::nombre)) {
                     std::cout << "Error, el nombre '" << nuevo.nombre << "' ya está en uso.\n";
                     flagError = true;
-                    Auxiliares::waitfor(3000);
+                    auxiliares::waitfor(3000);
                     continue;
                 }
-                Auxiliares::waitfor(2000);
+                auxiliares::waitfor(2000);
             } while (flagError);
 
             // Recolectamos la Edad
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            if (!Auxiliares::ingresarDatos(nuevo.edad, "Ingrese la edad del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::Edad)) {
+            if (!auxiliares::ingresarDatos(nuevo.edad, "Ingrese la edad del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::Edad)) {
                 std::cout << "\nRegistro cancelado por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
-            Auxiliares::waitfor(1500);
+            auxiliares::waitfor(1500);
 
             // Recolectamos la cedula
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                if (!Auxiliares::ingresarCadena(nuevo.cedula, TAMANO_CEDULA, "Ingrese la cedula del jugador (ingrese 'cancelar' para cancelar): ", nullptr, Validadores::Cedulas)) {
+                if (!auxiliares::ingresarCadena(nuevo.cedula, TAMANO_CEDULA, "Ingrese la cedula del jugador (ingrese 'cancelar' para cancelar): ", nullptr, validadores::Cedulas)) {
                     std::cout << "\nRegistro cancelado por el usuario.\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -4065,16 +4065,16 @@ namespace Presentacion {
                 if (Logica::cadenaDuplicada(nombreArchivo, nuevo.cedula, &Jugador::cedula)) {
                     std::cout << " Error, la cedula '" << nuevo.cedula << "' ya le pertenece a otro jugador\n";
                     flagError = true;
-                    Auxiliares::waitfor(3000);
+                    auxiliares::waitfor(3000);
                     continue;
                 }
-                Auxiliares::waitfor(2000);
+                auxiliares::waitfor(2000);
             } while (flagError);
 
             // Recolectamos la Posicion
             do {
                 flagError = false;
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
@@ -4082,10 +4082,10 @@ namespace Presentacion {
 
                 const char **matrizDeporteActual = nullptr;
 
-                for (size_t i = 0; i < Validadores::totalDeportes; i++) {
+                for (size_t i = 0; i < validadores::totalDeportes; i++) {
                     // Recorremos el array de matrices y verificamos lo que hay en la posicion 0
-                    if (std::strcmp(Validadores::MapaDeportes[i][0], torneo.deporte) == 0) {
-                        matrizDeporteActual = Validadores::MapaDeportes[i];
+                    if (std::strcmp(validadores::MapaDeportes[i][0], torneo.deporte) == 0) {
+                        matrizDeporteActual = validadores::MapaDeportes[i];
                         break;
                     }
                 }
@@ -4102,9 +4102,9 @@ namespace Presentacion {
                 }
                 std::cout << "\n";
 
-                if (!Auxiliares::ingresarDatos(opcion, "Seleccione una opción (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                if (!auxiliares::ingresarDatos(opcion, "Seleccione una opción (ingrese 'cancelar' para cancelar): ", &cancelado)) {
                     std::cout << "\nRegistro cancelado por el usuario.\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -4115,38 +4115,38 @@ namespace Presentacion {
                 } else {
                     std::cerr << "Error: Opción inválida. Por favor, intente de nuevo.\n";
                     flagError = true;
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                 }
             } while (flagError);
 
 
             // Recolectamos la fecha de registro del jugador
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            if (!Auxiliares::ingresarCadena(nuevo.fechaRegistro, 11, "Ingrese la fecha de Registro del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                            Validadores::fechaValidaRegistroDeJugadorOEquipo)) {
+            if (!auxiliares::ingresarCadena(nuevo.fechaRegistro, 11, "Ingrese la fecha de Registro del Jugador (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                            validadores::fechaValidaRegistroDeJugadorOEquipo)) {
                 std::cout << "\nRegistro cancelado por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
-            Auxiliares::waitfor(2000);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(2000);
+            auxiliares::limpiarPantalla();
 
             // Recolectamos el dorsal del Jugador
             do {
                 flagError = false;
                 Equipo equipoBuscado;
                 bool existe = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoBuscado, nuevo.idEquipo);
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║          REGISTRAR NUEVO JUGADOR          ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-                if (!Auxiliares::ingresarDatos(nuevo.numeroDorsal, "Ingrese el Dorsal del jugador (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::Dorsal)) {
+                if (!auxiliares::ingresarDatos(nuevo.numeroDorsal, "Ingrese el Dorsal del jugador (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::Dorsal)) {
                     std::cout << "\nRegistro cancelado por el usuario.\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -4154,23 +4154,23 @@ namespace Presentacion {
                     std::cout << "Error el dorsal '" << nuevo.numeroDorsal << "' ya está ocupado en el equipo '" << equipoBuscado.nombre << "'.\n";
                     flagError = true;
                 }
-                Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(2000);
+                auxiliares::limpiarPantalla();
             } while (flagError);
 
             // Pedimos la confirmacion al usuario
-            Auxiliares::limpiarPantalla();
-            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea registrar este jugador? (S/N): ");
+            auxiliares::limpiarPantalla();
+            auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea registrar este jugador? (S/N): ");
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 // agregamos el jugador
                 bool registrado = Logica::jugadores::registrarJugador(nombreArchivo, nuevo);
-                Auxiliares::waitfor(1200);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(1200);
+                auxiliares::limpiarPantalla();
                 // Si no se agregó
                 if (!registrado) {
                     std::cerr << "Error al registrar al jugador.\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -4191,11 +4191,11 @@ namespace Presentacion {
             } else {
                 std::cerr << " ERROR: Opción incorrecta (S/N).\nRegistro de Jugador Cancelado.\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void buscarJugadorID(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             int ID = 0;
             int error = -1;
             bool encontrado = false;
@@ -4210,21 +4210,21 @@ namespace Presentacion {
             if (headerJugadores.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay jugadores activos registrados
             if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún jugador registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4237,7 +4237,7 @@ namespace Presentacion {
             if (!archivoTorneo.is_open()) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Registro Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
@@ -4251,7 +4251,7 @@ namespace Presentacion {
             if (archivoTorneo.fail()) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Registro Cancelado\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
@@ -4261,7 +4261,7 @@ namespace Presentacion {
             // Si no hay jugadores registrados
             if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4269,18 +4269,18 @@ namespace Presentacion {
             std::cout << "       ║       BUSQUEDA DE JUGADORES POR ID        ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-            if (!Auxiliares::ingresarDatos(ID, "Ingrese el ID (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+            if (!auxiliares::ingresarDatos(ID, "Ingrese el ID (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                 std::cout << "\nRegistro Cancelado por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             encontrado = Logica::buscarRegistrosPorId<Jugador>(nombreArchivo, jugadorBuscado, ID);
 
-            Auxiliares::waitfor(800);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(800);
+            auxiliares::limpiarPantalla();
             std::cout << "\nBuscando...\n";
-            Auxiliares::waitfor(1500);
+            auxiliares::waitfor(1500);
 
 
             // si no encontro un jugador
@@ -4297,7 +4297,7 @@ namespace Presentacion {
                 if (!encontrado) {
                     std::cout << "\nError del Sistema!\n";
                     std::cout << "Busqueda Cancelada\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -4307,7 +4307,7 @@ namespace Presentacion {
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
                 std::cout << "-------------------------------------------------------------\n";
-                std::cout << "  Torneo:                 " << Auxiliares::toMayus(torneo.nombre) << "\n";
+                std::cout << "  Torneo:                 " << auxiliares::toMayus(torneo.nombre) << "\n";
                 std::cout << "  Deporte:                " << torneo.deporte << "\n";
                 std::cout << "-------------------------------------------------------------\n";
                 std::cout << "  Informacion del Jugador: \n";
@@ -4329,11 +4329,11 @@ namespace Presentacion {
                 std::cout << "    Tarjetas Rojas:       " << jugadorBuscado.tarjetasRojas << "\n";
                 std::cout << "-------------------------------------------------------------\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void buscarJugadorPorNombre(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             char subcadena[TAMANO_NOMBRE];
             int cantJugadoresEncontrados = 0;
             int error = -1;
@@ -4350,21 +4350,21 @@ namespace Presentacion {
             if (headerJugadores.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay jugadores activos registrados
             if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún jugador registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4372,18 +4372,18 @@ namespace Presentacion {
             std::cout << "       ║      BÚSQUEDA DE JUGADORES POR NOMBRE     ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-            if (!Auxiliares::ingresarCadena(subcadena, 100, "Escribe el nombre (o parte del nombre) del jugador que buscas (escribe 'cancelar' para cancelar): ", &cancelado,
-                                            Validadores::Nombres)) {
+            if (!auxiliares::ingresarCadena(subcadena, 100, "Escribe el nombre (o parte del nombre) del jugador que buscas (escribe 'cancelar' para cancelar): ", &cancelado,
+                                            validadores::Nombres)) {
                 std::cout << "\nRegistro Cancelado por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(1200);
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1200);
             std::cout << "Buscando..." << std::endl;
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(500);
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(500);
 
             // llamamos a la funcion buscar por nombre y almacenamos el resultado
             cantJugadoresEncontrados = Logica::buscarRegistrosPorSucadena<Jugador>(nombreArchivo, resultados, subcadena, maxResultados);
@@ -4408,7 +4408,7 @@ namespace Presentacion {
                     if (!encontrado) {
                         std::cerr << "Error del Sistema!";
                         std::cout << "Busqueda Cancelada";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
@@ -4429,11 +4429,11 @@ namespace Presentacion {
             }
 
             std::cout << "\n";
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void mostrarJugadoresPorEquipo(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             int idEquipo = 0;
             int cantJugadoresEncontrados = 0;
             const int maxResultados = MAX_RESULTADOS;
@@ -4450,21 +4450,21 @@ namespace Presentacion {
             if (headerJugadores.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Registro Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay jugadores activos registrados
             if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún jugador registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4474,9 +4474,9 @@ namespace Presentacion {
             std::cout << "       ║      MOSTRAR JUGADORES POR EQUIPO         ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-            if (!Auxiliares::ingresarDatos(idEquipo, "Ingrese el ID del Equipo: ", &cancelado, Validadores::IDvalido)) {
+            if (!auxiliares::ingresarDatos(idEquipo, "Ingrese el ID del Equipo: ", &cancelado, validadores::IDvalido)) {
                 std::cout << "\nOperación Cancelada por el usuario.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4487,19 +4487,19 @@ namespace Presentacion {
             // Si no encontramos un equipo con ese ID enviamos error
             if (!encontrado) {
                 std::cerr << "\nError: El equipo con ID '" << idEquipo << "' no existe.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(1000);
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1000);
             std::cout << "\nBuscando jugadores...\n\n";
 
             // obtenemos la lista de punteros
             cantJugadoresEncontrados = Logica::jugadores::listarJugadoresPorEquipo(nombreArchivo, idEquipo, listaDeJugadores, maxResultados);
 
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(1000);
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1000);
 
             // Si no obtenemos nada
             if (cantJugadoresEncontrados == 0) {
@@ -4523,11 +4523,11 @@ namespace Presentacion {
             }
 
             std::cout << "\n";
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void mostrarListaDeJugadores(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             int cantJugadoresEncontrados = 0;
             int error = -1;
             const int maxResultados = MAX_RESULTADOS;
@@ -4541,14 +4541,14 @@ namespace Presentacion {
             if (headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operación Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4561,7 +4561,7 @@ namespace Presentacion {
             if (!archivoTorneo.is_open()) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operación Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
@@ -4575,13 +4575,13 @@ namespace Presentacion {
             if (archivoTorneo.fail()) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operación Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Cerrmaos el archivo
             archivoTorneo.close();
-            Auxiliares::waitfor(1000);
+            auxiliares::waitfor(1000);
 
             // Llamamos a tu función lógica
             cantJugadoresEncontrados = Logica::listarRegistros<Jugador>(nombreArchivo, listaDeJugadores, maxResultados);
@@ -4592,8 +4592,8 @@ namespace Presentacion {
             } else {
 
                 std::cout << "Cargando todos los jugadores...\n\n";
-                Auxiliares::limpiarPantalla();
-                Auxiliares::waitfor(1000);
+                auxiliares::limpiarPantalla();
+                auxiliares::waitfor(1000);
 
                 std::cout << "╔═══════════════════════════════════════════════════════════════════════════════════╗\n";
                 std::cout << "║ SPORT G&C TOURNAMENTS                                                             ║\n";
@@ -4611,9 +4611,9 @@ namespace Presentacion {
                     encontrado = Logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoBuscado, listaDeJugadores[e].idEquipo);
 
                     if (!encontrado) {
-                        Auxiliares::limpiarPantalla();
+                        auxiliares::limpiarPantalla();
                         std::cout << "Error del Sistema!\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
@@ -4626,11 +4626,11 @@ namespace Presentacion {
             }
 
             std::cout << "\n";
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void actualizarJugador() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             // Datos Actualizables:
             // Nombre, Edad, Dorsal, Posicion
 
@@ -4648,14 +4648,14 @@ namespace Presentacion {
             // Si no hay equipos registrados
             if (MiSistema->numEquiposActuales == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay jugadores registrados
             if (MiSistema->numJugadoresActuales == 0) {
                 std::cout << "No hay ningún jugador registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4664,46 +4664,46 @@ namespace Presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Recolectamos el ID del jugador
-            Auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que desea actualizar: ", nullptr, Validadores::IDvalido);
+            auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que desea actualizar: ", nullptr, validadores::IDvalido);
 
             // Si no existe el ID del jugador
             if (!Logica::jugadores::existeID(MiSistema, ID)) {
                 std::cout << "Error: El ID '" << ID << "' no pertenece a ningún jugador registrado\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Recolectamos el nombre
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nuevo nombre del Jugador: ", nullptr, Validadores::Nombres);
+                auxiliares::ingresarCadena(nombreAux, 100, "Ingrese el nuevo nombre del Jugador: ", nullptr, validadores::Nombres);
 
                 if (Logica::jugadores::cadenaDuplicadaParaActualizar(MiSistema, nombreAux, ID)) {
                     std::cout << "Error: ya hay otro jugador con el nombre '" << nombreAux << "'\n";
                     flagError = true;
-                    Auxiliares::waitfor(2500);
+                    auxiliares::waitfor(2500);
                 }
 
-                Auxiliares::waitfor(1000);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(1000);
+                auxiliares::limpiarPantalla();
             } while (flagError);
 
             // Recolectamos la Edad
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarDatos(edadAux, "Ingrese la nueva edad del Jugador: ", Validadores::Edad);
-            Auxiliares::waitfor(1000);
-            Auxiliares::limpiarPantalla();
+            auxiliares::ingresarDatos(edadAux, "Ingrese la nueva edad del Jugador: ", validadores::Edad);
+            auxiliares::waitfor(1000);
+            auxiliares::limpiarPantalla();
 
             // Recolectamos la posición
             do {
                 int opcion = 0;
                 flagError = false;
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
@@ -4711,10 +4711,10 @@ namespace Presentacion {
 
                 const char **matrizDeporteActual = nullptr;
 
-                for (size_t i = 0; i < Validadores::totalDeportes; i++) {
+                for (size_t i = 0; i < validadores::totalDeportes; i++) {
                     // Recorremos el array de matrices y verificamos lo que hay en la posicion 0
-                    if (std::strcmp(Validadores::MapaDeportes[i][0], MiSistema->torneo.deporte) == 0) {
-                        matrizDeporteActual = Validadores::MapaDeportes[i];
+                    if (std::strcmp(validadores::MapaDeportes[i][0], MiSistema->torneo.deporte) == 0) {
+                        matrizDeporteActual = validadores::MapaDeportes[i];
                         break;
                     }
                 }
@@ -4731,7 +4731,7 @@ namespace Presentacion {
                 }
                 std::cout << "\n";
 
-                Auxiliares::ingresarDatos(opcion, "Seleccione una opción: ");
+                auxiliares::ingresarDatos(opcion, "Seleccione una opción: ");
 
                 // Verificamos que esté en el rango de opciones
                 if (opcion >= 1 && opcion <= contadorPosiciones) {
@@ -4740,7 +4740,7 @@ namespace Presentacion {
                 } else {
                     std::cout << "Error: Opción inválida. Por favor, intente de nuevo.\n";
                     flagError = true;
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                 }
             } while (flagError);
 
@@ -4750,8 +4750,8 @@ namespace Presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           ACTUALIZAR JUGADORES            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                Auxiliares::ingresarDatos(dorsalAux, "Ingrese el nuevo dorsal del Jugador: ", Validadores::Dorsal);
-                Auxiliares::waitfor(1000);
+                auxiliares::ingresarDatos(dorsalAux, "Ingrese el nuevo dorsal del Jugador: ", validadores::Dorsal);
+                auxiliares::waitfor(1000);
 
                 // Buscamos al jugador para obtener el id de su equipo
                 Jugador *jugadorAux = Logica::jugadores::buscarJugadorPorID(MiSistema, ID);
@@ -4759,22 +4759,22 @@ namespace Presentacion {
 
                 if (jugadorAux == nullptr || eqAux == nullptr) {
                     std::cout << " Error Inesperado del Sistema\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Si el dorsal ingresado esta duplicado y es distinto del dorsal actual del jugador
                 if (Logica::jugadores::dorsalDuplicadoParaActualizar(MiSistema, dorsalAux, ID, jugadorAux->idEquipo)) {
                     std::cout << " Error: El dorsal '" << dorsalAux << "' ya está en uso en el equipo '" << eqAux->nombre << "'.\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                 }
-                Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(2000);
+                auxiliares::limpiarPantalla();
             } while (flagError);
 
             // Confirmación de los cambios
-            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea actualizar el jugador? (S/N): ");
+            auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea actualizar el jugador? (S/N): ");
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
 
@@ -4805,11 +4805,11 @@ namespace Presentacion {
                 std::cout << "Error: No se ingresó una opción correcta (S/N)\n";
                 std::cout << "Actualización de Datos Cancelada\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void eliminarJugador(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             int ID = 0;
             char confirmacion;
             int error = -1;
@@ -4825,21 +4825,21 @@ namespace Presentacion {
             if (headerJugadores.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operacion Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay jugadores activos registrados
             if (headerJugadores.registrosActivos == 0) {
                 std::cout << "No hay ningún jugador registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4848,9 +4848,9 @@ namespace Presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Recolectamos el ID
-            if (!Auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que deseas eliminar (ingresa 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+            if (!auxiliares::ingresarDatos(ID, "Ingresa el ID del jugador que deseas eliminar (ingresa 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                 std::cout << "\nOperacion Cancelada por el usuario\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4860,7 +4860,7 @@ namespace Presentacion {
             // Si no encontro el jugador con ese ID
             if (!encontrado) {
                 std::cerr << "\nError: El ID '" << ID << "' no pertenece a ningún jugador registrado.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4876,7 +4876,7 @@ namespace Presentacion {
             // Si no ecnontro el equipo del jugador
             if (!encontrado) {
                 std::cerr << "\nError del Sistema!\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4890,9 +4890,9 @@ namespace Presentacion {
             std::cout << " Equipo:     " << equipoBuscado.nombre << "\n";
             std::cout << " -----------------------------------------------\n\n";
 
-            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de eliminar este jugador? (S/N): ");
-            Auxiliares::waitfor(1500);
-            Auxiliares::limpiarPantalla();
+            auxiliares::ingresarDatos(confirmacion, "¿Está seguro de eliminar este jugador? (S/N): ");
+            auxiliares::waitfor(1500);
+            auxiliares::limpiarPantalla();
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
 
                 // Llamamos a la logica
@@ -4910,14 +4910,14 @@ namespace Presentacion {
             } else {
                 std::cerr << "\nError: Opción inválida (S/N).\nEliminación de datos cancelada.\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
     } // namespace jugadores
 
     namespace partidos {
         void programarPartido(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             int error = -1;
             bool cancelado = false;
             bool encontrado = false;
@@ -4930,20 +4930,20 @@ namespace Presentacion {
             if (headerEquipos.cantidadRegistros == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay mas equipos activos registrados
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "\nNo hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             if (headerEquipos.registrosActivos <= 1) {
                 std::cout << "\nNo es posible programar un partido con solo un equipo\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -4956,22 +4956,22 @@ namespace Presentacion {
 
             // Recolectamos el ID LOCAL
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           PROGRAMAR PARTIDO               ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                if (!Auxiliares::ingresarDatos(nuevoPartido.idEquipoLocal, "Ingrese el ID del equipo local (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                               Validadores::IDvalido)) {
+                if (!auxiliares::ingresarDatos(nuevoPartido.idEquipoLocal, "Ingrese el ID del equipo local (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                               validadores::IDvalido)) {
                     std::cout << "\nOperacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Si el ID no corresponde a ningun equipo
                 if (!Logica::existeID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, nuevoPartido.idEquipoLocal)) {
                     std::cout << "Error el ID '" << nuevoPartido.idEquipoLocal << "' no está asociado a ningún equipo\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                 }
 
@@ -4979,34 +4979,34 @@ namespace Presentacion {
 
             // Recolectamos el ID VISItante
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           PROGRAMAR PARTIDO               ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                if (!Auxiliares::ingresarDatos(nuevoPartido.idEquipoVisitante, "Ingrese el ID del equipo visitante (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                               Validadores::IDvalido)) {
+                if (!auxiliares::ingresarDatos(nuevoPartido.idEquipoVisitante, "Ingrese el ID del equipo visitante (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                               validadores::IDvalido)) {
                     std::cout << "\nOperacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Si el ID no corresponde a ningun equipo
                 if (!Logica::existeID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, nuevoPartido.idEquipoVisitante)) {
                     std::cerr << "Error el ID '" << nuevoPartido.idEquipoVisitante << "' no está asociado a ningún equipo\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                 }
 
                 // Si el ID VISITANTE es el mismo que el ID del local
                 if (nuevoPartido.idEquipoLocal == nuevoPartido.idEquipoVisitante) {
                     std::cerr << "Error no se puede programar un partido entre un mismo equipo\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                 }
             } while (flagError);
 
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
 
             // Buscamos el equipo local
             encontrado = Logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqLocal, nuevoPartido.idEquipoLocal);
@@ -5015,7 +5015,7 @@ namespace Presentacion {
             if (!encontrado) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operación Cancelada\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5026,7 +5026,7 @@ namespace Presentacion {
             if (!encontrado) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operación Cancelada\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5039,7 +5039,7 @@ namespace Presentacion {
                 std::cout << "Minimo de Jugadores por Equipo: " << minimoDeJugadores << std::endl;
                 std::cout << "Numero de Jugadores de '" << EqLocal->nombre << "': " << EqLocal->numJugadores << std::endl;
                 std::cout << "Numero de Jugadores de '" << EqVisitante->nombre << "': " << EqVisitante->numJugadores << std::endl;
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }*/
 
@@ -5052,7 +5052,7 @@ namespace Presentacion {
             if (archivoPartidos.is_open()) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operación Cancelada\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5066,7 +5066,7 @@ namespace Presentacion {
                 if (archivoPartidos.fail()) {
                     std::cerr << "\nError del Sistema!\n";
                     std::cout << "Operación Cancelada\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -5074,7 +5074,7 @@ namespace Presentacion {
                                        ((partidoAux.idEquipoLocal == nuevoPartido.idEquipoVisitante) && (partidoAux.idEquipoVisitante == nuevoPartido.idEquipoLocal)));
                 if (partidoEntreSi && (std::strcmp(partidoAux.estado, Logica::partidos::estadoPartidos[0]) == 0)) {
                     std::cerr << "Error ya hay un partido programado entre el equipo " << eqLocal.nombre << "' y '" << eqVisitante.nombre << std::endl;
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
             }
@@ -5087,33 +5087,33 @@ namespace Presentacion {
             std::cout << "       ║           PROGRAMAR PARTIDO               ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
             std::cout << "Encuentro: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
-            if (!Auxiliares::ingresarCadena(nuevoPartido.fecha, TAMANO_FECHA, "Ingrese la fecha del partido (YYYY-MM-DD) (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                            Validadores::fechaValidaRegistroDePartidos)) {
+            if (!auxiliares::ingresarCadena(nuevoPartido.fecha, TAMANO_FECHA, "Ingrese la fecha del partido (YYYY-MM-DD) (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                            validadores::fechaValidaRegistroDePartidos)) {
                 std::cout << "\nOperacion Cancelada por el Usuario\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
-            Auxiliares::waitfor(750);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(750);
+            auxiliares::limpiarPantalla();
 
             // Pedimos la descripcion
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║           PROGRAMAR PARTIDO               ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            if (!Auxiliares::ingresarCadena(nuevoPartido.descripcion, 200, "Ingrese la descripción del partido (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                            Validadores::nombreTorneo)) {
+            if (!auxiliares::ingresarCadena(nuevoPartido.descripcion, 200, "Ingrese la descripción del partido (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                            validadores::nombreTorneo)) {
                 std::cout << "\nOperacion Cancelada por el Usuario\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
-            Auxiliares::waitfor(750);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(750);
+            auxiliares::limpiarPantalla();
 
             std::cout << "\n";
-            Auxiliares::ingresarDatos(confirmacion, "Confirme la programación del partido (S/N): ");
-            Auxiliares::waitfor(750);
-            Auxiliares::limpiarPantalla();
+            auxiliares::ingresarDatos(confirmacion, "Confirme la programación del partido (S/N): ");
+            auxiliares::waitfor(750);
+            auxiliares::limpiarPantalla();
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 programado = Logica::partidos::programarPartido(nombreArchivo, nuevoPartido);
@@ -5134,11 +5134,11 @@ namespace Presentacion {
                 std::cerr << "\nError: Opción inválida (S/N).\nLa programación del partido ha sido cancelada.";
             }
 
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void registrarResultado(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             int error = -1;
 
             // Buscamos y leemos el nombre del torneo
@@ -5149,7 +5149,7 @@ namespace Presentacion {
             // si se produjo un error
             if (!archivoTorneo.is_open()) {
                 std::cerr << "\nError del Sistema!\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
@@ -5162,7 +5162,7 @@ namespace Presentacion {
             // Si la lectura tuvo problemas
             if (archivoTorneo.fail()) {
                 std::cerr << "\nError del Sistema!\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5177,21 +5177,21 @@ namespace Presentacion {
             if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay partidos activos registrados
             if (headerPartidos.registrosActivos == 0) {
                 std::cout << "No hay ningún partido programado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5204,16 +5204,16 @@ namespace Presentacion {
 
             // Recopilamos el ID del partido a registrar
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-                if (!Auxiliares::ingresarDatos(registroPartido.ID, "Ingrese el ID del partido a registrar (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                               Validadores::IDvalido)) {
+                if (!auxiliares::ingresarDatos(registroPartido.ID, "Ingrese el ID del partido a registrar (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                               validadores::IDvalido)) {
                     std::cout << "\nOperacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -5221,11 +5221,11 @@ namespace Presentacion {
                 encontrado = Logica::buscarRegistrosPorId<Partido>(nombreArchivo, partidoAux, registroPartido.ID);
                 if (!encontrado) {
                     std::cerr << "Error: El ID de partido '" << registroPartido.ID << "' no está asociado a ningún partido.\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 } else if (std::strcmp(partidoAux.estado, Logica::partidos::estadoPartidos[0]) != 0) {
                     std::cerr << "Error: El partido ya fue JUGADO o no se encuentra en estado PROGRAMADO.\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                 }
 
@@ -5241,7 +5241,7 @@ namespace Presentacion {
             if (!encontrado) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operacion Cancelada\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5252,13 +5252,13 @@ namespace Presentacion {
             if (!encontrado) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Operacion Cancelada\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Recolectamos las anotaciones del partido
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║           REGISTRAR ANOTACIONES           ║\n";
@@ -5267,16 +5267,16 @@ namespace Presentacion {
                 std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo local
-                if (!Auxiliares::ingresarDatos(registroPartido.anotacionesLocal, "Número de Anotaciones del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                if (!auxiliares::ingresarDatos(registroPartido.anotacionesLocal, "Número de Anotaciones del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
                     std::cout << "Operacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
-                Auxiliares::waitfor(500);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(500);
+                auxiliares::limpiarPantalla();
 
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
@@ -5285,27 +5285,27 @@ namespace Presentacion {
                 std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo Visitante
-                if (!Auxiliares::ingresarDatos(registroPartido.anotacionesVisitante,
+                if (!auxiliares::ingresarDatos(registroPartido.anotacionesVisitante,
                                                "Número de Anotaciones del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
                     std::cout << "Operacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Verificamos que sean positivos
                 if (registroPartido.anotacionesLocal < 0 || registroPartido.anotacionesVisitante < 0) {
                     std::cerr << "Error: El número de anotaciones no puede ser un valor negativo.\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
                     // Validamos el empate
                 } else if (registroPartido.anotacionesLocal == registroPartido.anotacionesVisitante) {
 
-                    if (std::strcmp(Validadores::deporteActual, "BALONCESTO") == 0 || std::strcmp(Validadores::deporteActual, "TENIS") == 0 ||
-                        std::strcmp(Validadores::deporteActual, "VOLEIBOL") == 0 || std::strcmp(Validadores::deporteActual, "BEISBOL") == 0 ||
-                        std::strcmp(Validadores::deporteActual, "SOFTBOL") == 0) {
-                        std::cout << "Error: En el deporte " << Validadores::deporteActual << " no se permiten empates. Registre el marcador final con prórroga.\n";
-                        Auxiliares::waitfor(3000);
+                    if (std::strcmp(validadores::deporteActual, "BALONCESTO") == 0 || std::strcmp(validadores::deporteActual, "TENIS") == 0 ||
+                        std::strcmp(validadores::deporteActual, "VOLEIBOL") == 0 || std::strcmp(validadores::deporteActual, "BEISBOL") == 0 ||
+                        std::strcmp(validadores::deporteActual, "SOFTBOL") == 0) {
+                        std::cout << "Error: En el deporte " << validadores::deporteActual << " no se permiten empates. Registre el marcador final con prórroga.\n";
+                        auxiliares::waitfor(3000);
                         flagError = true;
                         continue;
                     }
@@ -5317,7 +5317,7 @@ namespace Presentacion {
                 // Verificamos que el numero de anotaciones no supere el máximo permitido
                 if (registroPartido.numAnotaciones > MAX_ANOTACIONES) {
                     std::cout << "Error: El número de anotaciones no puede ser mayor al maximo permitido (" << MAX_ANOTACIONES << ").\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
                 }
@@ -5326,8 +5326,8 @@ namespace Presentacion {
 
                 // Registramos las anotaciones del local
                 for (size_t e = 0; e < registroPartido.anotacionesLocal; e++) {
-                    Auxiliares::waitfor(300);
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::waitfor(300);
+                    auxiliares::limpiarPantalla();
                     flagError = false;
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
@@ -5336,27 +5336,27 @@ namespace Presentacion {
                     std::cout << " Anotacion " << e + 1 << "/" << registroPartido.anotacionesLocal;
 
                     // Pedimos el minuto en el que anotó el gol
-                    if (!Auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, "Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                                   Validadores::minuto)) {
+                    if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, "Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                   validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
                     do {
                         flagError = false;
                         // Pedimos el ID del jugador que anotó el gol
-                        if (!Auxiliares::ingresarDatos(registroPartido.anotaciones[e].idJugador,
-                                                       "Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].idJugador,
+                                                       "Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             return;
                         }
 
                         if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.anotaciones[e].idJugador)) {
                             std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
                             flagError = true;
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             continue;
                         }
 
@@ -5367,8 +5367,8 @@ namespace Presentacion {
 
                 // Registramos las anotaciones del visitante
                 for (size_t e = registroPartido.anotacionesLocal; e < registroPartido.numAnotaciones; e++) {
-                    Auxiliares::waitfor(300);
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::waitfor(300);
+                    auxiliares::limpiarPantalla();
                     flagError = false;
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
@@ -5377,27 +5377,27 @@ namespace Presentacion {
                     std::cout << " Anotacion " << (e - registroPartido.anotacionesLocal) + 1 << "/" << registroPartido.anotacionesVisitante;
 
                     // Pedimos el minuto en el que anotó el gol
-                    if (!Auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, "Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
-                                                   Validadores::minuto)) {
+                    if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, "Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                   validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
                     do {
                         flagError = false;
                         // Pedimos el ID del jugador que anotó el gol
-                        if (!Auxiliares::ingresarDatos(registroPartido.anotaciones[e].idJugador,
-                                                       "Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].idJugador,
+                                                       "Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             return;
                         }
 
                         if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.anotaciones[e].idJugador)) {
                             std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
                             flagError = true;
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             continue;
                         }
 
@@ -5410,7 +5410,7 @@ namespace Presentacion {
 
             // Recoletamos las tarjetas amarillas
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║             REGISTRAR TARJETAS            ║\n";
@@ -5419,17 +5419,17 @@ namespace Presentacion {
                 std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo local
-                if (!Auxiliares::ingresarDatos(registroPartido.tarjetasAmaLocal,
+                if (!auxiliares::ingresarDatos(registroPartido.tarjetasAmaLocal,
                                                "Número de Tarjetas Amarillas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
                     std::cout << "Operacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
-                Auxiliares::waitfor(500);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(500);
+                auxiliares::limpiarPantalla();
 
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
@@ -5438,17 +5438,17 @@ namespace Presentacion {
                 std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo Visitante
-                if (!Auxiliares::ingresarDatos(registroPartido.tarjetasAmaVisitante,
+                if (!auxiliares::ingresarDatos(registroPartido.tarjetasAmaVisitante,
                                                "Número de Tarjetas Amarillas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
                     std::cout << "Operacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Verificamos que sean positivos
                 if (registroPartido.tarjetasAmaLocal < 0 || registroPartido.tarjetasAmaVisitante < 0) {
                     std::cout << "Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
                     // Validamos el empate
@@ -5460,7 +5460,7 @@ namespace Presentacion {
                 // Verificamos que el numero de TARJETAS amarillas no supere el máximo permitido
                 if (registroPartido.numtarjetaAma > MAX_TARJETAS_AMARILLAS) {
                     std::cout << "Error: El número de tarjetas Amarillas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_AMARILLAS << ").\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
                 }
@@ -5469,8 +5469,8 @@ namespace Presentacion {
 
                 // Registramos las tarjetas amarillas del local
                 for (size_t e = 0; e < registroPartido.tarjetasAmaLocal; e++) {
-                    Auxiliares::waitfor(300);
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::waitfor(300);
+                    auxiliares::limpiarPantalla();
                     flagError = false;
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
@@ -5479,27 +5479,27 @@ namespace Presentacion {
                     std::cout << " Tarjeta A " << e + 1 << "/" << registroPartido.tarjetasAmaLocal;
 
                     // Pedimos el minuto en el que anotó el gol
-                    if (!Auxiliares::ingresarDatos(registroPartido.tarjetaA[e].minuto,
-                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::minuto)) {
+                    if (!auxiliares::ingresarDatos(registroPartido.tarjetaA[e].minuto,
+                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
                     do {
                         flagError = false;
                         // Pedimos el ID del jugador que le sacaron la tarjeta amarilla
-                        if (!Auxiliares::ingresarDatos(registroPartido.tarjetaA[e].idJugador,
-                                                       "Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(registroPartido.tarjetaA[e].idJugador,
+                                                       "Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             return;
                         }
 
                         if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaA[e].idJugador)) {
                             std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
                             flagError = true;
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             continue;
                         }
 
@@ -5510,8 +5510,8 @@ namespace Presentacion {
 
                 // Registramos las tarjetas amarillas del visitante
                 for (size_t e = registroPartido.tarjetasAmaLocal; e < registroPartido.numtarjetaAma; e++) {
-                    Auxiliares::waitfor(300);
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::waitfor(300);
+                    auxiliares::limpiarPantalla();
                     flagError = false;
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
@@ -5520,27 +5520,27 @@ namespace Presentacion {
                     std::cout << " Tarjeta A " << (e - registroPartido.tarjetasAmaLocal) + 1 << "/" << registroPartido.tarjetasAmaVisitante;
 
                     // Pedimos el minuto en el que anotó el gol
-                    if (!Auxiliares::ingresarDatos(registroPartido.tarjetaA[e].minuto,
-                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::minuto)) {
+                    if (!auxiliares::ingresarDatos(registroPartido.tarjetaA[e].minuto,
+                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
                     do {
                         flagError = false;
                         // Pedimos el ID del jugador que tiene tarjeta amarilla
-                        if (!Auxiliares::ingresarDatos(registroPartido.tarjetaA[e].idJugador,
-                                                       "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(registroPartido.tarjetaA[e].idJugador,
+                                                       "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             return;
                         }
 
                         if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaA[e].idJugador)) {
                             std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
                             flagError = true;
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             continue;
                         }
 
@@ -5553,7 +5553,7 @@ namespace Presentacion {
 
             // Recolectamos las tarjetas rojas
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║             REGISTRAR TARJETAS            ║\n";
@@ -5562,16 +5562,16 @@ namespace Presentacion {
                 std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo local
-                if (!Auxiliares::ingresarDatos(registroPartido.tarjetasRojasLocal, "Número de Tarjetas Rojas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                if (!auxiliares::ingresarDatos(registroPartido.tarjetasRojasLocal, "Número de Tarjetas Rojas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
                     std::cout << "Operacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
-                Auxiliares::waitfor(500);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(500);
+                auxiliares::limpiarPantalla();
 
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
@@ -5580,17 +5580,17 @@ namespace Presentacion {
                 std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo Visitante
-                if (!Auxiliares::ingresarDatos(registroPartido.tarjetasRojasVisitante,
+                if (!auxiliares::ingresarDatos(registroPartido.tarjetasRojasVisitante,
                                                "Número de Tarjetas Rojas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
                     std::cout << "Operacion Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Verificamos que sean positivos
                 if (registroPartido.tarjetasRojasLocal < 0 || registroPartido.tarjetasRojasVisitante < 0) {
                     std::cout << "Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
                 }
@@ -5601,7 +5601,7 @@ namespace Presentacion {
                 // Verificamos que el numero de tarjetas Rojas no supere el máximo permitido
                 if (registroPartido.numTarjetasRojas > MAX_TARJETAS_ROJAS) {
                     std::cout << "Error: El número de tarjetas Rojas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_ROJAS << ").\n";
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
                 }
@@ -5610,8 +5610,8 @@ namespace Presentacion {
 
                 // Registramos las tarjetas rojas del local
                 for (size_t e = 0; e < registroPartido.tarjetasRojasLocal; e++) {
-                    Auxiliares::waitfor(300);
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::waitfor(300);
+                    auxiliares::limpiarPantalla();
                     flagError = false;
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
@@ -5620,20 +5620,20 @@ namespace Presentacion {
                     std::cout << " Tarjeta R " << e + 1 << "/" << registroPartido.tarjetasRojasLocal;
 
                     // Pedimos el minuto en el que se produjo la tarjeta roja
-                    if (!Auxiliares::ingresarDatos(registroPartido.tarjetaR[e].minuto,
-                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::minuto)) {
+                    if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].minuto,
+                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
                     do {
                         flagError = false;
                         // Pedimos el ID del jugador que le sacaron la tarjeta roja
-                        if (!Auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
-                                                       "Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
+                                                       "Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             return;
                         }
 
@@ -5641,7 +5641,7 @@ namespace Presentacion {
                         if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaR[e].idJugador)) {
                             std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
                             flagError = true;
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             continue;
                         }
 
@@ -5652,8 +5652,8 @@ namespace Presentacion {
 
                 // Registramos las tarjetas amarillas del visitante
                 for (size_t e = registroPartido.tarjetasRojasLocal; e < registroPartido.numTarjetasRojas; e++) {
-                    Auxiliares::waitfor(300);
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::waitfor(300);
+                    auxiliares::limpiarPantalla();
 
                     flagError = false;
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
@@ -5663,27 +5663,27 @@ namespace Presentacion {
                     std::cout << " Tarjeta A " << (e - registroPartido.tarjetasRojasLocal) + 1 << "/" << registroPartido.tarjetasRojasVisitante;
 
                     // Pedimos el minuto el que le sacaron la tarjeta roja
-                    if (!Auxiliares::ingresarDatos(registroPartido.tarjetaR[e].minuto,
-                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::minuto)) {
+                    if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].minuto,
+                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
                     do {
                         flagError = false;
                         // Pedimos el ID del jugador que le sacaron la tarjeta Roja
-                        if (!Auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
-                                                       "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
+                                                       "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             return;
                         }
 
                         if (!Logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaR[e].idJugador)) {
                             std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
                             flagError = true;
-                            Auxiliares::pausarPrograma();
+                            auxiliares::pausarPrograma();
                             continue;
                         }
 
@@ -5695,14 +5695,14 @@ namespace Presentacion {
             } while (flagError);
 
             // Mostramos el marcador
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║          RESUMEN DEL MARCADOR             ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
             std::cout << " " << eqLocal.nombre << " " << registroPartido.anotacionesLocal << "  -  " << registroPartido.anotacionesVisitante << " " << eqVisitante.nombre << "\n\n";
 
-            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de registrar este resultado definitivo? (S/N): ");
-            Auxiliares::limpiarPantalla();
+            auxiliares::ingresarDatos(confirmacion, "¿Está seguro de registrar este resultado definitivo? (S/N): ");
+            auxiliares::limpiarPantalla();
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 // Invocamos tu función lógica corregida
@@ -5725,11 +5725,11 @@ namespace Presentacion {
             } else {
                 std::cerr << "\nError: Opción inválida (S/N).\nRegistro de resultado cancelado.\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void buscarPartidoPorID(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             bool cancelado = false;
             bool encontrado = false;
             int error = -1;
@@ -5743,21 +5743,21 @@ namespace Presentacion {
             if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay partidos activos registrados
             if (headerPartidos.registrosActivos == 0) {
                 std::cout << "No hay ningún partido programado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5767,14 +5767,14 @@ namespace Presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Recolectamos el ID
-            if (!Auxiliares::ingresarDatos(idPartido, "Ingrese el ID del partido que desea consultar (ingrese 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+            if (!auxiliares::ingresarDatos(idPartido, "Ingrese el ID del partido que desea consultar (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                 std::cout << "Operación Cancelada por el Usuario\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(500);
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(500);
 
             // Buscamos el partido mediante el ID
             encontrado = Logica::buscarRegistrosPorId<Partido>(nombreArchivo, partidoBuscado, idPartido);
@@ -5782,7 +5782,7 @@ namespace Presentacion {
             // Si no existe, avisamos y salimos
             if (!encontrado) {
                 std::cerr << "\nError: El ID de partido '" << idPartido << "' no existe en el sistema.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5796,7 +5796,7 @@ namespace Presentacion {
             // Si no existe, avisamos y salimos
             if (!encontrado) {
                 std::cerr << "\nError del Sistema!\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5806,13 +5806,13 @@ namespace Presentacion {
             // Si no existe, avisamos y salimos
             if (!encontrado) {
                 std::cerr << "\nError del Sistema!\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             std::cout << "Buscando..." << std::endl;
-            Auxiliares::waitfor(1200);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1200);
+            auxiliares::limpiarPantalla();
 
             std::cout << "\n╔══════════════════════════════════════════════════╗\n";
             std::cout << "║              DETALLE DE PARTIDO                  ║\n";
@@ -5829,11 +5829,11 @@ namespace Presentacion {
             std::cout << "║                                                  ║\n";
             std::cout << "╚══════════════════════════════════════════════════╝\n\n";
 
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void listarTodosLosPartidos(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             int error = -1;
             // Leemos el header del archivo de jugadores para saber el numero de reisgtros activos
             ArchivoHeader headerPartidos = Logica::leerHeader(nombreArchivo);
@@ -5843,21 +5843,21 @@ namespace Presentacion {
             if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay partidos activos registrados
             if (headerPartidos.registrosActivos == 0) {
                 std::cout << "No hay ningún partido programado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5870,11 +5870,11 @@ namespace Presentacion {
 
             if (cantPartidos == 0) {
                 std::cout << "No se encontró ningún partido\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             } else if (cantPartidos == -1) {
                 std::cerr << "\nError del Sistema!\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5900,7 +5900,7 @@ namespace Presentacion {
                 // Verificamos que si lo encontró
                 if (!encontrado) {
                     std::cerr << "\nError del Sistema!\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -5910,7 +5910,7 @@ namespace Presentacion {
                 // Verificamos que si lo encontró
                 if (!encontrado) {
                     std::cerr << "\nError del Sistema!\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -5922,11 +5922,11 @@ namespace Presentacion {
             std::cout << "--------------------------------------------------------------------------------\n\n";
 
 
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void buscarPartidosPorEquipo(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
 
             int idEquipo = -1;
             bool cancelado = false;
@@ -5945,21 +5945,21 @@ namespace Presentacion {
             if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay partidos activos registrados
             if (headerPartidos.registrosActivos == 0) {
                 std::cout << "No hay ningún partido programado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -5970,9 +5970,9 @@ namespace Presentacion {
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
                 // Pedimos al usuario el id
-                if (!Auxiliares::ingresarDatos(idEquipo, "Ingrese el ID del equipo a consultar (ingresa 'cancelar' para cancelar): ", &cancelado, Validadores::IDvalido)) {
+                if (!auxiliares::ingresarDatos(idEquipo, "Ingrese el ID del equipo a consultar (ingresa 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                     std::cout << "\nOperación Cancelada por el Usuario\n";
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     return;
                 }
 
@@ -5980,18 +5980,18 @@ namespace Presentacion {
                 if (!Logica::existeID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, idEquipo)) {
                     std::cout << "El id " << idEquipo << " no le pertenece a ningún equipo\n";
                     flagError = true;
-                    Auxiliares::pausarPrograma();
+                    auxiliares::pausarPrograma();
                     continue;
                 }
 
             } while (flagError);
 
 
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(500);
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(500);
             std::cout << "\nBuscando...\n";
-            Auxiliares::waitfor(1200);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1200);
+            auxiliares::limpiarPantalla();
 
             // Validamos si el equipo existe para poder usarlo
             Equipo equipoBuscado;
@@ -5999,7 +5999,7 @@ namespace Presentacion {
 
             if (!encontrado) {
                 std::cout << "\n Error del sistema.\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -6033,7 +6033,7 @@ namespace Presentacion {
                     // Verificamos que fue encontrado
                     if (!encontrado) {
                         std::cerr << "\nError del Sistema!\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
@@ -6043,7 +6043,7 @@ namespace Presentacion {
                     // Verificamos que fue encontrado
                     if (!encontrado) {
                         std::cerr << "\nError del Sistema!\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
@@ -6055,11 +6055,11 @@ namespace Presentacion {
                 std::cout << "--------------------------------------------------------------------------------\n\n";
             }
 
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void listarPartidosPorEstado(const char *nombreArchivo) {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
 
             int idEquipo = -1;
             bool cancelado = false;
@@ -6080,26 +6080,26 @@ namespace Presentacion {
             if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\nError del Sistema!\n";
                 std::cout << "Busqueda Cancelada\n";
-                Auxiliares::pausarPrograma;
+                auxiliares::pausarPrograma;
                 return;
             }
 
             // Si no hay equipos disponibles
             if (headerEquipos.registrosActivos == 0) {
                 std::cout << "No hay ningún equipo registrado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             // Si no hay partidos activos registrados
             if (headerPartidos.registrosActivos == 0) {
                 std::cout << "No hay ningún partido programado actualmente\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 return;
             }
 
             do {
-                Auxiliares::limpiarPantalla();
+                auxiliares::limpiarPantalla();
                 flagError = false;
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║         BUSCAR PARTIDOS POR ESTADO        ║\n";
@@ -6109,8 +6109,8 @@ namespace Presentacion {
                 std::cout << "---------------------------------------------\n";
                 std::cout << " 0. PROGRAMADO\n 1. JUGADO\n 2. CANCELADO\n\n";
                 std::cout << "---------------------------------------------\n";
-                Auxiliares::ingresarDatos(opcion, "Ingrese el tipo de estado de partido que desea consultar (ingrese 'canelar' para cancelar): ", &cancelado,
-                                          Validadores::Positivo);
+                auxiliares::ingresarDatos(opcion, "Ingrese el tipo de estado de partido que desea consultar (ingrese 'canelar' para cancelar): ", &cancelado,
+                                          validadores::Positivo);
 
                 switch (opcion) {
                     case 0: // Configuramos en PROGRAMADO
@@ -6128,15 +6128,15 @@ namespace Presentacion {
                     default:
                         std::cout << "Ingrese una opcion correcta\n";
                         flagError = true;
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                 }
             } while (flagError);
 
-            Auxiliares::limpiarPantalla();
-            Auxiliares::waitfor(500);
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(500);
             std::cout << "Buscando..." << std::endl;
-            Auxiliares::waitfor(1200);
-            Auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1200);
+            auxiliares::limpiarPantalla();
 
             // Listamos todos los partidos
             cantPartidos = Logica::partidos::listarPartidosPorSuEstado(nombreArchivo, listaDePartidos, estado, maxResultados);
@@ -6166,7 +6166,7 @@ namespace Presentacion {
                     // Verificamos que fue encontrado
                     if (!encontrado) {
                         std::cerr << "\nError del Sistema!\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
@@ -6176,7 +6176,7 @@ namespace Presentacion {
                     // Verificamos que fue encontrado
                     if (!encontrado) {
                         std::cerr << "\nError del Sistema!\n";
-                        Auxiliares::pausarPrograma();
+                        auxiliares::pausarPrograma();
                         return;
                     }
 
@@ -6194,39 +6194,73 @@ namespace Presentacion {
                 listaDePartidos = nullptr;
             }
 
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
-        void cancelarPartido() {
-            Auxiliares::limpiarPantalla();
-            std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
-            std::cout << "       ║             CANCELAR PARTIDOS             ║\n";
-            std::cout << "       ╚═══════════════════════════════════════════╝\n";
+        void cancelarPartido(const char *nombreArchivo) {
+            auxiliares::limpiarPantalla();
+
 
             int idPartido = -1;
             bool cancelado = false;
             char confirmacion;
+            Partido partidoAuxiliar;
+            Equipo eqLocal, eqVisitante;
+            bool existe = false;
+            bool flagError = false;
 
-            Auxiliares::ingresarDatos(idPartido, "Ingrese el ID del Partido que desea cancelar: ", Validadores::IDvalido);
-            Auxiliares::limpiarPantalla();
-            std::cout << "\n Procesando solicitud...";
-            Auxiliares::waitfor(1200);
-            Auxiliares::limpiarPantalla();
 
-            Partido *PartidoAux = Logica::partidos::buscarPartidoPorID(MiSistema, idPartido);
+            do {
+                flagError = false;
+                auxiliares::limpiarPantalla();
 
-            if (PartidoAux == nullptr) {
-                std::cout << "\nError: El ID '" << idPartido << "' no pertenece a ningún partido registrado.\n";
-                Auxiliares::pausarPrograma();
+                std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
+                std::cout << "       ║             CANCELAR PARTIDOS             ║\n";
+                std::cout << "       ╚═══════════════════════════════════════════╝\n";
+                if (!auxiliares::ingresarDatos(idPartido, " Ingrese el ID del Partido que desea cancelar (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                               validadores::IDvalido)) {
+                    std::cout << "\n Operación cancelada por el usuario.\n";
+                    auxiliares::pausarPrograma();
+                    return;
+                }
+
+                auxiliares::limpiarPantalla();
+                auxiliares::waitfor(250);
+                std::cout << "\n Procesando solicitud...";
+                auxiliares::waitfor(1200);
+                auxiliares::limpiarPantalla();
+
+
+                // Buscamos el Partido para mostrar los datos de ese partido antes de eliminarlo
+                existe = Logica::buscarRegistrosPorId<Partido>(nombreArchivo, partidoAuxiliar, idPartido);
+
+                // Verificamos si existe
+                if (!existe) {
+                    std::cerr << "\n Error: El ID '" << idPartido << "' no pertenece a ningún partido registrado.\n";
+                    flagError = true;
+                    auxiliares::pausarPrograma();
+                }
+
+            } while (flagError);
+
+
+            // Buscamos el equipo local
+            existe = Logica::buscarRegistrosPorId(nombreArchivo, eqLocal, partidoAuxiliar.idEquipoLocal);
+
+            // Verificamos si existe
+            if (!existe) {
+                std::cerr << "\n Error del Sistema!\n";
+                auxiliares::pausarPrograma();
                 return;
             }
 
-            Equipo *EqLocal = Logica::equipos::buscarEquipoPorID(MiSistema, PartidoAux->idEquipoLocal);
-            Equipo *EqVisitante = Logica::equipos::buscarEquipoPorID(MiSistema, PartidoAux->idEquipoVisitante);
-            if (EqLocal == nullptr || EqVisitante == nullptr) {
-                Auxiliares::limpiarPantalla();
-                std::cout << "Error Inesperado del Sistema\n";
-                Auxiliares::pausarPrograma();
+            // Buscamos el equipo visitante
+            existe = Logica::buscarRegistrosPorId(nombreArchivo, eqLocal, partidoAuxiliar.idEquipoLocal);
+
+            // Verificamos si existe
+            if (!existe) {
+                std::cerr << "\n Error del Sistema!\n";
+                auxiliares::pausarPrograma();
                 return;
             }
 
@@ -6235,38 +6269,47 @@ namespace Presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             std::cout << "\n Se borrará el registro del partido: \n\n";
-            std::cout << " Encuentro: " << EqLocal->nombre << " [ " << PartidoAux->anotacionesLocal << " ]  --  [ " << PartidoAux->puntosVisitante << "] " << EqVisitante->nombre
+            std::cout << " Encuentro: " << eqLocal.nombre << "  " << partidoAuxiliar.anotacionesLocal << "   -   " << partidoAuxiliar.puntosVisitante << "  " << eqVisitante.nombre
                       << std::endl;
-            std::cout << " Fecha: " << PartidoAux->fecha << std::endl;
-            std::cout << " ID: " << PartidoAux->ID << std::endl;
-            std::cout << " Estado del Partido: " << PartidoAux->estado << std::endl << std::endl;
+            std::cout << " Fecha: " << partidoAuxiliar.fecha << std::endl;
+            std::cout << " ID: " << partidoAuxiliar.ID << std::endl;
+            std::cout << " Estado del Partido: " << partidoAuxiliar.estado << "\n\n";
 
-            Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de eliminar el registro de este partido? (S/N): ");
+            auxiliares::ingresarDatos(confirmacion, " ¿Está seguro de eliminar el registro de este partido? (S/N): ");
 
-            Auxiliares::waitfor(1500);
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
+            auxiliares::waitfor(1000);
+
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
                 // Llamamos a la logica
-                cancelado = Logica::partidos::cancelarPartido(MiSistema, idPartido);
+                bool partidoCancelado = Logica::partidos::cancelarPartido(nombreArchivo, idPartido);
 
-                if (cancelado) {
+                if (partidoCancelado) {
                     std::cout << "\n------------------------------------------------------------------------------\n";
-                    std::cout << "           Partido Cancelado con éxito\n";
+                    std::cout << "           Partido Cancelado con Éxito\n";
                     std::cout << "------------------------------------------------------------------------------\n";
                 } else {
-                    std::cout << "\nError: No se pudo cancelar el Partido.\nError de Sistema.\n";
+                    std::cerr << "\n Error: No se pudo cancelar el Partido debido a un Error del Sistema.\n";
                 }
 
             } else if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'N') {
-                std::cout << "Operación Cancelada\n";
+                std::cout << " Operación Cancelada!\n";
             } else {
-                std::cout << "Error: No se ingresó una opción válida.\n Operación Cancelada\n";
+                std::cerr << " Error: No se ingresó una opción válida.\n Operación Cancelada!\n";
             }
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
     } // namespace partidos
+
+    namespace reportes {
+        //
+    }
+
+    namespace mantenimiento {
+        //
+    }
 
     namespace menu {
 
@@ -6281,7 +6324,7 @@ namespace Presentacion {
             // Verificamos que abrió correctamente
             if (!archivoTorneo.is_open()) {
                 std::cerr << "Error del sistema!\n";
-                Auxiliares::pausarPrograma();
+                auxiliares::pausarPrograma();
                 std::exit(1);
             }
 
@@ -6300,7 +6343,7 @@ namespace Presentacion {
             // Si ya esta inicializado no hacemos nada
             if (torneoAux.inicializado) {
                 std::cout << "Iniciando el torneo " << torneoAux.nombre << std::endl;
-                Auxiliares::waitfor(2500);
+                auxiliares::waitfor(2500);
                 return;
             }
 
@@ -6312,23 +6355,23 @@ namespace Presentacion {
             // * Aqui se recopilan los datos iniciales del torneo
 
             // Ingresar Nombre
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneo.nombre, TAMANO_NOMBRE, "Nombre del Torneo: ", nullptr, Validadores::nombreTorneo);
-            Auxiliares::waitfor(1500);
+            auxiliares::ingresarCadena(torneo.nombre, TAMANO_NOMBRE, "Nombre del Torneo: ", nullptr, validadores::nombreTorneo);
+            auxiliares::waitfor(1500);
 
             // Ingresar Deporte
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
             // Mostrar deportes disponibles
             std::cout << "Deportes disponibles:\n";
-            for (size_t e = 0; e < Validadores::totalDeportes; e++) {
-                std::cout << " - " << Validadores::Deportes[e] << std::endl;
+            for (size_t e = 0; e < validadores::totalDeportes; e++) {
+                std::cout << " - " << validadores::Deportes[e] << std::endl;
             }
             std::cout << std::endl;
 
@@ -6337,26 +6380,26 @@ namespace Presentacion {
             bool deporteValido = false;
 
             do {
-                Auxiliares::ingresarCadena(torneo.deporte, TAMANO_DEPORTE, "Deporte del Torneo: ", nullptr, Validadores::nombreTorneo);
+                auxiliares::ingresarCadena(torneo.deporte, TAMANO_DEPORTE, "Deporte del Torneo: ", nullptr, validadores::nombreTorneo);
 
                 // Convertimos a mayus
-                Auxiliares::toMayus(torneo.deporte);
+                auxiliares::toMayus(torneo.deporte);
 
-                if (!Validadores::existeDeporte(torneo.deporte, mensajeError)) {
+                if (!validadores::existeDeporte(torneo.deporte, mensajeError)) {
                     std::cerr << "Error: " << mensajeError << std::endl;
-                    Auxiliares::waitfor(2000);
+                    auxiliares::waitfor(2000);
                     deporteValido = false;
                 } else {
                     deporteValido = true;
                 }
             } while (!deporteValido);
 
-            // Definimos el deporte actual en Validadores
-            Validadores::definirDeporteActual(torneo.deporte);
-            Auxiliares::waitfor(1500);
+            // Definimos el deporte actual en validadores
+            validadores::definirDeporteActual(torneo.deporte);
+            auxiliares::waitfor(1500);
 
             // Ingresar Formato
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
@@ -6366,7 +6409,7 @@ namespace Presentacion {
 
             do {
                 opcionValida = true;
-                Auxiliares::ingresarDatos(opcionFormato, "Seleccione el formato (1 o 2): ");
+                auxiliares::ingresarDatos(opcionFormato, "Seleccione el formato (1 o 2): ");
                 if (opcionFormato != 1 && opcionFormato != 2) {
                     std::cerr << "Opcion invalida. Intente de nuevo.\n";
                     opcionValida = false;
@@ -6375,27 +6418,27 @@ namespace Presentacion {
 
             // desde la logica definimos el tipo de torneo en base a la opcion ingresada
             Logica::definirFormato(torneo, opcionFormato);
-            Auxiliares::waitfor(1500);
+            auxiliares::waitfor(1500);
 
             // Ingresar Fecha de Inicio del torneo
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-            Auxiliares::ingresarCadena(torneo.fechaInicio, TAMANO_FECHA, "Fecha De Inicio del Torneo: ", nullptr, Validadores::FechaValida);
-            Validadores::definirFechaInicio(torneo.fechaInicio);
-            Auxiliares::waitfor(1500);
+            auxiliares::ingresarCadena(torneo.fechaInicio, TAMANO_FECHA, "Fecha De Inicio del Torneo: ", nullptr, validadores::FechaValida);
+            validadores::definirFechaInicio(torneo.fechaInicio);
+            auxiliares::waitfor(1500);
 
             // Ingresar Fecha de Finalizacion de Torneo
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
             std::cout << "       ║ DATOS INICIALES DEL TORNEO                ║\n";
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-            Auxiliares::ingresarCadena(torneo.fechaFin, TAMANO_FECHA, "Fecha de Finalización del Torneo: ", nullptr, Validadores::ValidarFechaFin);
-            Validadores::definirFechaFin(torneo.fechaFin);
-            Auxiliares::waitfor(1500);
-            Auxiliares::limpiarPantalla();
+            auxiliares::ingresarCadena(torneo.fechaFin, TAMANO_FECHA, "Fecha de Finalización del Torneo: ", nullptr, validadores::ValidarFechaFin);
+            validadores::definirFechaFin(torneo.fechaFin);
+            auxiliares::waitfor(1500);
+            auxiliares::limpiarPantalla();
 
             // Movemos el puntero de escritura al inicio
             archivoTorneo.seekp(0, std::ios::beg);
@@ -6421,11 +6464,11 @@ namespace Presentacion {
             std::cout << "Fecha de Finalización del torneo: " << torneo.fechaFin;
 
             archivoTorneo.close();
-            Auxiliares::pausarPrograma();
+            auxiliares::pausarPrograma();
         }
 
         void Principal() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
 
             // Abrimos el archivo de torneos para acceder a los datos que necesitamos
             std::ifstream archivoTorneo;
@@ -6469,7 +6512,7 @@ namespace Presentacion {
         }
 
         void GestionDeEquipos() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n   ╔═══════════════════════════════════════════╗\n";
             std::cout << "   ║          GESTIÓN DE EQUIPOS               ║\n";
             std::cout << "   ╠═══════════════════════════════════════════╣\n";
@@ -6484,7 +6527,7 @@ namespace Presentacion {
         }
 
         void menuBuscarEquipo() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n   ╔═══════════════════════════════════════════╗\n";
             std::cout << "   ║          BUSQUEDA DE EQUIPOS              ║\n";
             std::cout << "   ╠═══════════════════════════════════════════╣\n";
@@ -6496,7 +6539,7 @@ namespace Presentacion {
         }
 
         void menuBuscarJugador() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n   ╔═══════════════════════════════════════════╗\n";
             std::cout << "   ║          BUSQUEDA DE JUGADORES            ║\n";
             std::cout << "   ╠═══════════════════════════════════════════╣\n";
@@ -6508,7 +6551,7 @@ namespace Presentacion {
         }
 
         void listarPartidos() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n   ╔═══════════════════════════════════════════╗\n";
             std::cout << "   ║              LISTAR PARTIDOS              ║\n";
             std::cout << "   ╠═══════════════════════════════════════════╣\n";
@@ -6520,7 +6563,7 @@ namespace Presentacion {
         }
 
         void buscarPartidos() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n   ╔═══════════════════════════════════════════╗\n";
             std::cout << "   ║          BUSQUEDA DE PARTIDOS             ║\n";
             std::cout << "   ╠═══════════════════════════════════════════╣\n";
@@ -6532,7 +6575,7 @@ namespace Presentacion {
         }
 
         void GestionDePartidos() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n   ╔═══════════════════════════════════════════╗\n";
             std::cout << "   ║        GESTIÓN DE PARTIDOS                ║\n";
             std::cout << "   ╠═══════════════════════════════════════════╣\n";
@@ -6547,7 +6590,7 @@ namespace Presentacion {
         }
 
         void GestionDeJugadores() {
-            Auxiliares::limpiarPantalla();
+            auxiliares::limpiarPantalla();
             std::cout << "\n   ╔═══════════════════════════════════════════╗\n";
             std::cout << "   ║        GESTIÓN DE JUGADORES               ║\n";
             std::cout << "   ╠═══════════════════════════════════════════╣\n";
@@ -6586,29 +6629,29 @@ namespace Presentacion {
     } // namespace menu
 
     void mensajeSalida() {
-        Auxiliares::limpiarPantalla();
-        std::cout << "Saliendo...";
-        Auxiliares::waitfor(3500);
+        auxiliares::limpiarPantalla();
+        std::cout << "\n Saliendo... \n";
+        auxiliares::waitfor(2500);
     }
 
     void mensajeMenuPrincipal() {
-        Auxiliares::limpiarPantalla();
-        std::cout << "Volviendo al Menú Principal...";
-        Auxiliares::waitfor(3000);
+        auxiliares::limpiarPantalla();
+        std::cout << "\n Volviendo al Menú Principal... \n";
+        auxiliares::waitfor(2500);
     }
 
     void mensajeMenuAnterior() {
-        Auxiliares::limpiarPantalla();
-        std::cout << "Volviendo al menu anterior...";
-        Auxiliares::waitfor(3000);
+        auxiliares::limpiarPantalla();
+        std::cout << "\n Volviendo al menu anterior... \n";
+        auxiliares::waitfor(2500);
     }
 
     void mensajeDefault() {
-        Auxiliares::limpiarPantalla();
-        std::cout << "ERROR has ingresado una opcion inválida. Intentalo nuevamente.\n";
-        Auxiliares::waitfor(3500);
+        auxiliares::limpiarPantalla();
+        std::cout << "\n Error: Has ingresado una opcion inválida. Intentalo nuevamente.\n";
+        auxiliares::waitfor(2500);
     }
-} // namespace Presentacion
+} // namespace presentacion
 
 // ============================================//
 //   7. MAIN                                   //
@@ -6617,11 +6660,7 @@ namespace Presentacion {
 int main() {
 
     // Llamamos a la función de configuración de Idioma al inicio
-    Auxiliares::configurarIdioma();
-
-    // ? ----------------------------------------------//
-    // ? DECLARACION DE VARIABLES                      //
-    // ? ----------------------------------------------//
+    auxiliares::configurarIdioma();
 
     // Creamos una carpeta de datos;
     Logica::crearCarpeta();
@@ -6637,38 +6676,39 @@ int main() {
     char confirmacion;
 
     // Inicio del Programa
-    Presentacion::menu::datosInicialesTorneo();
+    presentacion::menu::datosInicialesTorneo();
 
     // Estructura del switch
     do {
+
         // inicializamos las variables para evitar conflictos
         opcionMenu = -1;
         opcionSubMenu = -1;
         opcionMenuListar = -1;
 
         // Presentamos el menu principal
-        Presentacion::menu::Principal();
-        Auxiliares::ingresarDatos(opcionMenu, "Seleccione una opcion: ", nullptr, Validadores::Positivo);
-        Auxiliares::limpiarPantalla();
-        Auxiliares::waitfor(1500);
+        presentacion::menu::Principal();
+        auxiliares::ingresarDatos(opcionMenu, "Seleccione una opcion: ", nullptr, validadores::Positivo);
+        auxiliares::limpiarPantalla();
+        auxiliares::waitfor(1500);
         switch (opcionMenu) {
 
             // Salida del Programa
             case 0:
-                Auxiliares::limpiarPantalla();
-                Auxiliares::waitfor(2500);
-                Auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea salir del programa? (S/N): ");
+                auxiliares::limpiarPantalla();
+                auxiliares::waitfor(2500);
+                auxiliares::ingresarDatos(confirmacion, "¿Está seguro de que desea salir del programa? (S/N): ");
                 if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
-                    Presentacion::mensajeSalida();
+                    presentacion::mensajeSalida();
                 } else if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'N') {
                     std::cout << "Salida del Programa Cancelada\n"; // Forzamos la vuelta del bucle
                     opcionMenu = -1;
-                    Auxiliares::waitfor(3000);
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::waitfor(3000);
+                    auxiliares::limpiarPantalla();
                 } else {
                     std::cout << "Error: No se ingresó una opción correcta (S/N)\n";
                     std::cout << "Salida del Programa Cancelada\n";
-                    Auxiliares::waitfor(3000);
+                    auxiliares::waitfor(3000);
                     // Forzamos la vuelta del bucle
                     opcionMenu = -1;
                 }
@@ -6676,67 +6716,67 @@ int main() {
 
             // Gestión de Equipos
             case 1:
-                Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(2000);
+                auxiliares::limpiarPantalla();
                 std::cout << "Ingresando al apartado de Gestión de Equipos..." << std::endl;
-                Auxiliares::waitfor(3000);
+                auxiliares::waitfor(3000);
 
                 do {
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::limpiarPantalla();
                     opcionSubMenu = -1;
                     opcionMenuBusq = -1;
-                    Presentacion::menu::GestionDeEquipos();
-                    Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione una opcion: ", nullptr, Validadores::Positivo);
+                    presentacion::menu::GestionDeEquipos();
+                    auxiliares::ingresarDatos(opcionSubMenu, "Seleccione una opcion: ", nullptr, validadores::Positivo);
 
                     switch (opcionSubMenu) {
                         case 0: // Volver al menu Principal
-                            Presentacion::mensajeMenuPrincipal();
+                            presentacion::mensajeMenuPrincipal();
                             break;
 
                         case 1: // Registrar nuevos equipos
-                            Presentacion::equipos::RegistrarEquipos(NOMBRE_ARCHIVO_EQUIPOS);
+                            presentacion::equipos::RegistrarEquipos(NOMBRE_ARCHIVO_EQUIPOS);
                             break;
 
                         case 2: // Menu Buscar equipos
                             do {
                                 opcionMenuBusq = -1;
-                                Presentacion::menu::menuBuscarEquipo();
-                                Auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", nullptr, Validadores::Positivo);
+                                presentacion::menu::menuBuscarEquipo();
+                                auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", nullptr, validadores::Positivo);
 
                                 switch (opcionMenuBusq) {
                                     case 0: // Volver al menu anterior
-                                        Presentacion::mensajeMenuAnterior();
+                                        presentacion::mensajeMenuAnterior();
                                         break;
 
                                     case 1: // Busqueda por ID
-                                        Presentacion::equipos::buscarEquipoPorID(NOMBRE_ARCHIVO_EQUIPOS);
+                                        presentacion::equipos::buscarEquipoPorID(NOMBRE_ARCHIVO_EQUIPOS);
                                         break;
 
                                     case 2: // Busqueda por nombre
-                                        Presentacion::equipos::buscarEquiposPorSubCadena(NOMBRE_ARCHIVO_EQUIPOS);
+                                        presentacion::equipos::buscarEquiposPorSubCadena(NOMBRE_ARCHIVO_EQUIPOS);
                                         break;
 
                                     default:
-                                        Presentacion::mensajeDefault();
+                                        presentacion::mensajeDefault();
                                 }
                             } while (opcionMenuBusq != 0);
 
                             break;
 
                         case 3: // Actualizar Equipos
-                            Presentacion::equipos::actualizarEquipo(NOMBRE_ARCHIVO_EQUIPOS);
+                            presentacion::equipos::actualizarEquipo(NOMBRE_ARCHIVO_EQUIPOS);
                             break;
 
                         case 4: // Listar Equipos
-                            Presentacion::equipos::listarEquipos(NOMBRE_ARCHIVO_EQUIPOS);
+                            presentacion::equipos::listarEquipos(NOMBRE_ARCHIVO_EQUIPOS);
                             break;
 
                         case 5: // Eliminar Equipos
-                            Presentacion::equipos::eliminarEquipo(NOMBRE_ARCHIVO_EQUIPOS);
+                            presentacion::equipos::eliminarEquipo(NOMBRE_ARCHIVO_EQUIPOS);
                             break;
 
                         default:
-                            Presentacion::mensajeDefault();
+                            presentacion::mensajeDefault();
                     }
                 } while (opcionSubMenu != 0);
 
@@ -6744,119 +6784,119 @@ int main() {
 
             // Gestión de Jugadores
             case 2:
-                Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(2000);
+                auxiliares::limpiarPantalla();
                 std::cout << "Ingresando al apartado de Gestión de Jugadores..." << std::endl;
-                Auxiliares::waitfor(3000);
+                auxiliares::waitfor(3000);
 
                 do {
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::limpiarPantalla();
                     opcionSubMenu = -1;
-                    Presentacion::menu::GestionDeJugadores();
-                    Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", nullptr, Validadores::Positivo);
+                    presentacion::menu::GestionDeJugadores();
+                    auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", nullptr, validadores::Positivo);
 
                     switch (opcionSubMenu) {
                         case 0: // Volver al menu Principal
-                            Presentacion::mensajeMenuPrincipal();
+                            presentacion::mensajeMenuPrincipal();
                             break;
 
                         case 1: // Registrar nuevos jugadores
-                            Presentacion::jugadores::registrarJugador(NOMBRE_ARCHIVO_JUGADORES);
+                            presentacion::jugadores::registrarJugador(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 2: // Menu Buscar jugadores
                             do {
                                 opcionMenuBusq = -1;
-                                Presentacion::menu::menuBuscarJugador();
-                                Auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", nullptr, Validadores::Positivo);
+                                presentacion::menu::menuBuscarJugador();
+                                auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", nullptr, validadores::Positivo);
 
                                 switch (opcionMenuBusq) {
                                     case 0: // Volver al menu anterior
-                                        Presentacion::mensajeMenuAnterior();
+                                        presentacion::mensajeMenuAnterior();
                                         break;
 
                                     case 1: // Busqueda por ID
-                                        Presentacion::jugadores::buscarJugadorID(NOMBRE_ARCHIVO_JUGADORES);
+                                        presentacion::jugadores::buscarJugadorID(NOMBRE_ARCHIVO_JUGADORES);
                                         break;
 
                                     case 2: // Busqueda por nombre
-                                        Presentacion::jugadores::buscarJugadorPorNombre(NOMBRE_ARCHIVO_JUGADORES);
+                                        presentacion::jugadores::buscarJugadorPorNombre(NOMBRE_ARCHIVO_JUGADORES);
                                         break;
 
                                     default:
-                                        Presentacion::mensajeDefault();
+                                        presentacion::mensajeDefault();
                                 }
                             } while (opcionMenuBusq != 0);
                             break;
 
                         case 3: // Actualizar Jugador
-                            Presentacion::jugadores::actualizarJugador(NOMBRE_ARCHIVO_JUGADORES);
+                            presentacion::jugadores::actualizarJugador(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 4: // Listar todos los jugadores
-                            Presentacion::jugadores::mostrarListaDeJugadores(NOMBRE_ARCHIVO_JUGADORES);
+                            presentacion::jugadores::mostrarListaDeJugadores(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 5: // Listar Jugadores por Equipos
-                            Presentacion::jugadores::mostrarJugadoresPorEquipo(NOMBRE_ARCHIVO_JUGADORES);
+                            presentacion::jugadores::mostrarJugadoresPorEquipo(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         case 6: // Eliminar jugador
-                            Presentacion::jugadores::eliminarJugador(NOMBRE_ARCHIVO_JUGADORES);
+                            presentacion::jugadores::eliminarJugador(NOMBRE_ARCHIVO_JUGADORES);
                             break;
 
                         default:
-                            Presentacion::mensajeDefault();
+                            presentacion::mensajeDefault();
                     }
                 } while (opcionSubMenu != 0);
                 break;
 
             // Gestión de Partidos
             case 3:
-                Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(2000);
+                auxiliares::limpiarPantalla();
                 std::cout << "Ingresando al apartado de Gestión de Partidos..." << std::endl;
-                Auxiliares::waitfor(3000);
+                auxiliares::waitfor(3000);
                 do {
-                    Auxiliares::limpiarPantalla();
+                    auxiliares::limpiarPantalla();
                     opcionSubMenu = -1;
-                    Presentacion::menu::GestionDePartidos();
-                    Auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", nullptr, Validadores::Positivo);
+                    presentacion::menu::GestionDePartidos();
+                    auxiliares::ingresarDatos(opcionSubMenu, "Seleccione un opcion: ", nullptr, validadores::Positivo);
 
                     switch (opcionSubMenu) {
                         case 0: // Volver al menú principal
-                            Presentacion::mensajeMenuPrincipal();
+                            presentacion::mensajeMenuPrincipal();
                             break;
 
                         case 1: // Programar Partidos
-                            Presentacion::partidos::programarPartido(NOMBRE_ARCHIVO_PARTIDOS);
+                            presentacion::partidos::programarPartido(NOMBRE_ARCHIVO_PARTIDOS);
                             break;
 
                         case 2: // Registrar el Resultado de un partido
-                            Presentacion::partidos::registrarResultado(NOMBRE_ARCHIVO_PARTIDOS);
+                            presentacion::partidos::registrarResultado(NOMBRE_ARCHIVO_PARTIDOS);
                             break;
 
                         case 3: // Buscar partidos
                             do {
                                 opcionMenuBusq = -1;
-                                Presentacion::menu::buscarPartidos();
-                                Auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", nullptr, Validadores::Positivo);
+                                presentacion::menu::buscarPartidos();
+                                auxiliares::ingresarDatos(opcionMenuBusq, "Seleccione una opcion: ", nullptr, validadores::Positivo);
 
                                 switch (opcionMenuBusq) {
                                     case 0: // Volver al menu anterior
-                                        Presentacion::mensajeMenuAnterior();
+                                        presentacion::mensajeMenuAnterior();
                                         break;
 
                                     case 1: // Busqueda por Equipo
-                                        Presentacion::partidos::buscarPartidosPorEquipo(NOMBRE_ARCHIVO_PARTIDOS);
+                                        presentacion::partidos::buscarPartidosPorEquipo(NOMBRE_ARCHIVO_PARTIDOS);
                                         break;
 
                                     case 2: // Busqueda por ID
-                                        Presentacion::partidos::buscarPartidoPorID(NOMBRE_ARCHIVO_PARTIDOS);
+                                        presentacion::partidos::buscarPartidoPorID(NOMBRE_ARCHIVO_PARTIDOS);
                                         break;
 
                                     default:
-                                        Presentacion::mensajeDefault();
+                                        presentacion::mensajeDefault();
                                 }
                             } while (opcionMenuBusq != 0);
                             break;
@@ -6864,34 +6904,34 @@ int main() {
                         case 4: // Listar Partidos
                             do {
                                 opcionMenuListar = -1;
-                                Presentacion::menu::listarPartidos();
-                                Auxiliares::ingresarDatos(opcionMenuListar, "Seleccione una opcion: ", nullptr, Validadores::Positivo);
+                                presentacion::menu::listarPartidos();
+                                auxiliares::ingresarDatos(opcionMenuListar, "Seleccione una opcion: ", nullptr, validadores::Positivo);
 
                                 switch (opcionMenuListar) {
                                     case 0: // Volver al menu anterior
-                                        Presentacion::mensajeMenuAnterior();
+                                        presentacion::mensajeMenuAnterior();
                                         break;
 
                                     case 1: // Listar todos los partidos
-                                        Presentacion::partidos::listarTodosLosPartidos(NOMBRE_ARCHIVO_PARTIDOS);
+                                        presentacion::partidos::listarTodosLosPartidos(NOMBRE_ARCHIVO_PARTIDOS);
                                         break;
 
                                     case 2: // Listar partidos por estado
-                                        Presentacion::partidos::listarPartidosPorEstado(NOMBRE_ARCHIVO_PARTIDOS);
+                                        presentacion::partidos::listarPartidosPorEstado(NOMBRE_ARCHIVO_PARTIDOS);
                                         break;
 
                                     default:
-                                        Presentacion::mensajeDefault();
+                                        presentacion::mensajeDefault();
                                 }
                             } while (opcionMenuListar != 0);
                             break;
 
                         case 5: // Cancelar Partidos
-                            Presentacion::partidos::cancelarPartido(NOMBRE_ARCHIVO_PARTIDOS);
+                            presentacion::partidos::cancelarPartido(NOMBRE_ARCHIVO_PARTIDOS);
                             break;
 
                         default:
-                            Presentacion::mensajeDefault();
+                            presentacion::mensajeDefault();
                     }
                 } while (opcionSubMenu != 0);
 
@@ -6899,17 +6939,27 @@ int main() {
 
             // Tabla de Posiciones
             case 4:
-                Auxiliares::waitfor(2000);
-                Auxiliares::limpiarPantalla();
+                auxiliares::waitfor(2000);
+                auxiliares::limpiarPantalla();
                 std::cout << "Ingresando al apartado de Tabla de Posiciones..." << std::endl;
-                Auxiliares::waitfor(3000);
-                Auxiliares::limpiarPantalla();
-                Presentacion::equipos::mostrarTablaDePosiciones(NOMBRE_ARCHIVO_EQUIPOS);
+                auxiliares::waitfor(3000);
+                auxiliares::limpiarPantalla();
+                presentacion::equipos::mostrarTablaDePosiciones(NOMBRE_ARCHIVO_EQUIPOS);
+                break;
+
+            // Reportes
+            case 5:
+
+                break;
+
+            // Mantenimiento
+            case 6:
+
                 break;
 
             // Si no se selecciona una opcion correcta enviamos un mensaje de aviso
             default:
-                Presentacion::mensajeDefault();
+                presentacion::mensajeDefault();
         }
         // El bucle se repite si el usuario no eligió la opcion de salir en el menu Principal
     } while (opcionMenu != 0);
