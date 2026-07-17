@@ -3363,7 +3363,7 @@ namespace logica {
                 // Limpiamos las tarjetas amarillas y los detalles de cada tarjeta Amarilla
                 for (int e = 0; e < pAux.numtarjetaAma; e++) {
 
-                    if (pAux.anotaciones[e].idJugador == 0) {
+                    if (pAux.tarjetaA[e].idJugador == 0) {
                         continue;
                     }
 
@@ -3430,7 +3430,7 @@ namespace logica {
 
                     Jugador jugadorAux;
 
-                    if (pAux.anotaciones[e].idJugador == 0) {
+                    if (pAux.tarjetaR[e].idJugador == 0) {
                         continue;
                     }
 
@@ -6614,6 +6614,8 @@ namespace presentacion {
 
             } while (flagError);
 
+            std::strncpy(registroPartido.estado, logica::partidos::estadoPartidos[1], TAMANO_ESTADO);
+
             // Mostramos el marcador
             auxiliares::limpiarPantalla();
             std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
@@ -7179,7 +7181,7 @@ namespace presentacion {
             }
 
             // Buscamos el equipo visitante
-            existe = logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, partidoAuxiliar.idEquipoLocal);
+            existe = logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante, partidoAuxiliar.idEquipoVisitante);
 
             // Verificamos si existe
             if (!existe) {
