@@ -6635,7 +6635,7 @@ namespace presentacion {
                     std::cout << "                  ¡Resultado registrado con éxito!\n";
                     std::cout << "------------------------------------------------------------------------------\n";
                     std::cout << " Partido ID:  " << registroPartido.ID << "\n";
-                    std::cout << " Estado:      " << registroPartido.estado << "\n";
+                    std::cout << " Estado:      " << "JUGADO\n";
                     std::cout << " Marcador:    " << eqLocal.nombre << " " << registroPartido.anotacionesLocal << "  -  " << registroPartido.anotacionesVisitante << " "
                               << eqVisitante.nombre << "\n";
                     std::cout << "------------------------------------------------------------------------------\n";
