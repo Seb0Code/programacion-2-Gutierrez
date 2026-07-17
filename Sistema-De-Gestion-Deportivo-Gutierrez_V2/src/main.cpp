@@ -1193,13 +1193,13 @@ namespace logica {
                 return indice;
             }
 
-            if (ID <= 0) {
-                return false;
+            if (ID < 0) {
+                return -1;
             }
 
             std::ifstream archivo;
             if (!abrirParaLectura(nombreArchivo, archivo)) {
-                return false;
+                return -1;
             }
 
             // Movemos el puntero de lectura despues del header
@@ -1425,6 +1425,15 @@ namespace logica {
             }
 
             archivo.close();
+
+            /*
+            // debug
+            std::cout << "\n sizeof(ArchivoHeader): " << sizeof(ArchivoHeader);
+            std::cout << "\n Indice: " << indice;
+            std::cout << "\n sizeof(Equipo): " << sizeof(struct5);
+            std::cout << "\n Posicion: " << posicion;
+            std::cout << "\n Calculo: " << sizeof(ArchivoHeader) << " + " << indice << " * " << sizeof(struct5);
+            auxiliares::pausarPrograma();*/
             return true;
         }
 
@@ -1491,66 +1500,67 @@ namespace logica {
             return cantidadDeRegistrosEncontrados;
         }
 
-        template <class struct7> //
-        int listarRegistros(const char *nombreArchivo, struct7 resultados[], const int maxRegistros) {
-            int cantidadDeRegistrosEncontrados = 0;
-            int error = -1;
-            struct7 registroTemporal;
-            ArchivoHeader header = leerHeader(nombreArchivo);
-
-            // verificamos que si existe ese archivo
-            if (!existeArchivo(nombreArchivo)) {
-                return error;
-            }
-
-            std::ifstream archivo;
-            if (!abrirParaLectura(nombreArchivo, archivo)) {
-                return false;
-            }
-
-            // Verificamos que el header se haya leido correctamente
-            if (header.cantidadRegistros == -1) {
-                return false;
-            }
-
-            // Ubicamos el puntero de posicion despues del header
-            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
-
-            // Realizamos la lectura del archivo
-            while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct7))) {
-
-                // Verificamos si no hubo un falló en la lectura
-                if (archivo.fail()) {
-                    archivo.close();
-                    return error;
-                }
-
-                // Si encontramos un archivo que esta eliminado lo saltamos
-                if (registroTemporal.eliminado) {
-                    continue;
-                }
-
-                // Si aún no llegamos a la cantidad maxima de registros hacemos la comparacion
-                if (cantidadDeRegistrosEncontrados < maxRegistros) {
-
-                    resultados[cantidadDeRegistrosEncontrados] = registroTemporal;
-                    cantidadDeRegistrosEncontrados++;
-
-                } else {
-                    // sino salimos del bucle
-                    break;
-                }
-            }
-
-            // Verificamos que se hayan leido todos los registros
-            if (header.registrosActivos > cantidadDeRegistrosEncontrados) {
-                return error;
-            }
-
-            archivo.close();
-            return cantidadDeRegistrosEncontrados;
-        }
     } // namespace
+
+    template <class struct7> //
+    int listarRegistros(const char *nombreArchivo, struct7 resultados[], const int maxRegistros) {
+        int cantidadDeRegistrosEncontrados = 0;
+        int error = -1;
+        struct7 registroTemporal;
+        ArchivoHeader header = leerHeader(nombreArchivo);
+
+        // verificamos que si existe ese archivo
+        if (!existeArchivo(nombreArchivo)) {
+            return error;
+        }
+
+        std::ifstream archivo;
+        if (!abrirParaLectura(nombreArchivo, archivo)) {
+            return false;
+        }
+
+        // Verificamos que el header se haya leido correctamente
+        if (header.cantidadRegistros == -1) {
+            return false;
+        }
+
+        // Ubicamos el puntero de posicion despues del header
+        archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
+        // Realizamos la lectura del archivo
+        while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(struct7))) {
+
+            // Verificamos si no hubo un falló en la lectura
+            if (archivo.fail()) {
+                archivo.close();
+                return error;
+            }
+
+            // Si encontramos un archivo que esta eliminado lo saltamos
+            if (registroTemporal.eliminado) {
+                continue;
+            }
+
+            // Si aún no llegamos a la cantidad maxima de registros hacemos la comparacion
+            if (cantidadDeRegistrosEncontrados < maxRegistros) {
+
+                resultados[cantidadDeRegistrosEncontrados] = registroTemporal;
+                cantidadDeRegistrosEncontrados++;
+
+            } else {
+                // sino salimos del bucle
+                break;
+            }
+        }
+
+        // Verificamos que se hayan leido todos los registros
+        if (header.registrosActivos > cantidadDeRegistrosEncontrados) {
+            return error;
+        }
+
+        archivo.close();
+        return cantidadDeRegistrosEncontrados;
+    }
 
     namespace equipos {
 
@@ -2275,10 +2285,6 @@ namespace logica {
             if (!prepararOperacion(nombreArchivo, header)) {
                 return false;
             }
-            std::fstream archivo;
-            if (!abrirParaEscritura(nombreArchivo, archivo)) {
-                return false;
-            }
 
             // * Borramos el Jugador
 
@@ -2287,6 +2293,11 @@ namespace logica {
 
             // Verificamos si no se encontró ningun jugador con ese ID
             if (indice == error) {
+                return false;
+            }
+
+            std::fstream archivo;
+            if (!abrirParaEscritura(nombreArchivo, archivo)) {
                 return false;
             }
 
@@ -2343,18 +2354,18 @@ namespace logica {
             }
 
             // Guardamos la informacion en el equipo
+            int indiceEquipo = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoTemporal.ID);
+            if (indiceEquipo == error) {
+                return false;
+            }
+
             std::fstream archivoEquipo;
             if (!abrirParaEscritura(NOMBRE_ARCHIVO_EQUIPOS, archivoEquipo)) {
                 return false;
             }
 
-            int indiceEquipo = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, equipoTemporal.ID);
-            if (indice == error) {
-                return false;
-            }
-
-            std::streampos posicionEquipo = sizeof(ArchivoHeader) + indice * sizeof(Equipo);
-            archivoEquipo.seekp(posicionEquipo, std::ios::end);
+            std::streampos posicionEquipo = sizeof(ArchivoHeader) + indiceEquipo * sizeof(Equipo);
+            archivoEquipo.seekp(posicionEquipo, std::ios::beg);
             archivoEquipo.write(reinterpret_cast<const char *>(&equipoTemporal), sizeof(Equipo));
             if (archivoEquipo.fail()) {
                 archivoEquipo.close();
@@ -2524,10 +2535,11 @@ namespace logica {
             }
 
             int minimoRequerido = minJugadoresPorDeporte();
+            /*
             // Verificar que ambos equipos tengan suficientes jugadores
             if (eqLocal.numJugadores < minimoRequerido || eqVisitante.numJugadores < minimoRequerido) {
                 return false;
-            }
+            }*/
 
             // * Procedemos a programar el partido
             nuevoPartido.ID = header.proximoID;
@@ -2565,7 +2577,6 @@ namespace logica {
 
             // Actualizamos el header
             actualizarHeader(nombreArchivo, header);
-
             return true;
         }
 
@@ -2576,27 +2587,9 @@ namespace logica {
             int error = -1;
 
             Torneo torneo;
-
-            std::ifstream archivoTorneo;
-            archivoTorneo.open(NOMBRE_ARCHIVO_TORNEO, std::ios::binary);
-
-            if (!archivoTorneo.is_open()) {
+            if (!obtenerInformacionTorneo(torneo)) {
                 return false;
             }
-
-            // Movemos el puntero de lectura al principio
-            archivoTorneo.seekg(0, std::ios::beg);
-
-            // Leemos el torneo
-            archivoTorneo.read(reinterpret_cast<char *>(&torneo), sizeof(Torneo));
-
-            // Verificamos si la lectura fue exitosa
-            if (archivoTorneo.fail()) {
-                return false;
-            }
-
-            // Cerramos el archivo
-            archivoTorneo.close();
 
             // * Validaciones
 
@@ -2641,6 +2634,9 @@ namespace logica {
             Partido registroTemporal;
             int contador = 0;
 
+            // Movemos el puntero de lectura
+            archivo.seekg(sizeof(ArchivoHeader), std::ios::beg);
+
             // Verificamos que haya partidos en estado programado
             while (archivo.read(reinterpret_cast<char *>(&registroTemporal), sizeof(Partido))) {
 
@@ -2667,7 +2663,6 @@ namespace logica {
             if (registroPartido.anotacionesLocal < 0 || registroPartido.anotacionesVisitante < 0) {
                 archivo.close();
                 return false;
-                ;
             }
 
             // Ademas verificamos que el numAnotaciones no sea mayor que el maximo
@@ -2686,6 +2681,8 @@ namespace logica {
                 return false;
             }
 
+            archivo.close();
+
             // * 1. Leemos el partido y verificamos que exsite
 
             // verificamos que el partido si exista (en estado programado);
@@ -2694,13 +2691,11 @@ namespace logica {
 
             // Verificamos si encontro el partido
             if (!existePartido) {
-                archivo.close();
                 return false;
             }
 
             // Si encontró el partido verificamos que esté en estado programado
             if (std::strcmp(nuevoPartido.estado, estadoPartidos[0]) != 0) {
-                archivo.close();
                 return false;
             }
 
@@ -2721,7 +2716,12 @@ namespace logica {
 
             // Verificamos por seguridad
             if (!existe) {
-                archivo.close();
+                return false;
+            }
+
+            archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+            // Verificamos que esté abierto
+            if (!archivo.is_open()) {
                 return false;
             }
 
@@ -2812,15 +2812,6 @@ namespace logica {
 
             // * 6. Actualizamos las estadisticas de los jugadores por cada gol / tarjeta
 
-            std::fstream archivoJugadores;
-            archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::in | std::ios::out);
-
-            // Verificamos que esté abierto
-            if (!archivoJugadores.is_open()) {
-                archivo.close();
-                return false;
-            }
-
             Jugador jugadorAux;
 
             // Modificamos los goles
@@ -2837,7 +2828,15 @@ namespace logica {
                 // Si ocurrió un error detenemos el proceso
                 if (indiceBuscado == error) {
                     archivo.close();
-                    archivoJugadores.close();
+                    return false;
+                }
+
+                std::fstream archivoJugadores;
+                archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::in | std::ios::out);
+
+                // Verificamos que esté abierto
+                if (!archivoJugadores.is_open()) {
+                    archivo.close();
                     return false;
                 }
 
@@ -2864,6 +2863,14 @@ namespace logica {
 
                 // Escribimos el jugador
                 archivoJugadores.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
+
+                if (archivoJugadores.fail()) {
+                    archivoJugadores.close();
+                    archivo.close();
+                    return false;
+                }
+
+                archivoJugadores.close();
             }
 
             // Modificamos las tarjetas amarillas
@@ -2873,6 +2880,15 @@ namespace logica {
 
                 // Si ocurrió un error detenemos el proceso
                 if (indiceBuscado == error) {
+                    return false;
+                }
+
+                std::fstream archivoJugadores;
+                archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::in | std::ios::out);
+
+                // Verificamos que esté abierto
+                if (!archivoJugadores.is_open()) {
+                    archivo.close();
                     return false;
                 }
 
@@ -2899,6 +2915,14 @@ namespace logica {
 
                 // Escribimos el jugador
                 archivoJugadores.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
+
+                if (archivoJugadores.fail()) {
+                    archivoJugadores.close();
+                    archivo.close();
+                    return false;
+                }
+
+                archivoJugadores.close();
             }
 
             // Modificamos las tarjetas rojas
@@ -2908,6 +2932,15 @@ namespace logica {
 
                 // Si ocurrió un error detenemos el proceso
                 if (indiceBuscado == error) {
+                    return false;
+                }
+
+                std::fstream archivoJugadores;
+                archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::in | std::ios::out);
+
+                // Verificamos que esté abierto
+                if (!archivoJugadores.is_open()) {
+                    archivo.close();
                     return false;
                 }
 
@@ -2934,10 +2967,15 @@ namespace logica {
 
                 // Escribimos el jugador
                 archivoJugadores.write(reinterpret_cast<const char *>(&jugadorAux), sizeof(Jugador));
-            }
 
-            // Cerramos el archivo
-            archivoJugadores.close();
+                if (archivoJugadores.fail()) {
+                    archivoJugadores.close();
+                    archivo.close();
+                    return false;
+                }
+
+                archivoJugadores.close();
+            }
 
             // * 7. Cambiamos el estado del partido a jugado
             std::strncpy(nuevoPartido.estado, estadoPartidos[1], TAMANO_ESTADO); // JUGADO
@@ -2945,22 +2983,22 @@ namespace logica {
 
             // * 8. Escribimos cada equipo en su repectivo archivo
 
-            // Abrimos el archivo de equipos
-            std::fstream archivoEquipos;
-            archivoEquipos.open(NOMBRE_ARCHIVO_EQUIPOS, std::ios::binary | std::ios::in | std::ios::out);
-
-            // Verificamos que el archivo abrió
-            if (!archivo.is_open()) {
-                archivo.close();
-                return false;
-            }
-
             // Buscamos el indice de cada equipo
             int indiceLocal = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal.ID);
             int indiceVisitante = buscarIndicePorID<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante.ID);
 
             // Verificamos que no devuelvan error
             if (indiceLocal == error || indiceVisitante == error) {
+                archivo.close();
+                return false;
+            }
+
+            // Abrimos el archivo de equipos
+            std::fstream archivoEquipos;
+            archivoEquipos.open(NOMBRE_ARCHIVO_EQUIPOS, std::ios::binary | std::ios::in | std::ios::out);
+
+            // Verificamos que el archivo abrió
+            if (!archivoEquipos.is_open()) {
                 archivo.close();
                 return false;
             }
@@ -3001,13 +3039,19 @@ namespace logica {
 
             // cerramos el archivo
             archivoEquipos.close();
+            archivo.close();
 
             // * 9. Guardamos el partido
             int indice = buscarIndicePorID<Partido>(nombreArchivo, nuevoPartido.ID);
 
             // Verificamos que no devuelva error
             if (indice == error) {
-                archivo.close();
+                return false;
+            }
+
+            archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+            // Verificamos que esté abierto
+            if (!archivo.is_open()) {
                 return false;
             }
 
@@ -3028,7 +3072,6 @@ namespace logica {
 
             // Cerramos el archivo
             archivo.close();
-
             return true;
         }
 
@@ -3142,19 +3185,12 @@ namespace logica {
             if (pAux.eliminado) {
                 return false;
             }
+            archivo.close();
 
             // Si está jugado debemos revertir todo
             if (std::strcmp(pAux.estado, estadoPartidos[1]) == 0) {
 
                 // * 1. Buscamos los equipos para revertir las estadisticas
-
-                std::fstream archivoEquipos;
-                archivoEquipos.open(NOMBRE_ARCHIVO_EQUIPOS, std::ios::binary | std::ios::in | std::ios::out);
-
-                // Verificamos que esté abierto
-                if (!archivoEquipos.is_open()) {
-                    return false;
-                }
 
                 Equipo eqLocal, eqVisitante;
 
@@ -3164,6 +3200,14 @@ namespace logica {
 
                 // Verificamos que la lectura de los indices fue correcta
                 if (indiceLocal == error || indiceVisitante == error) {
+                    return false;
+                }
+
+                std::fstream archivoEquipos;
+                archivoEquipos.open(NOMBRE_ARCHIVO_EQUIPOS, std::ios::binary | std::ios::in | std::ios::out);
+
+                // Verificamos que esté abierto
+                if (!archivoEquipos.is_open()) {
                     return false;
                 }
 
@@ -3177,7 +3221,6 @@ namespace logica {
 
                 // Verificamos si falló
                 if (archivoEquipos.fail()) {
-                    archivo.close();
                     archivoEquipos.close();
                     return false;
                 }
@@ -3188,7 +3231,6 @@ namespace logica {
 
                 // Verificamos si falló
                 if (archivoEquipos.fail()) {
-                    archivo.close();
                     archivoEquipos.close();
                     return false;
                 }
@@ -3253,25 +3295,28 @@ namespace logica {
 
                 // * 2. Buscamos los jugadores para revertir estadisticas
 
-                // Abrimos el archivo de jugadores
-                std::fstream archivoJugadores;
-                archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::out | std::ios::in);
-
-                // Verificamos si falló
-                if (archivoJugadores.fail()) {
-                    archivoEquipos.close();
-                    archivo.close();
-                    return false;
-                }
-
                 // Limpiamos los goles y los detalles de cada gol
                 for (int e = 0; e < pAux.numAnotaciones; e++) {
+
+                    if (pAux.anotaciones[e].idJugador == 0) {
+                        continue;
+                    }
 
                     Jugador jugadorAux;
 
                     // Buscamos el índice jugador que realió la anotacion
                     int indiceJugador = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, pAux.anotaciones[e].idJugador);
                     if (indiceJugador == error) {
+                        return false;
+                    }
+
+                    // Abrimos el archivo de jugadores
+                    std::fstream archivoJugadores;
+                    archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::out | std::ios::in);
+
+                    // Verificamos si falló
+                    if (archivoJugadores.fail()) {
+                        archivoEquipos.close();
                         return false;
                     }
 
@@ -3288,7 +3333,6 @@ namespace logica {
                     if (archivoJugadores.fail()) {
                         archivoJugadores.close();
                         archivoEquipos.close();
-                        archivo.close();
                         return false;
                     }
 
@@ -3305,10 +3349,11 @@ namespace logica {
                     if (archivoJugadores.fail()) {
                         archivoJugadores.close();
                         archivoEquipos.close();
-                        archivo.close();
                         return false;
                     }
                     pAux.anotaciones[e] = {0, 0, 0};
+
+                    archivoJugadores.close();
                 }
 
                 pAux.anotacionesLocal = 0;
@@ -3318,11 +3363,25 @@ namespace logica {
                 // Limpiamos las tarjetas amarillas y los detalles de cada tarjeta Amarilla
                 for (int e = 0; e < pAux.numtarjetaAma; e++) {
 
+                    if (pAux.anotaciones[e].idJugador == 0) {
+                        continue;
+                    }
+
                     Jugador jugadorAux;
 
                     // Buscamos el índice jugador que realió la anotacion
                     int indiceJugador = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, pAux.tarjetaA[e].idJugador);
                     if (indiceJugador == error) {
+                        return false;
+                    }
+
+                    // Abrimos el archivo de jugadores
+                    std::fstream archivoJugadores;
+                    archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::out | std::ios::in);
+
+                    // Verificamos si falló
+                    if (archivoJugadores.fail()) {
+                        archivoEquipos.close();
                         return false;
                     }
 
@@ -3339,7 +3398,6 @@ namespace logica {
                     if (archivoJugadores.fail()) {
                         archivoJugadores.close();
                         archivoEquipos.close();
-                        archivo.close();
                         return false;
                     }
 
@@ -3356,10 +3414,11 @@ namespace logica {
                     if (archivoJugadores.fail()) {
                         archivoJugadores.close();
                         archivoEquipos.close();
-                        archivo.close();
                         return false;
                     }
                     pAux.tarjetaA[e] = {0, 0, 0};
+
+                    archivoJugadores.close();
                 }
 
                 pAux.tarjetasAmaLocal = 0;
@@ -3371,9 +3430,23 @@ namespace logica {
 
                     Jugador jugadorAux;
 
+                    if (pAux.anotaciones[e].idJugador == 0) {
+                        continue;
+                    }
+
                     // Buscamos el índice jugador que realió la anotacion
                     int indiceJugador = buscarIndicePorID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, pAux.tarjetaR[e].idJugador);
                     if (indiceJugador == error) {
+                        return false;
+                    }
+
+                    // Abrimos el archivo de jugadores
+                    std::fstream archivoJugadores;
+                    archivoJugadores.open(NOMBRE_ARCHIVO_JUGADORES, std::ios::binary | std::ios::out | std::ios::in);
+
+                    // Verificamos si falló
+                    if (archivoJugadores.fail()) {
+                        archivoEquipos.close();
                         return false;
                     }
 
@@ -3390,7 +3463,6 @@ namespace logica {
                     if (archivoJugadores.fail()) {
                         archivoJugadores.close();
                         archivoEquipos.close();
-                        archivo.close();
                         return false;
                     }
 
@@ -3407,16 +3479,16 @@ namespace logica {
                     if (archivoJugadores.fail()) {
                         archivoJugadores.close();
                         archivoEquipos.close();
-                        archivo.close();
                         return false;
                     }
                     pAux.tarjetaR[e] = {0, 0, 0};
+
+                    archivoJugadores.close();
                 }
 
                 pAux.tarjetasRojasLocal = 0;
                 pAux.tarjetasRojasVisitante = 0;
                 pAux.numTarjetasRojas = 0;
-                archivoJugadores.close();
 
                 // * Sobreescribimos los equipos
 
@@ -3426,7 +3498,6 @@ namespace logica {
 
                 // Verificamos si falló
                 if (archivoEquipos.fail()) {
-                    archivo.close();
                     archivoEquipos.close();
                     return false;
                 }
@@ -3437,7 +3508,6 @@ namespace logica {
 
                 // Verificamos si falló
                 if (archivoEquipos.fail()) {
-                    archivo.close();
                     archivoEquipos.close();
                     return false;
                 }
@@ -3445,17 +3515,18 @@ namespace logica {
                 // Cerramos el archivo
                 archivoEquipos.close();
 
-                archivo.close();
-                return true;
+                archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
 
-                // Si está programado solo lo colocamos como eliminado
-            } else if (std::strcmp(pAux.estado, estadoPartidos[0]) == 0) {
+                // Verificamos que el archivo este abierto
+                if (!archivo.is_open()) {
+                    return false;
+                }
 
                 // Colocamos el partido como cancelado
                 std::strncpy(pAux.estado, estadoPartidos[2], TAMANO_ESTADO);
 
-                // No se si deba eliminarlo
-                // pAux.eliminado =true;
+                pAux.fechaUltimaModificacion = std::time(nullptr);
+                // pAux.eliminado = true;
 
                 // Movemos el puntero de escritura a la posicion
                 archivo.seekp(posicion, std::ios::beg);
@@ -3468,6 +3539,45 @@ namespace logica {
                     archivo.close();
                     return false;
                 }
+
+                archivo.close();
+
+                return true;
+
+                // Si está programado solo lo colocamos como eliminado
+            } else if (std::strcmp(pAux.estado, estadoPartidos[0]) == 0) {
+
+                archivo.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
+
+                // Verificamos que el archivo este abierto
+                if (!archivo.is_open()) {
+                    return false;
+                }
+
+                // Colocamos el partido como cancelado
+                std::strncpy(pAux.estado, estadoPartidos[2], TAMANO_ESTADO);
+
+                // pAux.eliminado = true;
+                pAux.fechaUltimaModificacion = std::time(nullptr);
+
+                // Movemos el puntero de escritura a la posicion
+                archivo.seekp(posicion, std::ios::beg);
+
+                // Sobreescribimos el archivo
+                archivo.write(reinterpret_cast<const char *>(&pAux), sizeof(Partido));
+
+                // Verificamos que no se produjo un error
+                if (archivo.fail()) {
+                    archivo.close();
+                    return false;
+                }
+
+                ArchivoHeader headerPartidos = leerHeader(nombreArchivo);
+                if (headerPartidos.cantidadRegistros == -1) {
+                    return false;
+                }
+                headerPartidos.registrosActivos--;
+                actualizarHeader(nombreArchivo, headerPartidos);
 
                 archivo.close();
                 return true;
@@ -4553,23 +4663,25 @@ namespace presentacion {
                 return;
             }
 
+            /*
             // Si tiene partidos jugados
             if (equipoAux.cantidadPartidos > 0) {
                 std::cout << " ADVERTENCIA: El equipo tiene " << equipoAux.cantidadPartidos << " partidos asociados.\n";
                 std::cout << " No puede ser eliminado hasta que cancele los partidos del equipo\n";
                 auxiliares::pausarPrograma();
                 return;
-            }
+            }*/
 
             // ? ofrecer opcion de cancelar todos los partidos
 
+            /*
             // Si tiene jugadores
             if (equipoAux.numJugadores > 0) {
                 std::cout << " ADVERTENCIA: El equipo tiene " << equipoAux.numJugadores << " jugadores.\n";
                 std::cout << " No puede ser eliminado\n";
                 auxiliares::pausarPrograma();
                 return;
-            }
+            }*/
 
             // ? ofrecer opcion de eliminar todos los jugadores?
 
@@ -5735,7 +5847,7 @@ namespace presentacion {
             }
 
             // Leemos el header del archivo de equipo para saber el numero de reisgtros activos
-            ArchivoHeader headerEquipos = logica::leerHeader(nombreArchivo);
+            ArchivoHeader headerEquipos = logica::leerHeader(NOMBRE_ARCHIVO_EQUIPOS);
 
             // Verificamos que la lectura del header fue correcta
             if (headerEquipos.cantidadRegistros == error) {
@@ -5759,7 +5871,6 @@ namespace presentacion {
             }
 
             // Calculamos el minimo de jugadores en el deporte actual para organizar un partido
-            int minimoDeJugadores = logica::partidos::minJugadoresPorDeporte();
             Partido nuevoPartido;
             bool flagError = false;
             char confirmacion;
@@ -5820,7 +5931,7 @@ namespace presentacion {
             auxiliares::limpiarPantalla();
 
             // Buscamos el equipo local
-            encontrado = logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqLocal, nuevoPartido.idEquipoLocal);
+            encontrado = logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, nuevoPartido.idEquipoLocal);
 
             // Verificamos si fue encontrado
             if (!encontrado) {
@@ -5831,7 +5942,7 @@ namespace presentacion {
             }
 
             // Buscamos el equipo visitante
-            encontrado = logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqVisitante, nuevoPartido.idEquipoVisitante);
+            encontrado = logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante, nuevoPartido.idEquipoVisitante);
 
             // Verificamos si fue encontrado
             if (!encontrado) {
@@ -5841,7 +5952,7 @@ namespace presentacion {
                 return;
             }
 
-
+            /*
             // Si no cumplen con el minimo de jugadores
             if ((eqLocal.numJugadores < minimoDeJugadores) || (eqVisitante.numJugadores < minimoDeJugadores)) {
                 std::cout << "Error no se puede programar un partido.\n";
@@ -5852,7 +5963,7 @@ namespace presentacion {
                 std::cout << "Numero de Jugadores de '" << eqVisitante.nombre << "': " << eqVisitante.numJugadores << std::endl;
                 auxiliares::pausarPrograma();
                 return;
-            }
+            }*/
 
             // Abrimos el archivo de Partidos
             Partido partidoAux;
@@ -5860,7 +5971,7 @@ namespace presentacion {
             archivoPartidos.open(nombreArchivo, std::ios::binary | std::ios::in | std::ios::out);
 
             // Verificamos si abrió el archivo
-            if (archivoPartidos.is_open()) {
+            if (!archivoPartidos.is_open()) {
                 std::cerr << "\n Error del Sistema!\n";
                 std::cout << " Operación Cancelada\n";
                 auxiliares::pausarPrograma();
@@ -5922,7 +6033,7 @@ namespace presentacion {
             auxiliares::limpiarPantalla();
 
             std::cout << "\n";
-            auxiliares::ingresarDatos(confirmacion, "Confirme la programación del partido (S/N): ");
+            auxiliares::ingresarDatos(confirmacion, " Confirme la programación del partido (S/N): ");
             auxiliares::waitfor(750);
             auxiliares::limpiarPantalla();
 
@@ -5937,12 +6048,12 @@ namespace presentacion {
                     std::cout << "                ID Asignado: " << nuevoPartido.ID << std::endl;
                     std::cout << "------------------------------------------------------------------------------\n";
                 } else {
-                    std::cerr << "\nSe produjo un error a la hora de programar el partido.\n";
+                    std::cerr << "\n Se produjo un error a la hora de programar el partido.\n";
                 }
             } else if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'N') {
-                std::cout << "\nLa programación del partido ha sido cancelada.\n";
+                std::cout << "\n La programación del partido ha sido cancelada.\n";
             } else {
-                std::cerr << "\nError: Opción inválida (S/N).\nLa programación del partido ha sido cancelada.";
+                std::cerr << "\n Error: Opción inválida (S/N).\nLa programación del partido ha sido cancelada.";
             }
 
             auxiliares::pausarPrograma();
@@ -5976,49 +6087,6 @@ namespace presentacion {
             if (headerPartidos.cantidadRegistros == error || headerEquipos.registrosActivos == error) {
                 std::cerr << "\n Error del Sistema!\n";
                 std::cout << " Busqueda Cancelada\n";
-                auxiliares::pausarPrograma();
-                return;
-            }
-
-            // Buscamos los equipos
-            Equipo eqLocal, eqVisitante;
-
-            // Buscamos el equipo local
-            encontrado = logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqLocal, partidoAux.idEquipoLocal);
-
-            // Verificamos que fue encontrado
-            if (!encontrado) {
-                std::cerr << "\n Error del Sistema!\n";
-                std::cout << " Operacion Cancelada\n";
-                auxiliares::pausarPrograma();
-                return;
-            }
-
-            // Buscamos el equipo visitante
-            encontrado = logica::buscarRegistrosPorId<Equipo>(nombreArchivo, eqVisitante, partidoAux.idEquipoVisitante);
-
-            // Verificamos que fue encontrado
-            if (!encontrado) {
-                std::cerr << "\n Error del Sistema!\n";
-                std::cout << " Operacion Cancelada\n";
-                auxiliares::pausarPrograma();
-                return;
-            }
-
-            if (eqLocal.cantidadPartidos >= 50 && eqVisitante.cantidadPartidos >= 50) {
-                std::cerr << "\n Error: El equipo local de ID '" << eqLocal.ID << "' y nombre '" << eqLocal.nombre << " ha llegado al maximo de partidos (50) ";
-                std::cerr << "\n Error: El equipo visitante de ID '" << eqVisitante.ID << "' y nombre '" << eqVisitante.nombre << " ha llegado al maximo de partidos (50) ";
-                std::cout << "\n Operacion Cancelada\n";
-                auxiliares::pausarPrograma();
-                return;
-            } else if (eqLocal.cantidadPartidos >= 50) {
-                std::cerr << "\n Error: El equipo local de ID '" << eqLocal.ID << "' y nombre '" << eqLocal.nombre << " ha llegado al maximo de partidos (50) \n";
-                std::cout << " Operacion Cancelada\n";
-                auxiliares::pausarPrograma();
-                return;
-            } else if (eqVisitante.cantidadPartidos >= 50) {
-                std::cerr << "\n Error: El equipo visitante de ID '" << eqVisitante.ID << "' y nombre '" << eqVisitante.nombre << " ha llegado al maximo de partidos (50) \n";
-                std::cout << " Operacion Cancelada\n";
                 auxiliares::pausarPrograma();
                 return;
             }
@@ -6065,6 +6133,49 @@ namespace presentacion {
                 }
 
             } while (flagError);
+
+            // Buscamos los equipos
+            Equipo eqLocal, eqVisitante;
+
+            // Buscamos el equipo local
+            encontrado = logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, partidoAux.idEquipoLocal);
+
+            // Verificamos que fue encontrado
+            if (!encontrado) {
+                std::cerr << "\n Error del Sistema!\n";
+                std::cout << " Operacion Cancelada\n";
+                auxiliares::pausarPrograma();
+                return;
+            }
+
+            // Buscamos el equipo visitante
+            encontrado = logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqVisitante, partidoAux.idEquipoVisitante);
+
+            // Verificamos que fue encontrado
+            if (!encontrado) {
+                std::cerr << "\n Error del Sistema!\n";
+                std::cout << " Operacion Cancelada\n";
+                auxiliares::pausarPrograma();
+                return;
+            }
+
+            if (eqLocal.cantidadPartidos >= 50 && eqVisitante.cantidadPartidos >= 50) {
+                std::cerr << "\n Error: El equipo local de ID '" << eqLocal.ID << "' y nombre '" << eqLocal.nombre << " ha llegado al maximo de partidos (50) ";
+                std::cerr << "\n Error: El equipo visitante de ID '" << eqVisitante.ID << "' y nombre '" << eqVisitante.nombre << " ha llegado al maximo de partidos (50) ";
+                std::cout << "\n Operacion Cancelada\n";
+                auxiliares::pausarPrograma();
+                return;
+            } else if (eqLocal.cantidadPartidos >= 50) {
+                std::cerr << "\n Error: El equipo local de ID '" << eqLocal.ID << "' y nombre '" << eqLocal.nombre << " ha llegado al maximo de partidos (50) \n";
+                std::cout << " Operacion Cancelada\n";
+                auxiliares::pausarPrograma();
+                return;
+            } else if (eqVisitante.cantidadPartidos >= 50) {
+                std::cerr << "\n Error: El equipo visitante de ID '" << eqVisitante.ID << "' y nombre '" << eqVisitante.nombre << " ha llegado al maximo de partidos (50) \n";
+                std::cout << " Operacion Cancelada\n";
+                auxiliares::pausarPrograma();
+                return;
+            }
 
             // Recolectamos las anotaciones del partido
             do {
@@ -6142,10 +6253,10 @@ namespace presentacion {
                     std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
                     std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
                     std::cout << "\n ---------- Detalle de las Anotaciones del Equipo Local ---------- \n";
-                    std::cout << " Anotacion " << e + 1 << "/" << registroPartido.anotacionesLocal;
+                    std::cout << " Anotacion " << e + 1 << "/" << registroPartido.anotacionesLocal << "\n";
 
                     // Pedimos el minuto en el que anotó el gol
-                    if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, "Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
+                    if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, " Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
                                                    validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
                         auxiliares::pausarPrograma();
@@ -6367,12 +6478,12 @@ namespace presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║             REGISTRAR TARJETAS            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
-                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+                std::cout << " Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << " Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo local
                 if (!auxiliares::ingresarDatos(registroPartido.tarjetasRojasLocal, "Número de Tarjetas Rojas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
-                    std::cout << "Operacion Cancelada por el Usuario\n";
+                    std::cout << " Operacion Cancelada por el Usuario\n";
                     auxiliares::pausarPrograma();
                     return;
                 }
@@ -6385,20 +6496,20 @@ namespace presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
-                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+                std::cout << " Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << " Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo Visitante
                 if (!auxiliares::ingresarDatos(registroPartido.tarjetasRojasVisitante,
-                                               "Número de Tarjetas Rojas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
-                    std::cout << "Operacion Cancelada por el Usuario\n";
+                                               " Número de Tarjetas Rojas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << " peracion Cancelada por el Usuario\n";
                     auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Verificamos que sean positivos
                 if (registroPartido.tarjetasRojasLocal < 0 || registroPartido.tarjetasRojasVisitante < 0) {
-                    std::cout << "Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
+                    std::cout << " Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
                     auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
@@ -6409,7 +6520,7 @@ namespace presentacion {
 
                 // Verificamos que el numero de tarjetas Rojas no supere el máximo permitido
                 if (registroPartido.numTarjetasRojas > MAX_TARJETAS_ROJAS) {
-                    std::cout << "Error: El número de tarjetas Rojas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_ROJAS << ").\n";
+                    std::cout << " Error: El número de tarjetas Rojas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_ROJAS << ").\n";
                     auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
@@ -6430,7 +6541,7 @@ namespace presentacion {
 
                     // Pedimos el minuto en el que se produjo la tarjeta roja
                     if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].minuto,
-                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
+                                                   " Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
                         auxiliares::pausarPrograma();
                         return;
@@ -6440,7 +6551,7 @@ namespace presentacion {
                         flagError = false;
                         // Pedimos el ID del jugador que le sacaron la tarjeta roja
                         if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
-                                                       "Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
+                                                       " Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
                             auxiliares::pausarPrograma();
                             return;
@@ -6448,7 +6559,7 @@ namespace presentacion {
 
                         // Si no existe un jugador con ese ID
                         if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaR[e].idJugador)) {
-                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                            std::cerr << "\n Error el ID ingresado no pertenece a ningún jugador\n";
                             flagError = true;
                             auxiliares::pausarPrograma();
                             continue;
@@ -6490,7 +6601,7 @@ namespace presentacion {
                         }
 
                         if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaR[e].idJugador)) {
-                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                            std::cerr << "\n Error el ID ingresado no pertenece a ningún jugador\n";
                             flagError = true;
                             auxiliares::pausarPrograma();
                             continue;
@@ -6510,7 +6621,7 @@ namespace presentacion {
             std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
             std::cout << " " << eqLocal.nombre << " " << registroPartido.anotacionesLocal << "  -  " << registroPartido.anotacionesVisitante << " " << eqVisitante.nombre << "\n\n";
 
-            auxiliares::ingresarDatos(confirmacion, "¿Está seguro de registrar este resultado definitivo? (S/N): ");
+            auxiliares::ingresarDatos(confirmacion, " ¿Está seguro de registrar este resultado definitivo? (S/N): ");
             auxiliares::limpiarPantalla();
 
             if (std::toupper(static_cast<unsigned char>(confirmacion)) == 'S') {
@@ -7015,7 +7126,6 @@ namespace presentacion {
         void cancelarPartido(const char *nombreArchivo) {
             auxiliares::limpiarPantalla();
 
-
             int idPartido = -1;
             bool cancelado = false;
             char confirmacion;
@@ -7024,7 +7134,7 @@ namespace presentacion {
             bool existe = false;
             bool flagError = false;
 
-
+            // Pedimos  id
             do {
                 flagError = false;
                 auxiliares::limpiarPantalla();
@@ -7045,7 +7155,6 @@ namespace presentacion {
                 auxiliares::waitfor(1200);
                 auxiliares::limpiarPantalla();
 
-
                 // Buscamos el Partido para mostrar los datos de ese partido antes de eliminarlo
                 existe = logica::buscarRegistrosPorId<Partido>(nombreArchivo, partidoAuxiliar, idPartido);
 
@@ -7060,7 +7169,7 @@ namespace presentacion {
 
 
             // Buscamos el equipo local
-            existe = logica::buscarRegistrosPorId(nombreArchivo, eqLocal, partidoAuxiliar.idEquipoLocal);
+            existe = logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, partidoAuxiliar.idEquipoLocal);
 
             // Verificamos si existe
             if (!existe) {
@@ -7070,7 +7179,7 @@ namespace presentacion {
             }
 
             // Buscamos el equipo visitante
-            existe = logica::buscarRegistrosPorId(nombreArchivo, eqLocal, partidoAuxiliar.idEquipoLocal);
+            existe = logica::buscarRegistrosPorId<Equipo>(NOMBRE_ARCHIVO_EQUIPOS, eqLocal, partidoAuxiliar.idEquipoLocal);
 
             // Verificamos si existe
             if (!existe) {
@@ -7451,14 +7560,14 @@ namespace presentacion {
             std::cout << "\n╔════════════════════════════════════════════════════════════════════════╗\n";
             std::cout << "║                      FICHA TÉCNICA DEL PARTIDO                         ║\n";
             std::cout << "╠════════════════════════════════════════════════════════════════════════╣\n";
-            std::cout << "║ Torneo: " << std::left << std::setw(60) << torneo.nombre << " ║\n";
-            std::cout << "║ Partido ID: " << std::left << std::setw(8) << partidoBuscado.ID << " Fecha: " << std::left << std::setw(12) << partidoBuscado.fecha
-                      << " Estado: " << std::left << std::setw(10) << partidoBuscado.estado << " ║\n";
+            std::cout << "║ Torneo: " << std::left << std::setw(60) << torneo.nombre << "   ║\n";
+            std::cout << "║ Partido ID: " << std::left << std::setw(10) << partidoBuscado.ID << " Fecha: " << std::left << std::setw(14) << partidoBuscado.fecha
+                      << " Estado: " << std::left << std::setw(12) << partidoBuscado.estado << "    ║\n";
             std::cout << "╠════════════════════════════════════════════════════════════════════════╣\n";
             std::cout << "║ " << std::left << std::setw(28) << eqLocal.nombre << std::right << std::setw(3) << partidoBuscado.anotacionesLocal << "  -  " << std::setw(3)
                       << partidoBuscado.anotacionesVisitante << "   " << std::left << std::setw(28) << eqVisitante.nombre << " ║\n";
             std::cout << "╠════════════════════════════════════════════════════════════════════════╣\n";
-            std::cout << "║ Notas: " << std::left << std::setw(66) << partidoBuscado.descripcion << " ║\n";
+            std::cout << "║ Notas: " << std::left << std::setw(63) << partidoBuscado.descripcion << " ║\n";
             std::cout << "╠════════════════════════════════════════════════════════════════════════╣\n";
             std::cout << "║ GOLES:                                                                 ║\n";
             if (partidoBuscado.numAnotaciones <= 0) {
@@ -7475,8 +7584,8 @@ namespace presentacion {
                         }
                     }
                     std::string etiqueta = "[" + std::string(anotacion.equipo) + "]";
-                    std::cout << "║  " << std::left << std::setw(10) << etiqueta << " Min. " << std::right << std::setw(3) << anotacion.minuto << " - " << std::left
-                              << std::setw(45) << nombreJugador << " ║\n";
+                    std::cout << "║  " << std::left << std::setw(12) << etiqueta << " Min. " << std::right << std::setw(3) << anotacion.minuto << " - " << std::left
+                              << std::setw(45) << nombreJugador << "║\n";
                 }
             }
             std::cout << "╠════════════════════════════════════════════════════════════════════════╣\n";
@@ -7495,7 +7604,7 @@ namespace presentacion {
                     }
                     std::string etiqueta = "[" + std::string(tarjetaAma.equipo) + "]";
                     std::cout << "║  " << std::left << std::setw(10) << etiqueta << " Min. " << std::right << std::setw(3) << tarjetaAma.minuto << " - " << std::left
-                              << std::setw(45) << nombreJugador << " ║\n";
+                              << std::setw(44) << nombreJugador << "║\n";
                 }
             }
             std::cout << "╠════════════════════════════════════════════════════════════════════════╣\n";
@@ -7514,7 +7623,7 @@ namespace presentacion {
                     }
                     std::string etiqueta = "[" + std::string(tarjetaRoja.equipo) + "]";
                     std::cout << "║  " << std::left << std::setw(10) << etiqueta << " Min. " << std::right << std::setw(3) << tarjetaRoja.minuto << " - " << std::left
-                              << std::setw(45) << nombreJugador << " ║\n";
+                              << std::setw(44) << nombreJugador << "║\n";
                 }
             }
             std::cout << "╚════════════════════════════════════════════════════════════════════════╝\n\n";
@@ -7986,6 +8095,97 @@ int main() {
     int opcionMenuBusq = -1; // declaramos en -1 para evitar que coincida con una de las opciones
     int opcionMenuListar = -1;
     char confirmacion;
+
+    /*
+    // Calcular tamaño
+    std::ifstream archivoPrueba;
+    archivoPrueba.open(NOMBRE_ARCHIVO_EQUIPOS);
+    if (!archivoPrueba.is_open()) {
+        return 1;
+    }
+    archivoPrueba.seekg(0, std::ios::end);
+    std::streampos posicion = archivoPrueba.tellg();
+    std::cout << "Tamano archivo equipos original: " << posicion << std::endl;
+    archivoPrueba.close();
+
+    // Calcular tamaño
+    archivoPrueba;
+    archivoPrueba.open(RUTA_BACKUPS + "backup_2026-07-17_08-33/" + "equipos.bin");
+    if (!archivoPrueba.is_open()) {
+        return 1;
+    }
+    archivoPrueba.seekg(0, std::ios::end);
+    posicion = archivoPrueba.tellg();
+    std::cout << "Tamano archivo equipos backup: " << posicion << std::endl;
+    archivoPrueba.close();
+
+    // Calcular tamaño
+    archivoPrueba;
+    archivoPrueba.open(NOMBRE_ARCHIVO_JUGADORES);
+    if (!archivoPrueba.is_open()) {
+        return 1;
+    }
+    archivoPrueba.seekg(0, std::ios::end);
+    posicion = archivoPrueba.tellg();
+    std::cout << "Tamano archivo jugadores original: " << posicion << std::endl;
+    archivoPrueba.close();
+
+    // Calcular tamaño
+    archivoPrueba;
+    archivoPrueba.open(RUTA_BACKUPS + "backup_2026-07-17_08-33/" + "jugadores.bin");
+    if (!archivoPrueba.is_open()) {
+        return 1;
+    }
+    archivoPrueba.seekg(0, std::ios::end);
+    posicion = archivoPrueba.tellg();
+    std::cout << "Tamano archivo jugadores backup: " << posicion << std::endl;
+    archivoPrueba.close();
+
+    // Calcular tamaño
+    archivoPrueba;
+    archivoPrueba.open(NOMBRE_ARCHIVO_PARTIDOS);
+    if (!archivoPrueba.is_open()) {
+        return 1;
+    }
+    archivoPrueba.seekg(0, std::ios::end);
+    posicion = archivoPrueba.tellg();
+    std::cout << "Tamano archivo partidos original: " << posicion << std::endl;
+    archivoPrueba.close();
+
+    // Calcular tamaño
+    archivoPrueba;
+    archivoPrueba.open(RUTA_BACKUPS + "backup_2026-07-17_08-33/" + "partidos.bin");
+    if (!archivoPrueba.is_open()) {
+        return 1;
+    }
+    archivoPrueba.seekg(0, std::ios::end);
+    posicion = archivoPrueba.tellg();
+    std::cout << "Tamano archivo partidos backup: " << posicion << std::endl;
+    archivoPrueba.close();
+
+    // Calcular tamaño
+    archivoPrueba;
+    archivoPrueba.open(NOMBRE_ARCHIVO_TORNEO);
+    if (!archivoPrueba.is_open()) {
+        return 1;
+    }
+    archivoPrueba.seekg(0, std::ios::end);
+    posicion = archivoPrueba.tellg();
+    std::cout << "Tamano archivo torneo original: " << posicion << std::endl;
+    archivoPrueba.close();
+
+    // Calcular tamaño
+    archivoPrueba;
+    archivoPrueba.open(RUTA_BACKUPS + "backup_2026-07-17_08-33/" + "torneo.bin");
+    if (!archivoPrueba.is_open()) {
+        return 1;
+    }
+    archivoPrueba.seekg(0, std::ios::end);
+    posicion = archivoPrueba.tellg();
+    std::cout << "Tamano archivo torneo backup: " << posicion << std::endl;
+    archivoPrueba.close();
+
+    return 0;*/
 
     // Inicio del Programa
     presentacion::menu::datosInicialesTorneo();
