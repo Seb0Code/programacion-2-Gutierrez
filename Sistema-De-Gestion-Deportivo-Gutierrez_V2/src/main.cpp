@@ -551,6 +551,14 @@ namespace validadores {
         return true;
     }
 
+    bool IDvalidoParaAutogol(const int id, char *mensajeError) {
+        if (id < 0) {
+            std::strncpy(mensajeError, "Error: El ID no puede ser negativo", TAMANO_MENSAJE_ERROR);
+            return false;
+        }
+        return true;
+    }
+
     bool validarEdad(const int edad, char *mensajeError) {
         // la edad no puede ser negativa ni igual a 0, tampoco puede ser mayor a 120
         if (edad < 14 || edad > 50) {
@@ -2880,6 +2888,7 @@ namespace logica {
 
                 // Si ocurrió un error detenemos el proceso
                 if (indiceBuscado == error) {
+                    archivo.close();
                     return false;
                 }
 
@@ -2932,6 +2941,7 @@ namespace logica {
 
                 // Si ocurrió un error detenemos el proceso
                 if (indiceBuscado == error) {
+                    archivo.close();
                     return false;
                 }
 
@@ -3138,9 +3148,6 @@ namespace logica {
             return cantidadDeRegistrosEncontrados;
         }
 
-        // Cancela un partido: cambia estado a "CANCELADO"
-        // Si el partido ya fue JUGADO, revierte las estadísticas de ambos equipos
-        // Retorna true si se canceló, false si no existe o ya estaba cancelado
         bool cancelarPartido(const char *nombreArchivo, const int idPartido) {
             int error = -1;
 
@@ -6113,9 +6120,9 @@ namespace presentacion {
                 std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
 
-                if (!auxiliares::ingresarDatos(registroPartido.ID, "Ingrese el ID del partido a registrar (ingrese 'cancelar' para cancelar): ", &cancelado,
+                if (!auxiliares::ingresarDatos(registroPartido.ID, " Ingrese el ID del partido a registrar (ingrese 'cancelar' para cancelar): ", &cancelado,
                                                validadores::IDvalido)) {
-                    std::cout << "\nOperacion Cancelada por el Usuario\n";
+                    std::cout << "\n Operacion Cancelada por el Usuario\n";
                     auxiliares::pausarPrograma();
                     return;
                 }
@@ -6252,7 +6259,7 @@ namespace presentacion {
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
                     std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                    std::cout << "\n ---------- Detalle de las Anotaciones del Equipo Local ---------- \n";
+                    std::cout << "\n ---------- Detalle de las Anotaciones del Equipo Local (" << eqLocal.nombre << ") ---------- \n";
                     std::cout << " Anotacion " << e + 1 << "/" << registroPartido.anotacionesLocal << "\n";
 
                     // Pedimos el minuto en el que anotó el gol
@@ -6263,25 +6270,43 @@ namespace presentacion {
                         return;
                     }
 
+                    int idJugador = 0;
                     do {
+                        idJugador = 0;
+
                         flagError = false;
                         // Pedimos el ID del jugador que anotó el gol
-                        if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].idJugador,
-                                                       "Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(idJugador, " Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                       validadores::IDvalidoParaAutogol)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
                             auxiliares::pausarPrograma();
                             return;
                         }
 
-                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.anotaciones[e].idJugador)) {
-                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
-                            flagError = true;
-                            auxiliares::pausarPrograma();
-                            continue;
+                        // Si el id de l jugador no es de autogol
+                        if (idJugador != 0) {
+                            // Verificamos si el id
+                            if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, idJugador)) {
+                                std::cerr << "\n Error el ID ingresado no pertenece a ningún jugador \n";
+                                flagError = true;
+                                auxiliares::pausarPrograma();
+                                continue;
+                            }
+
+                            Jugador jugadorAux;
+                            logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, idJugador);
+
+                            if (jugadorAux.idEquipo != eqLocal.ID) {
+                                std::cerr << "\n Error: El jugador '" << jugadorAux.nombre << "' de ID '" << idJugador << "' no pertenece a el equipo local (" << eqLocal.nombre
+                                          << ") \n";
+                                flagError = true;
+                                auxiliares::pausarPrograma();
+                                continue;
+                            }
                         }
 
                     } while (flagError);
-
+                    registroPartido.anotaciones[e].idJugador = idJugador;
                     std::strncpy(registroPartido.anotaciones[e].equipo, "LOCAL", TAMANO_LOCAL_O_VISITANTE);
                 }
 
@@ -6293,36 +6318,54 @@ namespace presentacion {
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR RESULTADO            ║\n";
                     std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                    std::cout << "\n ---------- Detalle de las Anotaciones del Equipo Visitante ---------- \n";
+                    std::cout << "\n ---------- Detalle de las Anotaciones del Equipo Visitante (" << eqVisitante.nombre << ") ---------- \n";
                     std::cout << " Anotacion " << (e - registroPartido.anotacionesLocal) + 1 << "/" << registroPartido.anotacionesVisitante;
 
                     // Pedimos el minuto en el que anotó el gol
-                    if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, "Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
+                    if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].minuto, " Ingrese el minuto en el que se anotó (ingrese 'cancelar' para cancelar): ", &cancelado,
                                                    validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
                         auxiliares::pausarPrograma();
                         return;
                     }
 
+                    int idJugador = 0;
+
                     do {
+                        idJugador = 0;
                         flagError = false;
                         // Pedimos el ID del jugador que anotó el gol
                         if (!auxiliares::ingresarDatos(registroPartido.anotaciones[e].idJugador,
-                                                       "Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
+                                                       " Ingrese el ID del jugador que anotó (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalidoParaAutogol)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
                             auxiliares::pausarPrograma();
                             return;
                         }
 
-                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.anotaciones[e].idJugador)) {
-                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
-                            flagError = true;
-                            auxiliares::pausarPrograma();
-                            continue;
+                        // Si el id de l jugador no es de autogol
+                        if (idJugador != 0) {
+                            // Verificamos si el id excisste
+                            if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, idJugador)) {
+                                std::cerr << "\n Error el ID ingresado no pertenece a ningún jugador \n";
+                                flagError = true;
+                                auxiliares::pausarPrograma();
+                                continue;
+                            }
+
+                            Jugador jugadorAux;
+                            logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, idJugador);
+
+                            if (jugadorAux.idEquipo != eqVisitante.ID) {
+                                std::cerr << "\n Error: El jugador '" << jugadorAux.nombre << "' de ID '" << idJugador << "' no pertenece a el equipo Visitante ("
+                                          << eqVisitante.nombre << ") \n";
+                                flagError = true;
+                                auxiliares::pausarPrograma();
+                                continue;
+                            }
                         }
 
                     } while (flagError);
-
+                    registroPartido.anotaciones[e].idJugador = idJugador;
                     std::strncpy(registroPartido.anotaciones[e].equipo, "VISITANTE", TAMANO_LOCAL_O_VISITANTE);
                 }
 
@@ -6335,13 +6378,13 @@ namespace presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║             REGISTRAR TARJETAS            ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
-                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+                std::cout << " Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << " Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo local
                 if (!auxiliares::ingresarDatos(registroPartido.tarjetasAmaLocal,
-                                               "Número de Tarjetas Amarillas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
-                    std::cout << "Operacion Cancelada por el Usuario\n";
+                                               " Número de Tarjetas Amarillas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << " Operacion Cancelada por el Usuario\n";
                     auxiliares::pausarPrograma();
                     return;
                 }
@@ -6354,24 +6397,23 @@ namespace presentacion {
                 std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                 std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
                 std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                std::cout << "Deporte Actual del Torneo: " << torneo.deporte << "\n";
-                std::cout << "Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
+                std::cout << " Deporte Actual del Torneo: " << torneo.deporte << "\n";
+                std::cout << " Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo Visitante
                 if (!auxiliares::ingresarDatos(registroPartido.tarjetasAmaVisitante,
-                                               "Número de Tarjetas Amarillas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
-                    std::cout << "Operacion Cancelada por el Usuario\n";
+                                               " Número de Tarjetas Amarillas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                    std::cout << " Operacion Cancelada por el Usuario\n";
                     auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Verificamos que sean positivos
                 if (registroPartido.tarjetasAmaLocal < 0 || registroPartido.tarjetasAmaVisitante < 0) {
-                    std::cout << "Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
+                    std::cerr << " Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
                     auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
-                    // Validamos el empate
                 }
 
                 // Obtenemos el numero de tarjetas Amarillas totales
@@ -6379,7 +6421,7 @@ namespace presentacion {
 
                 // Verificamos que el numero de TARJETAS amarillas no supere el máximo permitido
                 if (registroPartido.numtarjetaAma > MAX_TARJETAS_AMARILLAS) {
-                    std::cout << "Error: El número de tarjetas Amarillas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_AMARILLAS << ").\n";
+                    std::cerr << " Error: El número de tarjetas Amarillas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_AMARILLAS << ").\n";
                     auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
@@ -6395,29 +6437,43 @@ namespace presentacion {
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
                     std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                    std::cout << "\n ---------- Detalle de las Tarjetas Amarillas del Equipo Local ---------- \n";
+                    std::cout << "\n ---------- Detalle de las Tarjetas Amarillas del Equipo Local (" << eqLocal.nombre << ") ---------- \n";
                     std::cout << " Tarjeta A " << e + 1 << "/" << registroPartido.tarjetasAmaLocal;
 
                     // Pedimos el minuto en el que anotó el gol
                     if (!auxiliares::ingresarDatos(registroPartido.tarjetaA[e].minuto,
-                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
+                                                   " Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
                         auxiliares::pausarPrograma();
                         return;
                     }
 
+
+                    int idJugador = 0;
                     do {
+                        idJugador = 0;
                         flagError = false;
                         // Pedimos el ID del jugador que le sacaron la tarjeta amarilla
-                        if (!auxiliares::ingresarDatos(registroPartido.tarjetaA[e].idJugador,
-                                                       "Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(idJugador, " Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                       validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
                             auxiliares::pausarPrograma();
                             return;
                         }
 
-                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaA[e].idJugador)) {
-                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, idJugador)) {
+                            std::cerr << "\n Error el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                        Jugador jugadorAux;
+                        logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, idJugador);
+
+                        if (jugadorAux.idEquipo != eqLocal.ID) {
+                            std::cerr << "\n Error: El jugador '" << jugadorAux.nombre << "' de ID '" << idJugador << "' no pertenece a el equipo local (" << eqLocal.nombre
+                                      << ") \n";
                             flagError = true;
                             auxiliares::pausarPrograma();
                             continue;
@@ -6425,6 +6481,7 @@ namespace presentacion {
 
                     } while (flagError);
 
+                    registroPartido.tarjetaA[e].idJugador = idJugador;
                     std::strncpy(registroPartido.tarjetaA[e].equipo, "LOCAL", TAMANO_LOCAL_O_VISITANTE);
                 }
 
@@ -6436,36 +6493,49 @@ namespace presentacion {
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
                     std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                    std::cout << "\n ---------- Detalle de las Tarjetas Amarillas del Equipo Visitante ---------- \n";
+                    std::cout << "\n ---------- Detalle de las Tarjetas Amarillas del Equipo Visitante (" << eqVisitante.nombre << ") ---------- \n";
                     std::cout << " Tarjeta A " << (e - registroPartido.tarjetasAmaLocal) + 1 << "/" << registroPartido.tarjetasAmaVisitante;
 
                     // Pedimos el minuto en el que anotó el gol
                     if (!auxiliares::ingresarDatos(registroPartido.tarjetaA[e].minuto,
-                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
+                                                   " Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
                         auxiliares::pausarPrograma();
                         return;
                     }
 
+                    int idJugador = 0;
                     do {
+                        idJugador = 0;
                         flagError = false;
                         // Pedimos el ID del jugador que tiene tarjeta amarilla
-                        if (!auxiliares::ingresarDatos(registroPartido.tarjetaA[e].idJugador,
-                                                       "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(idJugador, " Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                       validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
                             auxiliares::pausarPrograma();
                             return;
                         }
 
-                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaA[e].idJugador)) {
-                            std::cerr << "\nError el ID ingresado no pertenece a ningún jugador\n";
+                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, idJugador)) {
+                            std::cerr << "\n Error el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                        Jugador jugadorAux;
+                        logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, idJugador);
+
+                        if (jugadorAux.idEquipo != eqVisitante.ID) {
+                            std::cerr << "\n Error: El jugador '" << jugadorAux.nombre << "' de ID '" << idJugador << "' no pertenece a el equipo Visitante (" << eqVisitante.nombre
+                                      << ") \n";
                             flagError = true;
                             auxiliares::pausarPrograma();
                             continue;
                         }
 
                     } while (flagError);
-
+                    registroPartido.tarjetaA[e].idJugador = idJugador;
                     std::strncpy(registroPartido.tarjetaA[e].equipo, "VISITANTE", TAMANO_LOCAL_O_VISITANTE);
                 }
 
@@ -6482,7 +6552,7 @@ namespace presentacion {
                 std::cout << " Partido: " << eqLocal.nombre << " VS " << eqVisitante.nombre << "\n\n";
 
                 // Pedimos las del equipo local
-                if (!auxiliares::ingresarDatos(registroPartido.tarjetasRojasLocal, "Número de Tarjetas Rojas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
+                if (!auxiliares::ingresarDatos(registroPartido.tarjetasRojasLocal, " Número de Tarjetas Rojas del Equipo Local (ingrese 'cancelar' para cancelar): ", &cancelado)) {
                     std::cout << " Operacion Cancelada por el Usuario\n";
                     auxiliares::pausarPrograma();
                     return;
@@ -6502,14 +6572,14 @@ namespace presentacion {
                 // Pedimos las del equipo Visitante
                 if (!auxiliares::ingresarDatos(registroPartido.tarjetasRojasVisitante,
                                                " Número de Tarjetas Rojas del Equipo Visitante (ingrese 'cancelar' para cancelar): ", &cancelado)) {
-                    std::cout << " peracion Cancelada por el Usuario\n";
+                    std::cout << " Operacion Cancelada por el Usuario\n";
                     auxiliares::pausarPrograma();
                     return;
                 }
 
                 // Verificamos que sean positivos
                 if (registroPartido.tarjetasRojasLocal < 0 || registroPartido.tarjetasRojasVisitante < 0) {
-                    std::cout << " Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
+                    std::cerr << " Error: El número de tarjetas amarillas no puede ser un valor negativo.\n";
                     auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
@@ -6520,7 +6590,7 @@ namespace presentacion {
 
                 // Verificamos que el numero de tarjetas Rojas no supere el máximo permitido
                 if (registroPartido.numTarjetasRojas > MAX_TARJETAS_ROJAS) {
-                    std::cout << " Error: El número de tarjetas Rojas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_ROJAS << ").\n";
+                    std::cerr << " Error: El número de tarjetas Rojas no puede ser mayor al maximo permitido (" << MAX_TARJETAS_ROJAS << ").\n";
                     auxiliares::waitfor(2000);
                     flagError = true;
                     continue;
@@ -6536,7 +6606,7 @@ namespace presentacion {
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
                     std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                    std::cout << "\n ---------- Detalle de las Tarjetas Rojas del Equipo Local ---------- \n";
+                    std::cout << "\n ---------- Detalle de las Tarjetas Rojas del Equipo Local (" << eqLocal.nombre << ") ---------- \n";
                     std::cout << " Tarjeta R " << e + 1 << "/" << registroPartido.tarjetasRojasLocal;
 
                     // Pedimos el minuto en el que se produjo la tarjeta roja
@@ -6547,19 +6617,32 @@ namespace presentacion {
                         return;
                     }
 
+                    int idJugador = 0;
                     do {
+                        idJugador = 0;
                         flagError = false;
                         // Pedimos el ID del jugador que le sacaron la tarjeta roja
-                        if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
-                                                       " Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(idJugador, " Ingrese el ID del jugador que tiene tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                       validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
                             auxiliares::pausarPrograma();
                             return;
                         }
 
                         // Si no existe un jugador con ese ID
-                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaR[e].idJugador)) {
+                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, idJugador)) {
                             std::cerr << "\n Error el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                        Jugador jugadorAux;
+                        logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, idJugador);
+
+                        if (jugadorAux.idEquipo != eqLocal.ID) {
+                            std::cerr << "\n Error: El jugador '" << jugadorAux.nombre << "' de ID '" << idJugador << "' no pertenece a el equipo local (" << eqLocal.nombre
+                                      << ") \n";
                             flagError = true;
                             auxiliares::pausarPrograma();
                             continue;
@@ -6567,10 +6650,11 @@ namespace presentacion {
 
                     } while (flagError);
 
+                    registroPartido.tarjetaR[e].idJugador = idJugador;
                     std::strncpy(registroPartido.tarjetaR[e].equipo, "LOCAL", TAMANO_LOCAL_O_VISITANTE);
                 }
 
-                // Registramos las tarjetas amarillas del visitante
+                // Registramos las tarjetas rojas del visitante
                 for (int e = registroPartido.tarjetasRojasLocal; e < registroPartido.numTarjetasRojas; e++) {
                     auxiliares::waitfor(300);
                     auxiliares::limpiarPantalla();
@@ -6579,29 +6663,42 @@ namespace presentacion {
                     std::cout << "\n       ╔═══════════════════════════════════════════╗\n";
                     std::cout << "       ║            REGISTRAR TARJETAS             ║\n";
                     std::cout << "       ╚═══════════════════════════════════════════╝\n\n";
-                    std::cout << "\n ---------- Detalle de las Tarjetas Amarillas del Equipo Visitante ---------- \n";
-                    std::cout << " Tarjeta A " << (e - registroPartido.tarjetasRojasLocal) + 1 << "/" << registroPartido.tarjetasRojasVisitante;
+                    std::cout << "\n ---------- Detalle de las Tarjetas Rojas del Equipo Visitante (" << eqVisitante.nombre << ") ---------- \n";
+                    std::cout << " Tarjeta R " << (e - registroPartido.tarjetasRojasLocal) + 1 << "/" << registroPartido.tarjetasRojasVisitante;
 
                     // Pedimos el minuto el que le sacaron la tarjeta roja
                     if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].minuto,
-                                                   "Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
+                                                   " Ingrese el minuto en el que se produjo la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::minuto)) {
                         std::cout << " Operación Cancelada por el Usuario\n";
                         auxiliares::pausarPrograma();
                         return;
                     }
 
+                    int idJugador = 0;
                     do {
+                        idJugador = 0;
                         flagError = false;
                         // Pedimos el ID del jugador que le sacaron la tarjeta Roja
-                        if (!auxiliares::ingresarDatos(registroPartido.tarjetaR[e].idJugador,
-                                                       "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado, validadores::IDvalido)) {
+                        if (!auxiliares::ingresarDatos(idJugador, "Ingrese el ID del jugador que tiene la tarjeta (ingrese 'cancelar' para cancelar): ", &cancelado,
+                                                       validadores::IDvalido)) {
                             std::cout << " Operación Cancelada por el Usuario\n";
                             auxiliares::pausarPrograma();
                             return;
                         }
 
-                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, registroPartido.tarjetaR[e].idJugador)) {
+                        if (!logica::existeID<Jugador>(NOMBRE_ARCHIVO_JUGADORES, idJugador)) {
                             std::cerr << "\n Error el ID ingresado no pertenece a ningún jugador\n";
+                            flagError = true;
+                            auxiliares::pausarPrograma();
+                            continue;
+                        }
+
+                        Jugador jugadorAux;
+                        logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, idJugador);
+
+                        if (jugadorAux.idEquipo != eqVisitante.ID) {
+                            std::cerr << "\n Error: El jugador '" << jugadorAux.nombre << "' de ID '" << idJugador << "' no pertenece a el equipo Visitante (" << eqVisitante.nombre
+                                      << ") \n";
                             flagError = true;
                             auxiliares::pausarPrograma();
                             continue;
@@ -6609,6 +6706,7 @@ namespace presentacion {
 
                     } while (flagError);
 
+                    registroPartido.tarjetaR[e].idJugador = idJugador;
                     std::strncpy(registroPartido.tarjetaR[e].equipo, "VISITANTE", TAMANO_LOCAL_O_VISITANTE);
                 }
 
@@ -7582,8 +7680,11 @@ namespace presentacion {
                     if (anotacion.idJugador > 0) {
                         Jugador jugadorAux;
                         if (logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, anotacion.idJugador)) {
-                            std::strncpy(nombreJugador, jugadorAux.nombre, TAMANO_NOMBRE);
+                            std::strncpy(nombreJugador, jugadorAux.nombre, TAMANO_NOMBRE - 1);
+                            nombreJugador[TAMANO_NOMBRE - 1] = '\0';
                         }
+                    } else if (anotacion.idJugador == 0) {
+                        std::strncpy(nombreJugador, "AUTOGOL", TAMANO_NOMBRE);
                     }
                     std::string etiqueta = "[" + std::string(anotacion.equipo) + "]";
                     std::cout << "║  " << std::left << std::setw(12) << etiqueta << " Min. " << std::right << std::setw(3) << anotacion.minuto << " - " << std::left
@@ -7601,7 +7702,8 @@ namespace presentacion {
                     if (tarjetaAma.idJugador > 0) {
                         Jugador jugadorAux;
                         if (logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, tarjetaAma.idJugador)) {
-                            std::strncpy(nombreJugador, jugadorAux.nombre, TAMANO_NOMBRE);
+                            std::strncpy(nombreJugador, jugadorAux.nombre, TAMANO_NOMBRE - 1);
+                            nombreJugador[TAMANO_NOMBRE - 1] = '\0';
                         }
                     }
                     std::string etiqueta = "[" + std::string(tarjetaAma.equipo) + "]";
@@ -7620,7 +7722,8 @@ namespace presentacion {
                     if (tarjetaRoja.idJugador > 0) {
                         Jugador jugadorAux;
                         if (logica::buscarRegistrosPorId<Jugador>(NOMBRE_ARCHIVO_JUGADORES, jugadorAux, tarjetaRoja.idJugador)) {
-                            std::strncpy(nombreJugador, jugadorAux.nombre, TAMANO_NOMBRE);
+                            std::strncpy(nombreJugador, jugadorAux.nombre, TAMANO_NOMBRE - 1);
+                            nombreJugador[TAMANO_NOMBRE - 1] = '\0';
                         }
                     }
                     std::string etiqueta = "[" + std::string(tarjetaRoja.equipo) + "]";
