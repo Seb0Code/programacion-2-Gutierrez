@@ -3,6 +3,8 @@
 
 /**
  * @brief Contiene funciones que formatean o afectan la salida de mensajes en consola.
+ * Contiene funciones auxiliares del programa que no inciden en su logica pero que facilitan
+ * algunas acciones.
  */
 class Formatos {
 
@@ -27,6 +29,27 @@ class Formatos {
      * @brief Pausa el programa hasta que el usuario ingrese un enter por consola.
      */
     static void pausarPrograma();
+
+    /**
+     * @brief Configura el idioma de la salida de la consola a UTF-8 àra permitir acentos y carácteres especiales.
+     */
+    static void configurarIdioma();
+
+    /**
+     * @brief Transforma la cadena a mayusculas y devuelve la cadena
+     * @param texto Cadena de texto a evaluar.
+     * @return Devuelve la cadena convertida en mayusculas.
+     * @pre El parámetro texto no debe estar vacio.
+     */
+    static char *convertirCadenaAMayus(char *texto);
+
+    /**
+     * @brief Transforma la cadena a minusculas y devuelve la cadena
+     * @param texto Cadena de texto a evaluar.
+     * @return Devuelve la cadena convertida en minusculas.
+     * @pre El parámetro texto no debe estar vacio.
+     */
+    static char *convertirCadenaAMinus(char *texto);
 };
 
 #endif

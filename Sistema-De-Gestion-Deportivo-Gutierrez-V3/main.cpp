@@ -28,12 +28,7 @@ namespace fs = std::filesystem;
 //   2. STRUCTS                                //
 // ============================================//
 
-struct ArchivoHeader {
-    int cantidadRegistros; // Total histórico (incluyendo eliminados lógicamente) // 0
-    int proximoID;         // Siguiente ID a asignar (autoincremental)  // 1
-    int registrosActivos;  // Registros con eliminado == false  // 0
-    int version;           // Control de versión del archivo (iniciar en 1) // 1
-};
+
 
 struct Jugador {
     // Datos básicos

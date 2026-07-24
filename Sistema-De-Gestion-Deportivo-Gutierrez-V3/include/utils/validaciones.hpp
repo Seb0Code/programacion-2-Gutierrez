@@ -6,8 +6,7 @@
 /**
  * @brief Gestor de Validaciones Generales.
  * * Proporciona métodos estáticos/útiles para validar la entrada de datos en el sistema.
- * La mayoría de las funciones devuelven true si la validación es exitosa y false si no lo es,
- * enviando mensajes explicativos mediante parámetros de salida cuando aplica.
+ * Las funciones devuelven true si la validación es exitosa y false si no lo es.
  */
 class GestorDeValidaciones {
 

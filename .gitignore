@@ -1,4 +1,17 @@
-*.exe
+# Compilación y ejecutables
 *.o
 *.obj
+*.exe
+*.out
+*.app
+Makefile.out
+bin/
+build/
+
+# Archivos de datos locales creados durante pruebas
+# datos/*.bin
+
+# VS Code y entorno local
 .vscode/
+.DS_Store
+Thumbs.db
