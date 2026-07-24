@@ -1,0 +1,38 @@
+Sistema-De-Gestion-Deportivo-V3/
+│
+├── data/                       # Archivos .bin (torneo.bin, equipos.bin, etc.)
+│
+├── include/                    # Encabezados (.hpp)
+│   ├── models/                 # Clases Entidad pura (Atributos privados + getters/setters)
+│   │   ├── Torneo.hpp
+│   │   ├── Equipo.hpp
+│   │   ├── Jugador.hpp
+│   │   ├── Partido.hpp
+│   │   └── Gol.hpp
+│   │
+│   ├── persistence/            # Manejo de archivos binarios y templates
+│   │   └── GestorArchivos.hpp  # Template genérico de lectura/escritura binaria
+│   │
+│   ├── managers/               # Lógica de negocio / Operaciones por dominio
+│   │   ├── OperacionesTorneo.hpp
+│   │   ├── OperacionesEquipos.hpp
+│   │   ├── OperacionesJugadores.hpp
+│   │   └── OperacionesPartidos.hpp
+│   │
+│   ├── ui/                     # Interfaz con el usuario
+│   │   └── Interfaz.hpp        # Loop principal y menús de consola
+│   │
+│   └── utils/                  # Utilidades del sistema
+│       ├── Validaciones.hpp    # Métodos estáticos para validar formato
+│       └── Formatos.hpp        # Métodos estáticos para limpiar pantalla, fechas, etc.
+│
+├── src/                        # Implementaciones (.cpp)
+│   ├── models/                 # Implementación de constructores/métodos de entidades
+│   ├── managers/               # Lógica de operaciones (.cpp)
+│   ├── ui/                     # Implementación de menús y UI (.cpp)
+│   ├── utils/                  # Implementación de utils (.cpp)
+│   └── main.cpp                # Punto de entrada (< 20 líneas)
+│
+├── Makefile                    # Archivo para compilación automátiaca
+├── .gitignore                  # Para excluir .exe y datos temporales
+└── README_V3.md                # Documentación exigida
