@@ -1,5 +1,6 @@
 #ifndef FORMATOS_HPP
 #define FORMATOS_HPP
+#include "../../include/models/fecha.hpp"
 #include <string>
 
 /**
@@ -56,7 +57,7 @@ class Formatos {
      * // mensaje ahora contiene "HOLA MUNDO"
      * @endcode
      */
-    static char *convertirCadenaAMayus_pchar(char *texto);
+    static char *convertirTextoAMayus(char *texto);
 
     /**
      * @brief Convierte todos los caracteres de un objeto `std::string` a mayúsculas.
@@ -64,7 +65,7 @@ class Formatos {
      * @return Referencia o copia del `std::string` modificado en mayúsculas.
      * * @pre El parámetro `texto` no debe estar vacío.
      */
-    static std::string convertirAMayus_string(std::string &texto);
+    static std::string convertirTextoAMayus(std::string &texto);
 
     /**
      * @brief Convierte todos los caracteres de una cadena C (`char*`) a minúsculas.
@@ -72,7 +73,7 @@ class Formatos {
      * @return Puntero a la misma cadena de texto `texto` convertida a minúsculas.
      * * @pre El parámetro `texto` no debe ser `nullptr` ni estar vacío.
      */
-    static char *convertirCadenaAMinus_pchar(char *texto);
+    static char *convertirTextoAMinus(char *texto);
 
     /**
      * @brief Convierte todos los caracteres de un objeto `std::string` a minúsculas.
@@ -80,7 +81,32 @@ class Formatos {
      * @return Referencia o copia del `std::string` modificado en minúsculas.
      * * @pre El parámetro `texto` no debe estar vacío.
      */
-    static std::string convertirAMinus_string(std::string &texto);
+    static std::string convertirTextoAMinus(std::string &texto);
+
+    /**
+     * @brief Convierte una cadena de texto en formato C (`const char*`) a una estructura `Fecha`.
+     *
+     * Lee una cadena con el formato esperado `YYYY-MM-DD` extrae sus valores numéricos mediante
+     * `std::stringstream` y los asigna a un objeto `Fecha`. Realiza validación de puntero nulo
+     * y verifica que los separadores sean guiones (`-`).
+     *
+     * @param[in] fechaCStr Cadena de texto en formato C (`const char*`) que representa la fecha ("YYYY-MM-DD").
+     * @return Estructura `Fecha` con el año, mes y día extraídos. Si la cadena es `nullptr`,
+     * el formato es inválido o los separadores no son guiones, retorna una fecha por defecto `{0, 0, 0}`.
+     *
+     * @pre La cadena `fechaCStr` debe tener el formato estricto `"YYYY-MM-DD"`.
+     *
+     * @code
+     * const char* textoFecha = "2026-07-26";
+     * Fecha f = MiClase::stringAFecha(textoFecha);
+     * // f.anio == 2026, f.mes == 7, f.dia == 26
+     *
+     * const char* fechaInvalida = "2026/07/26";
+     * Fecha fErr = MiClase::stringAFecha(fechaInvalida);
+     * // fErr.anio == 0, fErr.mes == 0, fErr.dia == 0 (Formato rechazado por el separador)
+     * @endcode
+     */
+    static Fecha convertirTextoAFecha(const char *fechaCStr);
 };
 
 #endif

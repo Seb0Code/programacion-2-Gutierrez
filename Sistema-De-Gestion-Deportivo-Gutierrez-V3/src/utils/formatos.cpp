@@ -5,14 +5,16 @@
 #include <chrono>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <locale>
+#include <sstream>
 #include <thread>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-// funcion que pausa el programa por un tiempo determinado
+// Funcion que pausa el programa por un tiempo determinado
 void Formatos::esperarTiempo(int tiempo) { std::this_thread::sleep_for(std::chrono::milliseconds(tiempo)); }
 
 // funcion que limpia la consola
@@ -65,43 +67,76 @@ void Formatos::configurarIdioma() {
 }
 
 // esta funcion transforma el texto a mayuscula
-char *Formatos::convertirCadenaAMayus_pchar(char *texto) {
+char *Formatos::convertirTextoAMayus(char *texto) {
+
+    // Verificamos que la cadena no esté vacía
     if (GestorDeValidaciones::validarCadenaVacia(texto)) {
         return nullptr;
     }
 
+    // Calculamos la longitud del archivo y transformamos a mayus
     int longitud = std::strlen(texto);
     std::transform(texto, texto + longitud, texto, ::toupper);
     return texto;
 }
 
-std::string Formatos::convertirAMayus_string(std::string &texto) {
+std::string Formatos::convertirTextoAMayus(std::string &texto) {
     // Validamos texto vacío
     if (texto.empty()) {
         return texto;
     }
 
+    // Calculamos la longitud del archivo y transformamos a mayus
     std::transform(texto.begin(), texto.end(), texto.begin(), ::toupper);
     return texto;
 }
 
 // esta funcion transforma el texto a minuscula
-char *Formatos::convertirCadenaAMinus_pchar(char *texto) {
+char *Formatos::convertirTextoAMinus(char *texto) {
     if (GestorDeValidaciones::validarCadenaVacia(texto)) {
         return nullptr;
     }
 
+    // Calculamos la longitud del archivo y transformamos a minus
     int longitud = std::strlen(texto);
     std::transform(texto, texto + longitud, texto, ::tolower);
     return texto;
 }
 
-std::string Formatos::convertirAMinus_string(std::string &texto) {
+std::string Formatos::convertirTextoAMinus(std::string &texto) {
     // Validamos texto vacío
     if (texto.empty()) {
         return texto;
     }
 
+    // Calculamos la longitud del archivo y transformamos a minus
     std::transform(texto.begin(), texto.end(), texto.begin(), ::tolower);
     return texto;
+}
+
+Fecha Formatos::convertirTextoAFecha(const char *fecha) {
+
+    // Verificamos que la cadena no esté vacía
+    if (GestorDeValidaciones::validarCadenaVacia(fecha)) {
+        return {0, 0, 0};
+    }
+
+    Fecha f;
+
+    // Se declaran vacios
+    char guion1 = '\0';
+    char guion2 = '\0';
+
+    std::stringstream ss(fecha);
+
+    // Vamos separando cada cosa
+    if (ss >> f.anio >> guion1 >> f.mes >> guion2 >> f.dia) {
+        if (guion1 != '-' || guion2 != '-') {
+            return {0, 0, 0}; // Error
+        }
+    } else {
+        return {0, 0, 0}; // si no se pudo separar las fechas
+    }
+
+    return f;
 }
