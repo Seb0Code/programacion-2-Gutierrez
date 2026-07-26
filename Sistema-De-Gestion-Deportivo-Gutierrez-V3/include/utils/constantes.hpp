@@ -10,7 +10,7 @@ namespace constantes {
     const int MI_ERROR = -1;
 
     // Tamaños de Cadenas de Texto
-    const int TAMANO_MENSAJE_ERROR = 150;
+    constexpr int TAMANO_MENSAJE_ERROR = 150;
     constexpr int TAMANO_NOMBRE = 100;
     constexpr int TAMANO_FECHA = 11;
     constexpr int TAMANO_DEPORTE = 50;
