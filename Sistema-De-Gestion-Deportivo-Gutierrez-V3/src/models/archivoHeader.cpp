@@ -2,15 +2,15 @@
 
 ArchivoHeader::ArchivoHeader(int cantRgt, int proxId, int rgtAct, int ver) : cantidadRegistros(cantRgt), proximoId(proxId), registrosActivos(rgtAct), version(ver) {}
 
-int ArchivoHeader::getCantidadRegistros() { return cantidadRegistros; }
+int ArchivoHeader::getCantidadRegistros() const { return cantidadRegistros; }
 
-int ArchivoHeader::getProximoId() { return proximoId; }
+int ArchivoHeader::getProximoId() const { return proximoId; }
 
-int ArchivoHeader::getRegistrosActivos() { return registrosActivos; }
+int ArchivoHeader::getRegistrosActivos() const { return registrosActivos; }
 
-int ArchivoHeader::getVersion() { return version; }
+int ArchivoHeader::getVersion() const { return version; }
 
-size_t ArchivoHeader::getTamanoArchivoHeader() { return sizeof(ArchivoHeader); }
+size_t ArchivoHeader::getTamano() { return sizeof(ArchivoHeader); }
 
 void ArchivoHeader::aumentarCantidadDeRegistros() { cantidadRegistros++; }
 
