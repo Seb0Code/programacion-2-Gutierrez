@@ -1,316 +1,210 @@
 #include "../../include/utils/validaciones.hpp"
+#include "../../include/models/fecha.hpp"
 #include "../../include/utils/constantes.hpp"
+#include "../../include/utils/formatos.hpp"
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 
-void separarFechaEnPartes(const char *fecha, int &año, int &mes, int &dia) {
-    año = (fecha[0] - '0') * 1000 + (fecha[1] - '0') * 100 + (fecha[2] - '0') * 10 + (fecha[3] - '0');
-    mes = (fecha[5] - '0') * 10 + (fecha[6] - '0');
-    dia = (fecha[8] - '0') * 10 + (fecha[9] - '0');
+// =======================================================================================================
+// SOBRECARGAS PARA TEXTOS (Para std::string y puntero char (const char*))
+// =======================================================================================================
+
+bool GestorDeValidaciones::validarCadenaVacia(const char *texto) { return (texto == nullptr || *texto == '\0'); }
+
+bool GestorDeValidaciones::validarCadenaVacia(const std::string &texto) { return texto.empty(); }
+
+bool GestorDeValidaciones::validarEsCadenaVaciaOSoloEspacios(const char *texto) {
+    if (validarCadenaVacia(texto))
+        return true;
+    return std::all_of(texto, texto + strlen(texto), [](unsigned char ch) { return std::isspace(ch); });
 }
 
-int convertirFechaANumeroEntero(int año, int mes, int dia) { return (año * 10000) + (mes * 100) + dia; }
-
-// -------------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------------------------------
-
-bool GestorDeValidaciones::validarTamano(const char *texto, const size_t tamano) {
-    size_t tamanoCadena = strlen(texto);
-    return tamanoCadena == tamano;
+bool GestorDeValidaciones::validarEsCadenaVaciaOSoloEspacios(const std::string &texto) {
+    return texto.empty() || std::all_of(texto.begin(), texto.end(), [](unsigned char ch) { return std::isspace(ch); });
 }
-
-inline bool GestorDeValidaciones::validarCadenaVacia(const char *texto) { return (texto == nullptr || *texto == '\0'); }
 
 bool GestorDeValidaciones::validarSoloNumeros(const char *texto) {
-
-    size_t e = 0;
-    bool esNum = true;
-
-    // validamos que no esté vacío
-    if (GestorDeValidaciones::validarCadenaVacia(texto)) {
+    if (validarCadenaVacia(texto))
         return false;
-    }
+    return std::all_of(texto, texto + strlen(texto), [](unsigned char ch) { return std::isdigit(ch); });
+}
 
-    while (*(texto + e) != '\0') {
-        esNum = std::isdigit(static_cast<unsigned char>(*(texto + e)));
-        if (!esNum) {
-            return false;
-        }
-        e++;
-    }
-    return true;
+bool GestorDeValidaciones::validarSoloNumeros(const std::string &texto) {
+    if (texto.empty())
+        return false;
+    return std::all_of(texto.begin(), texto.end(), [](unsigned char ch) { return std::isdigit(ch); });
 }
 
 bool GestorDeValidaciones::validarSoloLetras(const char *texto) {
-
-    size_t e = 0;
-    bool esLetra = true;
-    bool esEspacio = true;
-
-    // validamos que no esté vacío
-    if (GestorDeValidaciones::validarCadenaVacia(texto)) {
+    if (validarCadenaVacia(texto))
         return false;
-    }
-
-    while (*(texto + e) != '\0') {
-        esLetra = std::isalpha(static_cast<unsigned char>(*(texto + e)));
-        esEspacio = std::isspace(static_cast<unsigned char>(*(texto + e)));
-        if (!esLetra && !esEspacio) {
-            return false;
-        }
-        e++;
-    }
-    return true;
+    return std::all_of(texto, texto + strlen(texto), [](unsigned char ch) { return std::isalpha(ch) || std::isspace(ch); });
 }
 
-bool GestorDeValidaciones::validarEsBisiesto(const int año) {
-    // Verificamos que no sea 0 o negativo
-    if (año <= 0) {
+bool GestorDeValidaciones::validarSoloLetras(const std::string &texto) {
+    if (texto.empty())
         return false;
-    }
-    // Aplicamos la regla de divisibilidad del año bisiesto
-    return (año % 4 == 0 && año % 100 != 0) || (año % 400 == 0);
+    return std::all_of(texto.begin(), texto.end(), [](unsigned char ch) { return std::isalpha(ch) || std::isspace(ch); });
 }
 
 bool GestorDeValidaciones::validarEsAlfanumericoConEspacios(const char *texto) {
-    size_t i = 0;
-    while (texto[i] != '\0') {
-        // revisa si es letra o número y si es espacio ' '
-        if (!std::isalnum(texto[i]) && texto[i] != ' ') {
-            return false;
-        }
-        i++;
-    }
-    return true;
+    if (validarCadenaVacia(texto))
+        return false;
+    return std::all_of(texto, texto + strlen(texto), [](unsigned char ch) { return std::isalnum(ch) || std::isspace(ch); });
 }
 
-bool GestorDeValidaciones::validarMinuto(const int variable) {
-
-    if (variable < MINUTO_MINIMO || variable > MINUTO_MAXIMO) {
+bool GestorDeValidaciones::validarEsAlfanumericoConEspacios(const std::string &texto) {
+    if (texto.empty())
         return false;
-    }
-    return true;
+    return std::all_of(texto.begin(), texto.end(), [](unsigned char ch) { return std::isalnum(ch) || std::isspace(ch); });
 }
 
-bool GestorDeValidaciones::validarEsPositivo(const int num) {
-    if (num < 0) {
+// =======================================================================================================
+// VALIDACIONES DE ENTIDADES DE NEGOCIO SIMPLES
+// =======================================================================================================
+
+bool GestorDeValidaciones::validarTamano(const char *texto, const size_t tamano) {
+    if (texto == nullptr) {
         return false;
     }
-    return true;
+    return strlen(texto) == tamano;
 }
 
-bool GestorDeValidaciones::validarId(const int id) {
-    if (id <= 0) {
+bool GestorDeValidaciones::validarTamano(const std::string &texto, const size_t tamano) { return texto.length() == tamano; }
+
+bool GestorDeValidaciones::validarMinuto(const int minuto, const int minutoMin, const int minutoMax) { return (minuto >= minutoMin && minuto <= minutoMax); }
+
+bool GestorDeValidaciones::validarEsPositivo(const int num) { return num > 0; }
+
+bool GestorDeValidaciones::validarId(const int id) { return id > 0; }
+
+bool GestorDeValidaciones::validarIdParaAutogol(const int id) { return id >= 0; }
+
+bool GestorDeValidaciones::validarEdad(const int edad) { return (edad >= 14 && edad <= 50); }
+
+bool GestorDeValidaciones::validarDorsal(const int dorsal) { return (dorsal >= 1 && dorsal <= 99); }
+
+bool GestorDeValidaciones::validarCedula(const char *cedula) {
+    if (validarCadenaVacia(cedula) || !validarSoloNumeros(cedula)) {
         return false;
     }
-    return true;
+    size_t longitud = strlen(cedula);
+    return (longitud >= 7 && longitud <= 10);
 }
 
-bool GestorDeValidaciones::validarIdParaAutogol(const int id) {
-    if (id < 0) {
-        return false;
-    }
-    return true;
-}
+bool GestorDeValidaciones::validarCedula(const std::string &cedula) { return validarCedula(cedula.c_str()); }
 
-bool GestorDeValidaciones::validarEdad(const int edad) {
-    // la edad no puede ser negativa ni igual a 0, tampoco puede ser mayor a 120
-    if (edad < 14 || edad > 50) {
-        // asignamos la siguiente cadena de texto a el array de char
-        return false;
-    }
-    return true;
-}
+bool GestorDeValidaciones::validarNombreOApellido(const char *nombre) { return !validarCadenaVacia(nombre) && validarSoloLetras(nombre); }
 
-bool GestorDeValidaciones::validarDorsal(const int dorsal) {
-    if (dorsal < 1 || dorsal > 99) {
-        // std:strncpy copia el mensaje del segundo parametro dentro de un const char*
+bool GestorDeValidaciones::validarNombreOApellido(const std::string &nombre) { return !validarCadenaVacia(nombre) && validarSoloLetras(nombre); }
+
+bool GestorDeValidaciones::validarNombreTorneo(const char *nombreTorneo) { return !validarCadenaVacia(nombreTorneo) && validarEsAlfanumericoConEspacios(nombreTorneo); }
+
+bool GestorDeValidaciones::validarNombreTorneo(const std::string &nombreTorneo) { return !validarCadenaVacia(nombreTorneo) && validarEsAlfanumericoConEspacios(nombreTorneo); }
+
+// =======================================================================================================
+//   LOGICA DE FECHAS
+// =======================================================================================================
+
+bool GestorDeValidaciones::validarEsBisiesto(const int año) {
+    if (año <= 0) {
         return false;
     }
-    return true;
+    return (año % 4 == 0 && año % 100 != 0) || (año % 400 == 0);
 }
 
 bool GestorDeValidaciones::validarFecha(const char *fecha) {
-    int dia = 0, mes = 0, año = 0;
-    // array de los dias de cada mes
-    int diasPorMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-    // validamos que no esté vacío
-    if (GestorDeValidaciones::validarCadenaVacia(fecha)) {
-        return false; // si esta vacio devolvemos que la fecha no es válida
-    }
-
-    // Validación de tamaño y guiones (YYYY-MM-DD)
-    if (!GestorDeValidaciones::validarTamano(fecha, 10) || fecha[4] != '-' || fecha[7] != '-') {
+    // Verificamos que no esté vacía y que tenga un tamaño de fecha valido
+    if (validarCadenaVacia(fecha) || !validarTamano(fecha, constantes::TAMANO_FECHA - 1)) {
         return false;
     }
 
-    // Verificamos que los demás caracteres sean numéricos
-    for (size_t e = 0; e < 10; e++) {
-        if (e == 4 || e == 7)
+    // Verificamos que tenga los guiones
+    if (fecha[4] != '-' || fecha[7] != '-') {
+        return false;
+    }
+
+    // Verificar que sea YYYY-MM-DD
+    for (size_t e = 0; e < constantes::TAMANO_FECHA - 1; e++) {
+        if (e == 4 || e == 7) {
             continue;
+        }
         if (!std::isdigit(static_cast<unsigned char>(fecha[e]))) {
             return false;
         }
     }
 
-    separarFechaEnPartes(fecha, año, mes, dia);
-    // si es año bisiesto febrero pasa a tener 29 dias
-    if (mes == 2 && GestorDeValidaciones::validarEsBisiesto(año)) {
+    // Transformamos la cadena de texto a formato fecha
+    Fecha f = Formatos::convertirTextoAFecha(fecha);
+    if (f.anio < 1) {
+        return false;
+    }
+
+    int diasPorMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    if (validarEsBisiesto(f.anio)) {
         diasPorMes[1] = 29;
     }
 
-    // validar que los meses esten en el rango y que los años no sean negativos
-    if (mes < 1 || mes > 12 || año < 1) {
-        return false;
-    }
-
-    // validar que el dia
-    if (dia < 1 || dia > diasPorMes[mes - 1]) {
-        return false;
-    }
-
-    return true;
+    return (f.mes >= 1 && f.mes <= 12 && f.dia >= 1 && f.dia <= diasPorMes[f.mes - 1]);
 }
 
-// Esta funcion se usa para validar que una fecha no sea menor en el tiempo que otra
+bool GestorDeValidaciones::validarFecha(const std::string &fecha) { return validarFecha(fecha.c_str()); }
+
 bool GestorDeValidaciones::validarFechaFin(const char *fechaFin, const char *fechaInicio) {
 
-    // si la fecha final no es valida
-    if (!GestorDeValidaciones::validarFecha(fechaFin)) {
+    // Validamos que las fechas sean validas (valga la redundancia xd)
+    if (!validarFecha(fechaFin) || !validarFecha(fechaInicio))
         return false;
-    }
 
-    // declaramos los valores a comparar
-    int añoFin, mesFin, diaFin;
-    int añoIni, mesIni, diaIni;
+    Fecha fin = Formatos::convertirTextoAFecha(fechaFin);
+    Fecha inicio = Formatos::convertirTextoAFecha(fechaInicio);
 
-    // Almacenamos las fechas en variables int
-    separarFechaEnPartes(fechaFin, añoFin, mesFin, diaFin);
-    separarFechaEnPartes(fechaInicio, añoIni, mesIni, diaIni);
-
-    int numIni = convertirFechaANumeroEntero(añoIni, mesIni, diaIni);
-    int numFin = convertirFechaANumeroEntero(añoFin, mesFin, diaFin);
-
-    if (numFin < numIni) {
-        return false;
-    }
-    return true;
+    // Comparamos con la sobrecarga de operadores (Equivale como al >=)
+    return !(fin < inicio);
 }
+
+bool GestorDeValidaciones::validarFechaFin(const std::string &fechaFin, const std::string &fechaInicio) { return validarFechaFin(fechaFin.c_str(), fechaInicio.c_str()); }
 
 bool GestorDeValidaciones::validarFechaDeRegistroDePartidos(const char *fechaPartido, const char *fechaInicioTorneo, const char *fechaFinTorneo) {
 
-    // si las fechas no son validas
-    if (!GestorDeValidaciones::validarFecha(fechaPartido) || !GestorDeValidaciones::validarFecha(fechaInicioTorneo) || !GestorDeValidaciones::validarFecha(fechaFinTorneo)) {
+    // Verificamos si las fechas son validas
+    if (!validarFecha(fechaPartido) || !validarFecha(fechaInicioTorneo) || !validarFecha(fechaFinTorneo))
         return false;
-    }
 
-    // declaramos los valores a comparar
-    int añoFin, mesFin, diaFin;
-    int añoIni, mesIni, diaIni;
-    int añoPtd, mesPtd, diaPtd;
+    // Convertimos a tipo fecha para comparar
+    Fecha ptd = Formatos::convertirTextoAFecha(fechaPartido);
+    Fecha inicio = Formatos::convertirTextoAFecha(fechaInicioTorneo);
+    Fecha fin = Formatos::convertirTextoAFecha(fechaFinTorneo);
 
-    // Almacenamos las fechas en variables int
-    separarFechaEnPartes(fechaFinTorneo, añoFin, mesFin, diaFin);
-    separarFechaEnPartes(fechaInicioTorneo, añoIni, mesIni, diaIni);
-    separarFechaEnPartes(fechaPartido, añoPtd, mesPtd, diaPtd);
+    // El partido debe estar entre en el rango del torneo (>= incio && <= al final)
+    return !(ptd < inicio) && !(ptd > fin);
+}
 
-    // llevamos cada fecha a expresion de un solo numero
-    int numIni = convertirFechaANumeroEntero(añoIni, mesIni, diaIni);
-    int numFin = convertirFechaANumeroEntero(añoFin, mesFin, diaFin);
-    int numPtd = convertirFechaANumeroEntero(añoPtd, mesPtd, diaPtd);
-
-    // Validamos los limites
-    if (numPtd < numIni || numPtd > numFin) {
-        return false;
-    }
-
-    return true;
+bool GestorDeValidaciones::validarFechaDeRegistroDePartidos(const std::string &fechaPartido, const std::string &fechaInicioTorneo, const std::string &fechaFinTorneo) {
+    return validarFechaDeRegistroDePartidos(fechaPartido.c_str(), fechaInicioTorneo.c_str(), fechaFinTorneo.c_str());
 }
 
 bool GestorDeValidaciones::validarFechaDeRegistroDeJugadorOEquipo(const char *fechaRegistro, const char *fechaInicioTorneo) {
 
-    // si la fecha final no es valida
-    if (!GestorDeValidaciones::validarFecha(fechaRegistro) || !GestorDeValidaciones::validarFecha(fechaRegistro)) {
+    // Verificamos si las fechas son validas
+    if (!validarFecha(fechaRegistro) || !validarFecha(fechaInicioTorneo)) {
         return false;
     }
 
-    // declaramos los valores a comparar
-    int añoRgt, mesRgt, diaRgt;
-    int añoIni, mesIni, diaIni;
+    Fecha rgt = Formatos::convertirTextoAFecha(fechaRegistro);
+    Fecha inicio = Formatos::convertirTextoAFecha(fechaInicioTorneo);
 
-    // Almacenamos las fechas en variables int
-    separarFechaEnPartes(fechaRegistro, añoRgt, mesRgt, diaRgt);
-    separarFechaEnPartes(fechaInicioTorneo, añoIni, mesIni, diaIni);
-
-    int numIni = convertirFechaANumeroEntero(añoIni, mesIni, diaIni);
-    int numRgt = convertirFechaANumeroEntero(añoRgt, mesRgt, diaRgt);
-
-    // Verificamos que el registro no sea despues de iniciar el torneo del torneo
-    if (numRgt >= numIni) {
+    // No se puede registrar después de que el torneo arrancó
+    if (!(rgt < inicio))
         return false;
-    }
 
-    // Calculamos la diferencia de tiempo en meses entre ambas fechas
-    int difAños = añoIni - añoRgt;
-    int difMeses = (mesIni - mesRgt);
-    int totalDeMesesDiferencia = (difAños * 12) + difMeses;
-
-    // Verificamos que el registro no sea mas de 6 meses antes
-    if (std::abs(totalDeMesesDiferencia) > 6) {
-        return false;
-    }
-    return true;
+    // Calcular la diferencia máxima permitida (6 meses)
+    int totalDeMesesDiferencia = ((inicio.anio - rgt.anio) * 12) + (inicio.mes - rgt.mes);
+    return std::abs(totalDeMesesDiferencia) <= 6;
 }
 
-bool Cedulas(const char *cedula) {
-    const size_t tamañoMin = 7, tamañomax = 10;
-
-    // validamos que no esté vacío
-    if (GestorDeValidaciones::validarCadenaVacia(cedula)) {
-        return false; // si esta vacio devolvemos que la fecha no es válida
-    }
-
-    // verificamos que solo tenga numeros
-    if (!GestorDeValidaciones::validarSoloNumeros(cedula)) {
-        return false;
-    }
-
-    // medimos la longitud
-    size_t longitud = strlen(cedula);
-
-    // si la longitud esta fuera del rando
-    if (longitud < tamañoMin || longitud > tamañomax) {
-        return false;
-    }
-
-    return true;
-}
-
-bool GestorDeValidaciones::validarNombreOApellido(const char *nombre) {
-    // validamos que no esté vacío
-    if (GestorDeValidaciones::validarCadenaVacia(nombre)) {
-        return false; // si esta vacio devolvemos que la fecha no es válida
-    }
-
-    // validamos que solo contenga letras
-    if (!GestorDeValidaciones::validarSoloLetras(nombre)) {
-        return false;
-    }
-    return true;
-}
-
-bool nombreTorneo(const char *nombreTorneo) {
-    // validamos que no esté vacío
-    if (GestorDeValidaciones::validarCadenaVacia(nombreTorneo)) {
-        return false; // si esta vacio devolvemos que la fecha no es válida
-    }
-
-    //
-    if (!GestorDeValidaciones::validarEsAlfanumericoConEspacios(nombreTorneo)) {
-        return false;
-    }
-
-    return true;
+bool GestorDeValidaciones::validarFechaDeRegistroDeJugadorOEquipo(const std::string &fechaRegistro, const std::string &fechaInicioTorneo) {
+    return validarFechaDeRegistroDeJugadorOEquipo(fechaRegistro.c_str(), fechaInicioTorneo.c_str());
 }
