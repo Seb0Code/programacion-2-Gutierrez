@@ -39,7 +39,7 @@ void Formatos::pausarPrograma() {
     }
 
     // Mostramos el mensaje
-    std::cout << "\nPresione Enter para continuar...";
+    std::cout << "\n Presione Enter para continuar...";
 
     // Espera a que el usuario presione la tecla Enter
     std::cin.get();
@@ -65,7 +65,7 @@ void Formatos::configurarIdioma() {
 }
 
 // esta funcion transforma el texto a mayuscula
-char *Formatos::convertirCadenaAMayus(char *texto) {
+char *Formatos::convertirCadenaAMayus_pchar(char *texto) {
     if (GestorDeValidaciones::validarCadenaVacia(texto)) {
         return nullptr;
     }
@@ -75,13 +75,33 @@ char *Formatos::convertirCadenaAMayus(char *texto) {
     return texto;
 }
 
+std::string Formatos::convertirAMayus_string(std::string &texto) {
+    // Validamos texto vacío
+    if (texto.empty()) {
+        return texto;
+    }
+
+    std::transform(texto.begin(), texto.end(), texto.begin(), ::toupper);
+    return texto;
+}
+
 // esta funcion transforma el texto a minuscula
-char *Formatos::convertirCadenaAMinus(char *texto) {
+char *Formatos::convertirCadenaAMinus_pchar(char *texto) {
     if (GestorDeValidaciones::validarCadenaVacia(texto)) {
         return nullptr;
     }
 
     int longitud = std::strlen(texto);
     std::transform(texto, texto + longitud, texto, ::tolower);
+    return texto;
+}
+
+std::string Formatos::convertirAMinus_string(std::string &texto) {
+    // Validamos texto vacío
+    if (texto.empty()) {
+        return texto;
+    }
+
+    std::transform(texto.begin(), texto.end(), texto.begin(), ::tolower);
     return texto;
 }
