@@ -27,6 +27,8 @@ namespace constantes {
     inline const std::string NOMBRE_ARCHIVO_JUGADORES = "datos/jugadores.bin";
     inline const std::string NOMBRE_ARCHIVO_EQUIPOS = "datos/equipos.bin";
     inline const std::string NOMBRE_ARCHIVO_PARTIDOS = "datos/partidos.bin";
+    inline const std::string RUTA_ARCHIVO_DEPORTES_CONFIG = "../../config/deportes_config.csv";
+    inline const std::string RUTA_ARCHIVO_POSICIONES_DEPORTES = "../../config/posiciones_deportes.csv";
 
     // Rutas de Backups
     inline const std::string RUTA_BACKUPS = "datos/backups/";
