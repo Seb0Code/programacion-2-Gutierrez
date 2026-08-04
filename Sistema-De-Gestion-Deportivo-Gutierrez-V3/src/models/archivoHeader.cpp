@@ -1,5 +1,7 @@
 #include "../../include/models/archivoHeader.hpp"
 
+ArchivoHeader::ArchivoHeader() : ArchivoHeader(0, 1, 0, 1) {}
+
 ArchivoHeader::ArchivoHeader(int cantRgt, int proxId, int rgtAct, int ver) : cantidadRegistros(cantRgt), proximoId(proxId), registrosActivos(rgtAct), version(ver) {}
 
 int ArchivoHeader::getCantidadRegistros() const { return cantidadRegistros; }
