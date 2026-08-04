@@ -42,7 +42,7 @@ class ArchivoHeader {
     /**
      * @brief Destructor de la clase ArchivoHeader.
      */
-    ~ArchivoHeader();
+    ~ArchivoHeader() = default;
 
     // ---------------------------------------------------------------------------------------------- //
     //   GETTERS                                                                                      //
