@@ -1,7 +1,9 @@
 #ifndef FORMATOS_HPP
 #define FORMATOS_HPP
 #include "../../include/models/fecha.hpp"
+#include <sstream>
 #include <string>
+#include <type_traits>
 
 /**
  * @file Formatos.hpp
@@ -107,6 +109,40 @@ class Formatos {
      * @endcode
      */
     static Fecha convertirTextoAFecha(const char *fechaCStr);
+
+    static void copiarCadena(char *destino, const char *origen, const size_t tamano);
+
+    /**
+     * @brief Elimina espacios en blanco al inicio y al final de una cadena.
+     */
+    static std::string trim(const std::string &str);
+
+    /**
+     * @brief Convierte una cadena de texto a un tipo de dato genérico.
+     * Maneja internamente cualquier error de parseo retornando un valor por defecto.
+     */
+    template <typename T> T static parsearValor(const std::string &str, T valorPorDefecto = T{}) {
+        std::string textoLimpio = trim(str);
+        if (textoLimpio.empty()) {
+            return valorPorDefecto;
+        }
+
+        // Si T es un std::string, simplemente devolvemos la cadena limpia
+        if constexpr (std::is_same_v<T, std::string>) {
+            return textoLimpio;
+        } else {
+            // Para tipos numéricos o de otro tipo, usamos stringstream
+            std::stringstream ss(textoLimpio);
+            T resultado;
+            ss >> resultado;
+
+            if (ss.fail() || !ss.eof()) {
+                return valorPorDefecto;
+            }
+
+            return resultado;
+        }
+    }
 };
 
 #endif

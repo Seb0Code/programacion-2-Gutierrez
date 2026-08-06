@@ -7,7 +7,6 @@
 #include <iostream>
 #include <limits>
 #include <locale>
-#include <sstream>
 #include <thread>
 
 #ifdef _WIN32
@@ -139,4 +138,36 @@ Fecha Formatos::convertirTextoAFecha(const char *fecha) {
     }
 
     return f;
+}
+
+void Formatos::copiarCadena(char *destino, const char *origen, const size_t tamano) {
+    if (origen == nullptr || tamano == 0) {
+        if (tamano > 0) {
+            destino[0] = '\0';
+        }
+        return;
+    }
+
+    std::strncpy(destino, origen, tamano - 1);
+    destino[tamano - 1] = '\0';
+}
+
+std::string Formatos::trim(const std::string &str) {
+    if (str.empty())
+        return "";
+
+    auto inicio = str.begin();
+    while (inicio != str.end() && std::isspace(static_cast<unsigned char>(*inicio))) {
+        ++inicio;
+    }
+
+    if (inicio == str.end())
+        return "";
+
+    auto fin = str.end() - 1;
+    while (fin > inicio && std::isspace(static_cast<unsigned char>(*fin))) {
+        --fin;
+    }
+
+    return std::string(inicio, fin + 1);
 }
