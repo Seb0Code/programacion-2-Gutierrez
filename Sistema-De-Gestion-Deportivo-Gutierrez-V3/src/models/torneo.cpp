@@ -1,30 +1,17 @@
 #include "../../include/models/torneo.hpp"
 #include "../../include/manager/operacionesTorneo.hpp"
 #include "../../include/persistence/gestorArchivosTexto.hpp"
+#include "../../include/utils/formatos.hpp"
 #include "../../include/utils/validaciones.hpp"
 #include <iomanip>
 #include <iostream>
 
-namespace {
-    void copiarCadena(char *destino, const char *origen, const size_t tamano) {
-        if (origen == nullptr || tamano == 0) {
-            if (tamano > 0) {
-                destino[0] = '\0';
-            }
-            return;
-        }
-
-        std::strncpy(destino, origen, tamano - 1);
-        destino[tamano - 1] = '\0';
-    }
-} // namespace
-
 Torneo::Torneo(const char *nom, const char *dep, const char *form, const char *fechaI, const char *fechaF) : Torneo() {
-    copiarCadena(nombre, nom, sizeof(nombre));
-    copiarCadena(deporte, dep, sizeof(deporte));
-    copiarCadena(formato, form, sizeof(formato));
-    copiarCadena(fechaInicio, fechaI, sizeof(fechaInicio));
-    copiarCadena(fechaFin, fechaF, sizeof(fechaFin));
+    Formatos::copiarCadena(nombre, nom, sizeof(nombre));
+    Formatos::copiarCadena(deporte, dep, sizeof(deporte));
+    Formatos::copiarCadena(formato, form, sizeof(formato));
+    Formatos::copiarCadena(fechaInicio, fechaI, sizeof(fechaInicio));
+    Formatos::copiarCadena(fechaFin, fechaF, sizeof(fechaFin));
 
     const time_t ahora = std::time(nullptr);
     fechaCreacion = ahora;
@@ -71,7 +58,7 @@ bool Torneo::setNombre(const char *nom) {
     }
 
     // Copiamos el nombre
-    copiarCadena(nombre, nom, sizeof(nombre));
+    Formatos::copiarCadena(nombre, nom, sizeof(nombre));
     return true;
 }
 
@@ -90,7 +77,7 @@ bool Torneo::setDeporte(const int idDep) {
 
     // Convertimos el string a cadenas de c y copiamos el nuevo nombre del deporte
     const char *nombreDeporte_cstr = nombreDeporte.c_str();
-    copiarCadena(deporte, nombreDeporte_cstr, sizeof(deporte));
+    Formatos::copiarCadena(deporte, nombreDeporte_cstr, sizeof(deporte));
     return true;
 }
 
@@ -109,7 +96,7 @@ bool Torneo::setFormato(const int idForm) {
 
     // Convertimos el string a cadenas de c y copiamos el nuevo nombre del formato
     const char *nombreFormato_cstr = nombreFormato.c_str();
-    copiarCadena(formato, nombreFormato_cstr, sizeof(formato));
+    Formatos::copiarCadena(formato, nombreFormato_cstr, sizeof(formato));
     return true;
 }
 
@@ -125,7 +112,7 @@ bool Torneo::setFechaInicio(const char *fechaI) {
         return false;
     }
 
-    copiarCadena(fechaInicio, fechaI, sizeof(fechaInicio));
+    Formatos::copiarCadena(fechaInicio, fechaI, sizeof(fechaInicio));
     return true;
 }
 
@@ -141,9 +128,11 @@ bool Torneo::setFechaFin(const char *fechaF) {
     }
 
     // Copiamos al atributo original
-    copiarCadena(fechaFin, fechaF, sizeof(fechaFin));
+    Formatos::copiarCadena(fechaFin, fechaF, sizeof(fechaFin));
     return true;
 }
+
+ReglasTorneo Torneo::getReglasTorneo() const { return reglas; }
 
 bool Torneo::setFechaCreacion(const time_t fechaC) {
     // Si time_t es con signo negativo (antes de 1970) o excede rangos soportados
