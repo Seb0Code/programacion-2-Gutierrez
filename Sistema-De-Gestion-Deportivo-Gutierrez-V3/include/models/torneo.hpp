@@ -18,6 +18,7 @@ class Torneo {
     char formato[constantes::TAMANO_FORMATO]{};   // "GRUPOS" o "ELIMINATORIA"
     char fechaInicio[constantes::TAMANO_FECHA]{}; // Formato YYYY-MM-DD
     char fechaFin[constantes::TAMANO_FECHA]{};    // Formato YYYY-MM-DD
+    ReglasTorneo reglas{};
 
     // Metadata de control
     time_t fechaCreacion{};
@@ -82,6 +83,8 @@ class Torneo {
      * @return Devuelve un puntero a un array de char que contiene la fecha de finalización del torneo.
      */
     const char *getFechaFin() const;
+
+    ReglasTorneo getReglasTorneo() const;
 
     /**
      * @brief Retorna la fecha de creación del registro en formato crudo (timestamp).
