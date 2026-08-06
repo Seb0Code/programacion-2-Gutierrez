@@ -47,8 +47,6 @@ class OperacionesEquipos {
     }
 
   public:
-    static bool aumentarNumJugadores(Equipo &equipo);
-
     static bool registrarEquipo(Equipo &nuevoEquipo);
 
     static std::vector<Equipo> tablaDePosiciones();
@@ -57,14 +55,12 @@ class OperacionesEquipos {
 
     static bool eliminarEquipo(const int id);
 
-    static bool disminuirCantidadDeJugadores(const int idEquipo);
-
-    static bool aumentarCantidadDeJugadores(const int idEquipo);
+    static bool modificarCantidadDeJugadores(const int idEquipo, const bool disminuir = false);
 
     // -1 = derrota, 0 = empate, 1 = victoria
-    static bool modificarEstadisticas(const int idEquipo, const int resultadoParaEquipo, const bool permiteEmpate);
+    static bool modificarEstadisticas(const int idEquipo, const int resultadoParaEquipo, const bool permiteEmpate, const bool revertir = false);
 
-    static bool modificarAnotaciones(const int idEquipoLocal, const int idEquipoVisitante, const Partido registroPartido);
+    static bool modificarAnotaciones(const Partido registroPartido, const bool revertir = false);
 };
 
 #endif

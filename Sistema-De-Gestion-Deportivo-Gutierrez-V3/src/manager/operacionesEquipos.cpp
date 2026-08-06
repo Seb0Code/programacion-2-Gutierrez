@@ -246,7 +246,7 @@ bool OperacionesEquipos::eliminarEquipo(const int id) {
     // Reabrimos el archivo de equipos para actualizar el registro
 }
 
-bool OperacionesEquipos::disminuirCantidadDeJugadores(const int idEquipo) {
+bool OperacionesEquipos::modificarCantidadDeJugadores(const int idEquipo, const bool disminuir) {
 
     // Buscamos el equipo por su id
     Equipo equipoAuxiliar;
@@ -264,47 +264,22 @@ bool OperacionesEquipos::disminuirCantidadDeJugadores(const int idEquipo) {
         return false;
     }
 
-    // Disminuimos la cantidad;
-    cantJugadores--;
+    if (disminuir) {
+        // Disminuimos la cantidad;
+        --cantJugadores;
+    } else {
+        // Aumentamos la cantidad
+        ++cantJugadores;
+    }
 
     // Cambiamos el valor del equipo
     if (!equipoAuxiliar.setNumJugadores(cantJugadores)) {
         return false;
     }
-
     return true;
 }
 
-bool OperacionesEquipos::aumentarCantidadDeJugadores(const int idEquipo) {
-
-    // Buscamos el equipo por su id
-    Equipo equipoAuxiliar;
-
-    // Si no lo encuentra devolvemos false
-    if (!GestorArchivosBinarios::buscarRegistrosPorId<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoAuxiliar, idEquipo)) {
-        return false;
-    }
-
-    // Pedimos la cantida de jugadores del equipo
-    int cantJugadores = equipoAuxiliar.getNumJugadores();
-
-    // Disminuimos la cantidad;
-    cantJugadores++;
-
-    // Cambiamos el valor del equipo
-    if (!equipoAuxiliar.setNumJugadores(cantJugadores)) {
-        return false;
-    }
-
-    // Guardamos los cambios
-    if (!GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoAuxiliar, idEquipo)) {
-        return false;
-    }
-
-    return true;
-}
-
-bool OperacionesEquipos::modificarEstadisticas(const int idEquipo, const int resultadoParaEquipo, const bool permiteEmpate) {
+bool OperacionesEquipos::modificarEstadisticas(const int idEquipo, const int resultadoParaEquipo, const bool permiteEmpate, const bool revertir) {
 
     Equipo equipoAuxiliar;
 
@@ -318,52 +293,106 @@ bool OperacionesEquipos::modificarEstadisticas(const int idEquipo, const int res
         return false;
     }
 
-    // Si el equipo gano
-    if (resultadoParaEquipo == 1) {
-        int victorias = 0, puntos = 0;
+    if (!revertir) {
 
-        // * Aumentamos las victorias
-        victorias = equipoAuxiliar.getVictorias();
-        ++victorias;
-        if (!equipoAuxiliar.setVictorias(victorias)) {
-            return false;
-        }
+        // Si el equipo gano
+        if (resultadoParaEquipo == 1) {
+            int victorias = 0, puntos = 0;
 
-        // * Aumentamos los puntos
-        puntos = equipoAuxiliar.getPuntos();
-        puntos += 3;
-        if (!equipoAuxiliar.setPuntos(puntos)) {
-            return false;
-        }
+            // * Aumentamos las victorias
+            victorias = equipoAuxiliar.getVictorias();
+            ++victorias;
+            if (!equipoAuxiliar.setVictorias(victorias)) {
+                return false;
+            }
 
-        // si perdio
-    } else if (resultadoParaEquipo == -1) {
-        int derrotas = 0;
-
-        // * Aumentamos las derrotas
-        derrotas = equipoAuxiliar.getDerrotas();
-        ++derrotas;
-        if (!equipoAuxiliar.setDerrotas(derrotas)) {
-            return false;
-        }
-
-        // Si empato
-    } else {
-
-        // Y ademas el deporte permite empate
-        if (permiteEmpate) {
-            int empates, puntos;
-
-            // * Aumentamos los empates y puntos
-            empates = equipoAuxiliar.getEmpates();
-            ++empates;
-            equipoAuxiliar.setEmpates(empates);
+            // * Aumentamos los puntos
             puntos = equipoAuxiliar.getPuntos();
-            ++puntos;
-            equipoAuxiliar.setPuntos(puntos);
+            puntos += 3;
+            if (!equipoAuxiliar.setPuntos(puntos)) {
+                return false;
+            }
 
+            // si perdio
+        } else if (resultadoParaEquipo == -1) {
+            int derrotas = 0;
+
+            // * Aumentamos las derrotas
+            derrotas = equipoAuxiliar.getDerrotas();
+            ++derrotas;
+            if (!equipoAuxiliar.setDerrotas(derrotas)) {
+                return false;
+            }
+
+            // Si empato
         } else {
-            return false;
+
+            // Y ademas el deporte permite empate
+            if (permiteEmpate) {
+                int empates, puntos;
+
+                // * Aumentamos los empates y puntos
+                empates = equipoAuxiliar.getEmpates();
+                ++empates;
+                equipoAuxiliar.setEmpates(empates);
+                puntos = equipoAuxiliar.getPuntos();
+                ++puntos;
+                equipoAuxiliar.setPuntos(puntos);
+
+            } else {
+                return false;
+            }
+        }
+
+        // Si deseamos revertir
+    } else {
+        // Si el equipo gano
+        if (resultadoParaEquipo == 1) {
+            int victorias = 0, puntos = 0;
+
+            // * Aumentamos las victorias
+            victorias = equipoAuxiliar.getVictorias();
+            --victorias;
+            if (!equipoAuxiliar.setVictorias(victorias)) {
+                return false;
+            }
+
+            // * Aumentamos los puntos
+            puntos = equipoAuxiliar.getPuntos();
+            puntos -= 3;
+            if (!equipoAuxiliar.setPuntos(puntos)) {
+                return false;
+            }
+
+            // si perdio
+        } else if (resultadoParaEquipo == -1) {
+            int derrotas = 0;
+
+            // * Aumentamos las derrotas
+            derrotas = equipoAuxiliar.getDerrotas();
+            --derrotas;
+            if (!equipoAuxiliar.setDerrotas(derrotas)) {
+                return false;
+            }
+
+            // Si empato
+        } else {
+
+            // Y ademas el deporte permite empate
+            if (permiteEmpate) {
+                int empates, puntos;
+
+                // * Aumentamos los empates y puntos
+                empates = equipoAuxiliar.getEmpates();
+                --empates;
+                equipoAuxiliar.setEmpates(empates);
+                puntos = equipoAuxiliar.getPuntos();
+                --puntos;
+                equipoAuxiliar.setPuntos(puntos);
+
+            } else {
+                return false;
+            }
         }
     }
 
@@ -374,75 +403,170 @@ bool OperacionesEquipos::modificarEstadisticas(const int idEquipo, const int res
     return true;
 }
 
-bool OperacionesEquipos::modificarAnotaciones(const int idEquipoLocal, const int idEquipoVisitante, const Partido registroPartido) {
+bool OperacionesEquipos::modificarAnotaciones(Partido registroPartido, const bool revertir) {
 
     Equipo equipoLocal, equipoVisitante;
 
     // Buscamos los equipos para ver si existen
-    if (!GestorArchivosBinarios::buscarRegistrosPorId<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoLocal, idEquipoLocal) ||
-        !GestorArchivosBinarios::buscarRegistrosPorId<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoVisitante, idEquipoVisitante)) {
+    if (!GestorArchivosBinarios::buscarRegistrosPorId<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoLocal, registroPartido.getIdEquipoLocal()) ||
+        !GestorArchivosBinarios::buscarRegistrosPorId<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoVisitante, registroPartido.getIdEquipoVisitante())) {
         return false;
     }
 
     int jugados = 0, anotacionAFavorLocal = 0, anotacionAFavorVisitante = 0, anotacionEnContraLocal = 0, anotacionEnContraVisitante = 0;
 
-    // * Modificamos las anotaciones del equipo local
+    if (!revertir) {
 
-    // Anotaciones a favor
-    anotacionAFavorLocal = equipoLocal.getAnotacionAFavor();
-    anotacionAFavorLocal += registroPartido.getAnotacionesLocal();
-    equipoLocal.setAnotacionAFavor(anotacionAFavorLocal);
+        // * Modificamos las anotaciones del equipo local
 
-    // Anotaciones en contra
-    anotacionEnContraLocal = equipoLocal.getAnotacionEnContra();
-    anotacionEnContraLocal += registroPartido.getAnotacionesVisitante();
-    equipoLocal.setAnotacionEnContra(anotacionEnContraLocal);
+        // Anotaciones a favor
+        anotacionAFavorLocal = equipoLocal.getAnotacionAFavor();
+        anotacionAFavorLocal += registroPartido.getAnotacionesLocal();
+        if (!equipoLocal.setAnotacionAFavor(anotacionAFavorLocal)) {
+            return false;
+        }
 
-    // Partidos jugados
-    jugados = equipoLocal.getJugados();
-    ++jugados;
-    equipoLocal.setJugados(jugados);
+        // Anotaciones en contra
+        anotacionEnContraLocal = equipoLocal.getAnotacionEnContra();
+        anotacionEnContraLocal += registroPartido.getAnotacionesVisitante();
+        if (!equipoLocal.setAnotacionEnContra(anotacionEnContraLocal)) {
+            return false;
+        }
 
-    // * Modificamos las anotaciones del equipo visitante
-    jugados = 0;
+        // Partidos jugados
+        jugados = equipoLocal.getJugados();
+        ++jugados;
+        if (!equipoLocal.setJugados(jugados)) {
+            return false;
+        }
 
-    // Anotaciones a favor
-    anotacionAFavorVisitante = equipoVisitante.getAnotacionAFavor();
-    anotacionAFavorVisitante += registroPartido.getAnotacionesVisitante();
-    equipoVisitante.setAnotacionAFavor(anotacionAFavorVisitante);
+        // * Modificamos las anotaciones del equipo visitante
+        jugados = 0;
 
-    // Anotaciones en contra
-    anotacionEnContraVisitante = equipoVisitante.getAnotacionEnContra();
-    anotacionEnContraVisitante += registroPartido.getAnotacionesLocal();
-    equipoVisitante.setAnotacionEnContra(anotacionEnContraVisitante);
+        // Anotaciones a favor
+        anotacionAFavorVisitante = equipoVisitante.getAnotacionAFavor();
+        anotacionAFavorVisitante += registroPartido.getAnotacionesVisitante();
+        if (!equipoVisitante.setAnotacionAFavor(anotacionAFavorVisitante)) {
+            return false;
+        }
 
-    // Partidos jugados
-    jugados = equipoVisitante.getJugados();
-    ++jugados;
-    equipoVisitante.setJugados(jugados);
+        // Anotaciones en contra
+        anotacionEnContraVisitante = equipoVisitante.getAnotacionEnContra();
+        anotacionEnContraVisitante += registroPartido.getAnotacionesLocal();
+        if (!equipoVisitante.setAnotacionEnContra(anotacionEnContraVisitante)) {
+            return false;
+        }
 
-    // * 4. Agregamos el id del partido al array de cada equipo y aumentamos el numero de partidos
-    if (equipoLocal.getCantidadPartidos() >= 50 || equipoVisitante.getCantidadPartidos() >= 50) {
-        return false;
-    }
+        // Partidos jugados
+        jugados = equipoVisitante.getJugados();
+        ++jugados;
+        if (!equipoVisitante.setJugados(jugados)) {
+            return false;
+        }
 
-    if (!equipoLocal.agregarIdPartido(registroPartido.getId())) {
-        return false;
-    }
-    if (!equipoVisitante.agregarIdPartido(registroPartido.getId())) {
-        return false;
-    }
+        // * 4. Agregamos el id del partido al array de cada equipo y aumentamos el numero de partidos
+        if (equipoLocal.getCantidadPartidos() >= 50 || equipoVisitante.getCantidadPartidos() >= 50) {
+            return false;
+        }
 
-    // ! NOTA: LA FUNCION AGREGAR PARTIDO MANEJA INTERNAMENTE EL AUMENTO DE LA CANTIDAD DE PARTIDOS
+        if (!equipoLocal.agregarIdPartido(registroPartido.getId())) {
+            return false;
+        }
+        if (!equipoVisitante.agregarIdPartido(registroPartido.getId())) {
+            return false;
+        }
 
-    // Agregamos la fecha de modificacion
-    equipoLocal.setFechaUltimaModificacion(std::time(nullptr));
-    equipoVisitante.setFechaUltimaModificacion(std::time(nullptr));
+        // ! NOTA: LA FUNCION AGREGAR PARTIDO MANEJA INTERNAMENTE EL AUMENTO DE LA CANTIDAD DE PARTIDOS
 
-    // Guardamos los archivos
-    if (!GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoLocal, idEquipoLocal) ||
-        !GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoVisitante, idEquipoVisitante)) {
-        return false;
+        // Agregamos la fecha de modificacion
+        if (!equipoLocal.setFechaUltimaModificacion(std::time(nullptr))) {
+            return false;
+        }
+
+        if (!equipoVisitante.setFechaUltimaModificacion(std::time(nullptr))) {
+            return false;
+        }
+
+        // Guardamos los archivos
+        if (!GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoLocal, registroPartido.getIdEquipoLocal()) ||
+            !GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoVisitante, registroPartido.getIdEquipoVisitante())) {
+            return false;
+        }
+
+    } else {
+
+        // * Modificamos las anotaciones del equipo local
+
+        // Anotaciones a favor
+        anotacionAFavorLocal = equipoLocal.getAnotacionAFavor();
+        anotacionAFavorLocal -= registroPartido.getAnotacionesLocal();
+        if (!equipoLocal.setAnotacionAFavor(anotacionAFavorLocal)) {
+            return false;
+        }
+
+        // Anotaciones en contra
+        anotacionEnContraLocal = equipoLocal.getAnotacionEnContra();
+        anotacionEnContraLocal -= registroPartido.getAnotacionesVisitante();
+        if (!equipoLocal.setAnotacionEnContra(anotacionEnContraLocal)) {
+            return false;
+        }
+
+        // Partidos jugados
+        jugados = equipoLocal.getJugados();
+        --jugados;
+        if (!equipoLocal.setJugados(jugados)) {
+            return false;
+        }
+
+        // * Modificamos las anotaciones del equipo visitante
+        jugados = 0;
+
+        // Anotaciones a favor
+        anotacionAFavorVisitante = equipoVisitante.getAnotacionAFavor();
+        anotacionAFavorVisitante -= registroPartido.getAnotacionesVisitante();
+        if (!equipoVisitante.setAnotacionAFavor(anotacionAFavorVisitante)) {
+            return false;
+        }
+
+        // Anotaciones en contra
+        anotacionEnContraVisitante = equipoVisitante.getAnotacionEnContra();
+        anotacionEnContraVisitante -= registroPartido.getAnotacionesLocal();
+        if (!equipoVisitante.setAnotacionEnContra(anotacionEnContraVisitante)) {
+            return false;
+        }
+
+        // Partidos jugados
+        jugados = equipoVisitante.getJugados();
+        --jugados;
+        if (!equipoVisitante.setJugados(jugados)) {
+            return false;
+        }
+
+        // * ¿Quitamos el id del partido del array?
+
+        if (!equipoLocal.eliminarIdPartido(registroPartido.getId())) {
+            return false;
+        }
+        if (!equipoVisitante.eliminarIdPartido(registroPartido.getId())) {
+            return false;
+        }
+
+        // ! NOTA: LA FUNCION ELIMINAR ID PARTIDO MANEJA INTERNAMENTE EL AUMENTO DE LA CANTIDAD DE PARTIDOS
+
+        // Agregamos la fecha de modificacion
+        if (!equipoLocal.setFechaUltimaModificacion(std::time(nullptr))) {
+            return false;
+        }
+
+        if (!equipoVisitante.setFechaUltimaModificacion(std::time(nullptr))) {
+            return false;
+        }
+
+        // Guardamos los archivos
+        if (!GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoLocal, registroPartido.getIdEquipoLocal()) ||
+            !GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoVisitante, registroPartido.getIdEquipoVisitante())) {
+            return false;
+        }
     }
 
     return true;
