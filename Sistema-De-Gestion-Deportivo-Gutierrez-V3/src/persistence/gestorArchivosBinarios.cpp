@@ -103,7 +103,7 @@ bool GestorArchivosBinarios::inicializarSistemaArchivos() {
 ArchivoHeader GestorArchivosBinarios::obtenerHeader(const std::string &rutaArchivo) {
 
     // Lo declaramos en formato error
-    ArchivoHeader header = {-1, -1, -1, -1};
+    ArchivoHeader header = {constantes::ERROR_INT, constantes::ERROR_INT, constantes::ERROR_INT, constantes::ERROR_INT};
 
     // Verificamos que exista y que no esté vacío
     if (!GestorArchivosBinarios::validarExisteArchivo(rutaArchivo) || validarArchivoVacio(rutaArchivo)) {

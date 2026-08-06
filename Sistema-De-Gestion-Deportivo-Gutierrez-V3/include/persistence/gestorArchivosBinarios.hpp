@@ -148,7 +148,7 @@ class GestorArchivosBinarios {
                 break;
 
             // Si encontramos el id devolvemos el indice fisico
-            if (registroTemporal.ID == id) {
+            if (registroTemporal.getId() == id) {
                 archivo.close();
                 return contadorIndice;
             }
@@ -229,7 +229,7 @@ class GestorArchivosBinarios {
                 return false;
 
             // Si encontramos el id y no esta eliminado devolvemos true
-            if (!registroTemporal.eliminado && registroTemporal.ID == id) {
+            if (!registroTemporal.getEliminado() && registroTemporal.getId() == id) {
                 archivo.close();
                 return true;
             }
@@ -280,7 +280,7 @@ class GestorArchivosBinarios {
         archivo.read(reinterpret_cast<char *>(&registroBuscado), tipoRegistro::getTamano());
 
         // Verificamos que la lectura haya sido exitosa y que el registro no este eliminado
-        if (!verificarOperacion(archivo) || registroBuscado.eliminado) {
+        if (!verificarOperacion(archivo) || registroBuscado.getEliminado()) {
             archivo.close();
             return false;
         }
@@ -327,12 +327,12 @@ class GestorArchivosBinarios {
             }
 
             // si está eliminado nos lo saltamos para no agregarlo al vector
-            if (registroTemporal.eliminado) {
+            if (registroTemporal.getEliminado()) {
                 continue;
             }
 
             // Transformamos a string el parametro const char * para una mejor comparacion
-            std::string nombreRegistro(registroTemporal.nombre);
+            std::string nombreRegistro(registroTemporal.getNombre());
             Formatos::convertirTextoAMinus(nombreRegistro);
 
             // Comparamos
@@ -385,7 +385,7 @@ class GestorArchivosBinarios {
             }
 
             // Si no está eliminado lo agregamos
-            if (!registroTemporal.eliminado) {
+            if (!registroTemporal.getEliminado()) {
                 resultados.push_back(registroTemporal);
             }
         }
