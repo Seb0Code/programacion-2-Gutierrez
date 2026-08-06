@@ -23,6 +23,7 @@ namespace constantes {
     constexpr int TAMANO_FORMATO = 20;
     constexpr int TAMANO_DESCRIPCION = 200;
     constexpr int TAMANO_LOCAL_O_VISITANTE = 12;
+    constexpr int TAMANO_TIPO_REFERNCIA = 20;
 
     // Rutas de Archivos Principales
     inline const std::string RUTA_DATOS_CARPETA = "datos/";
@@ -33,6 +34,7 @@ namespace constantes {
     inline const std::string RUTA_ARCHIVO_DEPORTES_CONFIG = "../../config/deportes_config.csv";
     inline const std::string RUTA_ARCHIVO_POSICIONES_DEPORTES = "../../config/posiciones_deportes.csv";
     inline const std::string RUTA_ARCHIVO_FORMATOS_CONFIG = "../../config/formatos_config.csv";
+    inline const std::string RUTA_ARCHIVO_ESTADO_PARTIDOS_CONFIG = "../../config/estado_partidos_config.csv";
 
     // Rutas de Backups
     inline const std::string RUTA_BACKUPS = "datos/backups/";
@@ -48,6 +50,7 @@ namespace constantes {
     constexpr int MAX_TARJETAS_ROJAS = 8;
     constexpr int MINUTO_MINIMO = 1;
     constexpr int MINUTO_MAXIMO = 120;
+    constexpr int MAX_PARTIDOS_EQUIPOS = 50;
 
 } // namespace constantes
 
