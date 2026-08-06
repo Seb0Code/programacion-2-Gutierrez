@@ -96,6 +96,8 @@ std::streampos GestorArchivosBinarios::calcularPosicion(const size_t &indiceFisi
 // =======================================================================================
 
 bool GestorArchivosBinarios::inicializarSistemaArchivos() {
+    std::filesystem::create_directories(constantes::RUTA_DATOS_CARPETA);
+    std::filesystem::create_directories(constantes::RUTA_BACKUPS);
     return GestorArchivosBinarios::inicializarArchivo(constantes::NOMBRE_ARCHIVO_TORNEO) && GestorArchivosBinarios::inicializarArchivo(constantes::NOMBRE_ARCHIVO_EQUIPOS) &&
            GestorArchivosBinarios::inicializarArchivo(constantes::NOMBRE_ARCHIVO_JUGADORES) && GestorArchivosBinarios::inicializarArchivo(constantes::NOMBRE_ARCHIVO_PARTIDOS);
 }
