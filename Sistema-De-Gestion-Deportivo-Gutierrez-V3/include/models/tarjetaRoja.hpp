@@ -58,7 +58,7 @@ class TarjetaRoja {
      * @brief Obtiene el identificador del jugador sancionado.
      * @return `int` Identificador único del jugador.
      */
-    int getIdJugado() const;
+    int getIdJugador() const;
 
     /**
      * @brief Obtiene el minuto del partido en el que se mostró la tarjeta roja.

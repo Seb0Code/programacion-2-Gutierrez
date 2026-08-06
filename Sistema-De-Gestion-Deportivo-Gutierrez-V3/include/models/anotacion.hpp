@@ -58,7 +58,7 @@ class Anotacion {
      * @brief Obtiene el identificador del jugador que realizó la anotación.
      * @return `int` ID del jugador (`0` en caso de gol en contra o valor no especificado).
      */
-    int getIdJugado() const;
+    int getIdJugador() const;
 
     /**
      * @brief Obtiene el minuto exacto en el que ocurrió la anotación.

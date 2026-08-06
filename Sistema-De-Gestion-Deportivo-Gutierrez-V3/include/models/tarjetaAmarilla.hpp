@@ -58,7 +58,7 @@ class TarjetaAmarilla {
      * @brief Obtiene el identificador del jugador amonestado.
      * @return `int` Identificador único del jugador.
      */
-    int getIdJugado() const;
+    int getIdJugador() const;
 
     /**
      * @brief Obtiene el minuto del partido en el que se otorgó la tarjeta amarilla.

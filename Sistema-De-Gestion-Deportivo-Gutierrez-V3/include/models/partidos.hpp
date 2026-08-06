@@ -310,6 +310,8 @@ class Partido {
      */
     bool agregarAnotacion(const Anotacion &nuevaAnotacion);
 
+    bool eliminarAnotacion(const int indice);
+
     /**
      * @brief Agrega una nueva tarjeta amarilla al detalle del partido, si hay espacio disponible.
      * @param nuevaTarjeta Estructura tarjetaAmarilla a agregar.
@@ -317,12 +319,16 @@ class Partido {
      */
     bool agregarTarjetaAmarilla(const TarjetaAmarilla &nuevaTarjeta);
 
+    bool eliminarTarjetaAmarilla(const int indice);
+
     /**
      * @brief Agrega una nueva tarjeta roja al detalle del partido, si hay espacio disponible.
      * @param nuevaTarjeta Estructura tarjetaRoja a agregar.
      * @return true si se agregó correctamente, false si el arreglo está lleno o los datos son inválidos.
      */
     bool agregarTarjetaRoja(const TarjetaRoja &nuevaTarjeta);
+
+    bool eliminarTarjetaRoja(const int indice);
 
     /**
      * @brief Modifica una anotación existente en el detalle del partido, dado su índice.

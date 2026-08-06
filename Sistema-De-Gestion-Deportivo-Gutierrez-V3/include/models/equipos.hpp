@@ -341,6 +341,8 @@ class Equipo {
      */
     bool agregarIdPartido(const int nuevoIdPartido);
 
+    bool eliminarIdPartido(const int idPartido);
+
     /**
      * @brief Modifica una anotación existente en el detalle del partido, dado su índice.
      * @param indice Posición dentro del arreglo de anotaciones (0-based).
