@@ -1,6 +1,8 @@
 #include "../../include/models/jugador.hpp"
 #include "../../include/utils/formatos.hpp"
 #include "../../include/utils/validaciones.hpp"
+#include <cctype>
+#include <cstring>
 #include <ctime>
 
 Jugador::Jugador(int idJ, int idEq, const char *nom, const char *ced, const char *pos, int ed, int dor, const char *fechaR, bool eli, time_t fechaC, time_t fechaUM)
@@ -74,9 +76,21 @@ bool Jugador::setCedula(const char *ced) {
 }
 
 bool Jugador::setPosicion(const char *pos) {
-    if (pos == nullptr || !GestorDeValidaciones::validarTamano(pos, constantes::TAMANO_POSICION - 1)) {
+    if (pos == nullptr || GestorDeValidaciones::validarCadenaVacia(pos)) {
         return false;
     }
+
+    if (std::strlen(pos) >= constantes::TAMANO_POSICION) {
+        return false;
+    }
+
+    for (size_t i = 0; pos[i] != '\0'; ++i) {
+        unsigned char ch = static_cast<unsigned char>(pos[i]);
+        if (!std::isalnum(ch) && !std::isspace(ch) && ch != '-') {
+            return false;
+        }
+    }
+
     Formatos::copiarCadena(posicion, pos, constantes::TAMANO_POSICION);
     return true;
 }

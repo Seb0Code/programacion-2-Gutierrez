@@ -100,6 +100,16 @@ bool Equipo::setNumJugadores(const int numJ) {
     return true;
 }
 
+void Equipo::aumentarNumeroDeJugadores() { numJugadores++; }
+
+bool Equipo::disminuirNumeroDeJugadores() {
+    if (numJugadores > 0) {
+        numJugadores--;
+        return true;
+    }
+    return false;
+}
+
 bool Equipo::setPuntos(const int pts) {
     if (pts < 0) {
         return false;

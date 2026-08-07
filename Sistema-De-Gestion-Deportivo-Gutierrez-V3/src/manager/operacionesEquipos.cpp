@@ -256,27 +256,26 @@ bool OperacionesEquipos::modificarCantidadDeJugadores(const int idEquipo, const 
         return false;
     }
 
-    // Pedimos la cantida de jugadores del equipo
+    // Pedimos la cantidad de jugadores del equipo
     int cantJugadores = equipoAuxiliar.getNumJugadores();
 
-    // Verificamos que no esté vacío
-    if (cantJugadores <= 0) {
+    // Verificamos que no se intente disminuir por debajo de cero
+    if (cantJugadores < 0) {
         return false;
     }
 
-    if (disminuir) {
-        // Disminuimos la cantidad;
-        --cantJugadores;
+    if (!disminuir) {
+        equipoAuxiliar.aumentarNumeroDeJugadores();
+    } else if (cantJugadores > 0) {
+        equipoAuxiliar.disminuirNumeroDeJugadores();
     } else {
-        // Aumentamos la cantidad
-        ++cantJugadores;
+        equipoAuxiliar.setNumJugadores(0);
     }
 
-    // Cambiamos el valor del equipo
-    if (!equipoAuxiliar.setNumJugadores(cantJugadores)) {
-        return false;
-    }
-    return true;
+    equipoAuxiliar.setFechaUltimaModificacion(std::time(nullptr));
+
+    // Persistimos la modificación en el archivo binario
+    return GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoAuxiliar, idEquipo);
 }
 
 bool OperacionesEquipos::modificarEstadisticas(const int idEquipo, const int resultadoParaEquipo, const bool permiteEmpate, const bool revertir) {

@@ -84,16 +84,10 @@ bool OperacionesJugadores::registrarJugador(Jugador &nuevoJugador) {
     }
 
     // * Aumentamos el numero de jugadores del equipo
-
-    Equipo equipoAuxiliar;
-    // buscamos el indice fisico del equipo al que pertence el jugador
-    if (!GestorArchivosBinarios::buscarRegistrosPorId<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoAuxiliar, nuevoJugador.getIdEquipo())) {
+    if (!OperacionesEquipos::modificarCantidadDeJugadores(nuevoJugador.getIdEquipo(), false)) {
         return false;
     }
 
-    // aumentamos en 1 el numero de jugadores y guardamos el equipo
-    OperacionesEquipos::modificarCantidadDeJugadores(equipoAuxiliar.getId());
-    GestorArchivosBinarios::guardarRegistro<Equipo>(constantes::NOMBRE_ARCHIVO_EQUIPOS, equipoAuxiliar, nuevoJugador.getIdEquipo());
     return true;
 }
 
@@ -113,11 +107,6 @@ std::vector<Jugador> OperacionesJugadores::listarJugadoresPorEquipo(const int id
 
     // Verificamos si el equipo existe
     if (!existe) {
-        return listaDeJugadoresPorSuEquipo;
-    }
-
-    // Si el equipo no tiene jugadores
-    if (equipoTemporal.getNumJugadores() <= 0) {
         return listaDeJugadoresPorSuEquipo;
     }
 
@@ -216,20 +205,25 @@ bool OperacionesJugadores::eliminarJugador(const int id) {
 
     // Primero buscamos al jugador para ver si existe
     if (!GestorArchivosBinarios::buscarRegistrosPorId<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, id)) {
+        std::cout << "1";
         return false;
     }
+    // * Disminuimos el contador de jugadores del equipo correspondiente si corresponde
+    OperacionesEquipos::modificarCantidadDeJugadores(jugadorAuxiliar.getIdEquipo(), true);
 
     // Lo eliminamos
     jugadorAuxiliar.setEliminado(true);
 
     // Lo guardamos
     if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, id)) {
+        std::cout << "1";
         return false;
     }
 
     // Obtenemos el header
     ArchivoHeader header = GestorArchivosBinarios::obtenerHeader(constantes::NOMBRE_ARCHIVO_JUGADORES);
     if (header.getCantidadRegistros() == constantes::ERROR_INT) {
+        std::cout << "1";
         return false;
     }
 
@@ -238,11 +232,7 @@ bool OperacionesJugadores::eliminarJugador(const int id) {
 
     //  *Actualizamos el header
     if (!GestorArchivosBinarios::actualizarHeader(constantes::NOMBRE_ARCHIVO_JUGADORES, header)) {
-        return false;
-    }
-
-    // * Disminuimos el contador de jugadores del equipo correspondiente
-    if (!OperacionesEquipos::modificarCantidadDeJugadores(jugadorAuxiliar.getIdEquipo(), true)) {
+        std::cout << "2";
         return false;
     }
 
@@ -287,6 +277,8 @@ bool OperacionesJugadores::modificarEstadisticas(Partido &registroPartido, const
         if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, anotaciones[e].getIdJugador())) {
             return false;
         }
+
+        return true;
     }
 
     // Modificamos las tarjetas amarillas

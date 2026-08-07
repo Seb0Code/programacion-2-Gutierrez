@@ -1138,7 +1138,7 @@ void jugadores::eliminarJugador() {
     ArchivoHeader headerEquipos = GestorArchivosBinarios::obtenerHeader(constantes::NOMBRE_ARCHIVO_EQUIPOS);
 
     // Verificamos que la lectura del header fue correcta
-    if (headerJugadores.getCantidadRegistros() == constantes::ERROR_INT | headerEquipos.getCantidadRegistros() == constantes::ERROR_INT) {
+    if (headerJugadores.getCantidadRegistros() == constantes::ERROR_INT || headerEquipos.getCantidadRegistros() == constantes::ERROR_INT) {
         std::cerr << "\nError del Sistema!\n";
         std::cout << "Busqueda Cancelada\n";
         Formatos::pausarPrograma();

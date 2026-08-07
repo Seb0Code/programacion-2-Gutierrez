@@ -278,6 +278,10 @@ class Equipo {
      */
     bool setNumJugadores(const int numJ);
 
+    bool disminuirNumeroDeJugadores();
+
+    void aumentarNumeroDeJugadores();
+
     /**
      * @brief Establece la puntuación acumulada en la tabla general.
      *
