@@ -46,6 +46,11 @@ bool OperacionesJugadores::esDorsalDuplicado(const int dorsal, const int idEquip
             continue;
         }
 
+        // Solo nos interesan los jugadores del mismo equipo
+        if (jugadorAux.getIdEquipo() != idEquipo) {
+            continue;
+        }
+
         if (actualizar && jugadorAux.getId() == idRegistro) {
             continue;
         }
@@ -62,6 +67,13 @@ bool OperacionesJugadores::registrarJugador(Jugador &nuevoJugador) {
 
     ArchivoHeader header = GestorArchivosBinarios::obtenerHeader(constantes::NOMBRE_ARCHIVO_JUGADORES);
     if (header.getCantidadRegistros() == constantes::ERROR_INT) {
+        return false;
+    }
+
+    // * Verificamos que no esten duplicados el nombre, la cedula o el dorsal dentro del equipo
+    if (OperacionesJugadores::cadenaDuplicada(nuevoJugador.getNombre(), &Jugador::getNombre) ||
+        OperacionesJugadores::cadenaDuplicada(nuevoJugador.getCedula(), &Jugador::getCedula) ||
+        OperacionesJugadores::esDorsalDuplicado(nuevoJugador.getNumeroDorsal(), nuevoJugador.getIdEquipo())) {
         return false;
     }
 
@@ -157,7 +169,7 @@ bool OperacionesJugadores::actualizarJugador(const int id, const char *nombre, c
 
     // Verificamos que no estén duplicados
     if (OperacionesJugadores::cadenaDuplicada(nombre, &Jugador::getNombre, true, id) || OperacionesJugadores::cadenaDuplicada(cedula, &Jugador::getCedula, true, id) ||
-        OperacionesJugadores::esDorsalDuplicado(numeroDorsal, jugadorAuxiliar.getId(), true, id)) {
+        OperacionesJugadores::esDorsalDuplicado(numeroDorsal, jugadorAuxiliar.getIdEquipo(), true, id)) {
         return false;
     }
 
