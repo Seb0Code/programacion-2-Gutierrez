@@ -15,7 +15,7 @@ std::string OperacionesPartidos::obtenerEstadoPorId(const int idEstado) {
         return constantes::ERROR_STRING;
     }
 
-    for (size_t e = 0; listaEstadoPartidos.size(); ++e) {
+    for (size_t e = 0; e < listaEstadoPartidos.size(); ++e) {
 
         std::vector<std::string> linea = listaEstadoPartidos[e];
         int idAuxiliar = Formatos::parsearValor<int>(linea[0], constantes::ERROR_INT);
@@ -111,10 +111,10 @@ std::vector<Partido> OperacionesPartidos::listarPartidosPorSuEstado(const char *
         } else {
             break;
         }
-
-        // Devolvemos el vector
-        return listaDePartidosPorEstado;
     }
+
+    // Devolvemos el vector
+    return listaDePartidosPorEstado;
 }
 
 bool OperacionesPartidos::programarPartido(Partido &nuevoPartido) {

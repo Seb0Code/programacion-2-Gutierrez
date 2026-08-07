@@ -79,6 +79,7 @@ class OperacionesTorneo {
      * int idPosicion = 1; // Portero
      * std::string pos = OperacionesTorneo::buscarPosicionJugadorEnConfig(idPosicion, idDeporte);
      * @endcode
+     *
      */
     static std::string buscarPosicionJugadorEnConfig(const int idPosicionBuscada, const int idDeporteBuscado);
 

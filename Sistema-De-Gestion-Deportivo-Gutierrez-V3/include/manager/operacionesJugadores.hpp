@@ -13,9 +13,9 @@ class OperacionesJugadores {
   private:
     OperacionesJugadores() = delete;
 
+  public:
     static bool cadenaDuplicada(const char *cadena, const char *(Jugador::*getter)() const, bool actualizar = false, int idRegistro = -1);
 
-  public:
     static bool esDorsalDuplicado(const int dorsal, const int idEquipo, bool actualizar = false, int idRegistro = -1);
 
     static bool registrarJugador(Jugador &nuevoJugador);

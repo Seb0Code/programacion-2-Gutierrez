@@ -203,7 +203,7 @@ bool OperacionesJugadores::actualizarJugador(const int id, const char *nombre, c
     jugadorAuxiliar.setFechaUltimaModificacion(std::time(nullptr));
 
     // Guardamos el registro
-    if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_EQUIPOS, jugadorAuxiliar, id)) {
+    if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, id)) {
         return false;
     }
     return true;
