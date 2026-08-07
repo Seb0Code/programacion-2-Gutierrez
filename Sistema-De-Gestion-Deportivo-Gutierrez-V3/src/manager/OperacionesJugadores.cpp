@@ -253,105 +253,81 @@ bool OperacionesJugadores::eliminarJugador(const int id) {
 
 bool OperacionesJugadores::modificarEstadisticas(Partido &registroPartido, const bool disminuir) {
 
-    // Modificamos los goles
-    for (int e = 0; e < registroPartido.getNumAnotaciones(); ++e) {
-
+    // Recorremos de atras hacia adelante: al revertir (disminuir), eliminarAnotacion/
+    // eliminarTarjetaX desplaza los elementos siguientes, por lo que iterar hacia
+    // adelante saltaria registros y guardaria el jugador equivocado.
+    for (int e = registroPartido.getNumAnotaciones() - 1; e >= 0; --e) {
         Jugador jugadorAuxiliar;
-
         const Anotacion *anotaciones = registroPartido.getAnotaciones();
+        int idJugadorAnotacion = anotaciones[e].getIdJugador();
 
-        // Si fue un autogol, saltamos esta iteracion
-        if (anotaciones[e].getIdJugador() == 0) {
+        if (idJugadorAnotacion == 0) {
             continue;
         }
 
-        // Verificamos si el jugador existe
-        if (!GestorArchivosBinarios::buscarRegistrosPorId<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, anotaciones[e].getIdJugador())) {
+        if (!GestorArchivosBinarios::buscarRegistrosPorId<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, idJugadorAnotacion)) {
             return false;
         }
 
         if (!disminuir) {
-            // Aumentamos el numero de anotaciones
-            if (!modificarAnotaciones(jugadorAuxiliar, false)) {
+            if (!modificarAnotaciones(jugadorAuxiliar, false))
                 return false;
-            }
         } else {
-            // Aumentamos el numero de anotaciones
-            if (!modificarAnotaciones(jugadorAuxiliar, true)) {
+            if (!modificarAnotaciones(jugadorAuxiliar, true))
                 return false;
-            }
-            if (!registroPartido.eliminarAnotacion(e)) {
+            if (!registroPartido.eliminarAnotacion(e))
                 return false;
-            }
         }
 
-        // guardamos los cambios
-        if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, anotaciones[e].getIdJugador())) {
+        if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, idJugadorAnotacion)) {
             return false;
         }
     }
 
-    // Modificamos las tarjetas amarillas
-    for (int e = 0; e < registroPartido.getNumTarjetaAma(); ++e) {
-
+    for (int e = registroPartido.getNumTarjetaAma() - 1; e >= 0; --e) {
         Jugador jugadorAuxiliar;
-
         const TarjetaAmarilla *tarjetaA = registroPartido.getTarjetasAmarillas();
+        int idJugadorTarjeta = tarjetaA[e].getIdJugador();
 
-        // Verificamos si el jugador existe
-        if (!GestorArchivosBinarios::buscarRegistrosPorId<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, tarjetaA[e].getIdJugador())) {
+        if (!GestorArchivosBinarios::buscarRegistrosPorId<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, idJugadorTarjeta)) {
             return false;
         }
 
-        // Aumentamos el numero de tarjetas ama
         if (!disminuir) {
-            if (!modificarTarjetasAma(jugadorAuxiliar, false)) {
+            if (!modificarTarjetasAma(jugadorAuxiliar, false))
                 return false;
-            }
         } else {
-            if (!modificarTarjetasAma(jugadorAuxiliar, true)) {
+            if (!modificarTarjetasAma(jugadorAuxiliar, true))
                 return false;
-            }
-
-            if (!registroPartido.eliminarTarjetaAmarilla(e)) {
+            if (!registroPartido.eliminarTarjetaAmarilla(e))
                 return false;
-            }
         }
 
-        // guardamos los cambios
-        if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, tarjetaA[e].getIdJugador())) {
+        if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, idJugadorTarjeta)) {
             return false;
         }
     }
 
-    // Modificamos las tarjetas rojas
-    for (int e = 0; e < registroPartido.getNumTarjetasRojas(); ++e) {
-
+    for (int e = registroPartido.getNumTarjetasRojas() - 1; e >= 0; --e) {
         Jugador jugadorAuxiliar;
-
         const TarjetaRoja *tarjetaR = registroPartido.getTarjetasRojas();
+        int idJugadorTarjeta = tarjetaR[e].getIdJugador();
 
-        // Verificamos si el jugador existe
-        if (!GestorArchivosBinarios::buscarRegistrosPorId<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, tarjetaR[e].getIdJugador())) {
+        if (!GestorArchivosBinarios::buscarRegistrosPorId<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, idJugadorTarjeta)) {
             return false;
         }
 
-        // Aumentamos el numero de tarjetas rojas
         if (!disminuir) {
-            if (!modificarTarjetasRojas(jugadorAuxiliar, false)) {
+            if (!modificarTarjetasRojas(jugadorAuxiliar, false))
                 return false;
-            }
         } else {
-            if (!modificarTarjetasRojas(jugadorAuxiliar, true)) {
+            if (!modificarTarjetasRojas(jugadorAuxiliar, true))
                 return false;
-            }
-            if (!registroPartido.eliminarTarjetaRoja(e)) {
+            if (!registroPartido.eliminarTarjetaRoja(e))
                 return false;
-            }
         }
 
-        // guardamos los cambios
-        if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, tarjetaR[e].getIdJugador())) {
+        if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, idJugadorTarjeta)) {
             return false;
         }
     }

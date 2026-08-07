@@ -296,6 +296,46 @@ bool OperacionesPartidos::registrarResultado(Partido registroPartido) {
         return false;
     }
 
+    // * Verificamos que los contadores resumen (local/visitante) coincidan con el detalle real
+    int golesLocalReal = 0, golesVisitanteReal = 0;
+    const Anotacion *anotacionesChequeo = registroPartido.getAnotaciones();
+    for (int e = 0; e < registroPartido.getNumAnotaciones(); ++e) {
+        if (std::strcmp(anotacionesChequeo[e].getEquipo(), "LOCAL") == 0) {
+            ++golesLocalReal;
+        } else if (std::strcmp(anotacionesChequeo[e].getEquipo(), "VISITANTE") == 0) {
+            ++golesVisitanteReal;
+        }
+    }
+    if (golesLocalReal != registroPartido.getAnotacionesLocal() || golesVisitanteReal != registroPartido.getAnotacionesVisitante()) {
+        return false;
+    }
+
+    int tarjetasAmaLocalReal = 0, tarjetasAmaVisitanteReal = 0;
+    const TarjetaAmarilla *tarjetasAmaChequeo = registroPartido.getTarjetasAmarillas();
+    for (int e = 0; e < registroPartido.getNumTarjetaAma(); ++e) {
+        if (std::strcmp(tarjetasAmaChequeo[e].getEquipo(), "LOCAL") == 0) {
+            ++tarjetasAmaLocalReal;
+        } else if (std::strcmp(tarjetasAmaChequeo[e].getEquipo(), "VISITANTE") == 0) {
+            ++tarjetasAmaVisitanteReal;
+        }
+    }
+    if (tarjetasAmaLocalReal != registroPartido.getTarjetasAmaLocal() || tarjetasAmaVisitanteReal != registroPartido.getTarjetasAmaVisitante()) {
+        return false;
+    }
+
+    int tarjetasRojasLocalReal = 0, tarjetasRojasVisitanteReal = 0;
+    const TarjetaRoja *tarjetasRojChequeo = registroPartido.getTarjetasRojas();
+    for (int e = 0; e < registroPartido.getNumTarjetasRojas(); ++e) {
+        if (std::strcmp(tarjetasRojChequeo[e].getEquipo(), "LOCAL") == 0) {
+            ++tarjetasRojasLocalReal;
+        } else if (std::strcmp(tarjetasRojChequeo[e].getEquipo(), "VISITANTE") == 0) {
+            ++tarjetasRojasVisitanteReal;
+        }
+    }
+    if (tarjetasRojasLocalReal != registroPartido.getTarjetasRojasLocal() || tarjetasRojasVisitanteReal != registroPartido.getTarjetasRojasVisitante()) {
+        return false;
+    }
+
     // * 1. Leemos el partido y verificamos que exsite
 
     // verificamos que el partido si exista (en estado programado);
