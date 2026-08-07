@@ -155,6 +155,32 @@ bool GestorArchivosBinarios::actualizarHeader(const std::string &rutaArchivo, co
     return true;
 }
 
+bool GestorArchivosBinarios::guardarInformacionTorneo(const Torneo &torneo) {
+    // Validamos que exista el archivo
+    if (!validarExisteArchivo(constantes::NOMBRE_ARCHIVO_TORNEO)) {
+        return false;
+    }
+
+    // Abrimos el archivo en modo escritura (esto trunca y reescribe desde cero,
+    // que es correcto porque el archivo de torneo solo contiene UN registro)
+    std::ofstream archivo;
+    if (!abrirArchivoParaEscritura(constantes::NOMBRE_ARCHIVO_TORNEO, archivo)) {
+        return false;
+    }
+
+    // Escribimos el struct completo desde el inicio (sin ArchivoHeader, tal como lo lee obtenerInformacionTorneo)
+    archivo.seekp(0, std::ios::beg);
+    archivo.write(reinterpret_cast<const char *>(&torneo), Torneo::getTamano());
+
+    if (!verificarOperacion(archivo)) {
+        archivo.close();
+        return false;
+    }
+
+    archivo.close();
+    return true;
+}
+
 Torneo GestorArchivosBinarios::obtenerInformacionTorneo() {
     Torneo torneo;
     // Validamos que existe el archivo

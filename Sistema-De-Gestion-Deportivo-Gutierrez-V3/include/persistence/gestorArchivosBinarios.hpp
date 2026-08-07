@@ -192,6 +192,16 @@ class GestorArchivosBinarios {
      */
     static Torneo obtenerInformacionTorneo();
 
+    /**
+     * @brief Persiste (sobrescribe) el único registro de `Torneo` en su archivo binario.
+     * @details A diferencia de `guardarNuevoRegistro`, este archivo NO usa `ArchivoHeader`:
+     * contiene un único registro `Torneo` escrito directamente desde el byte 0, tal como
+     * lo crea `inicializarArchivo()`. Por eso requiere su propia lógica de guardado.
+     * @param[in] torneo Objeto `Torneo` con los datos a persistir.
+     * @return `true` si la escritura fue exitosa, `false` en caso contrario.
+     */
+    static bool guardarInformacionTorneo(const Torneo &torneo);
+
     // =======================================================================================
     // Métodos Genéricos Templatizados (CRUD y Consultas)
     // =======================================================================================
