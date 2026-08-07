@@ -1,10 +1,13 @@
 #ifndef CONSTANTES_HPP
 #define CONSTANTES_HPP
 
+#include <filesystem>
 #include <string>
 
 // Definicion de Variables globales constantes
 namespace constantes {
+
+    inline const std::filesystem::path PROYECTO_ROOT = std::filesystem::path(__FILE__).parent_path().parent_path().parent_path();
 
     // Devolucion de Error en funciones de tipo int
     const int ERROR_INT = -1;
@@ -26,22 +29,22 @@ namespace constantes {
     constexpr int TAMANO_TIPO_REFERNCIA = 20;
 
     // Rutas de Archivos Principales
-    inline const std::string RUTA_DATOS_CARPETA = "datos/";
-    inline const std::string NOMBRE_ARCHIVO_TORNEO = "datos/torneo.bin";
-    inline const std::string NOMBRE_ARCHIVO_JUGADORES = "datos/jugadores.bin";
-    inline const std::string NOMBRE_ARCHIVO_EQUIPOS = "datos/equipos.bin";
-    inline const std::string NOMBRE_ARCHIVO_PARTIDOS = "datos/partidos.bin";
-    inline const std::string RUTA_ARCHIVO_DEPORTES_CONFIG = "../../config/deportes_config.csv";
-    inline const std::string RUTA_ARCHIVO_POSICIONES_DEPORTES = "../../config/posiciones_deportes.csv";
-    inline const std::string RUTA_ARCHIVO_FORMATOS_CONFIG = "../../config/formatos_config.csv";
-    inline const std::string RUTA_ARCHIVO_ESTADO_PARTIDOS_CONFIG = "../../config/estado_partidos_config.csv";
+    inline const std::string RUTA_DATOS_CARPETA = (PROYECTO_ROOT / "datos").string() + "/";
+    inline const std::string NOMBRE_ARCHIVO_TORNEO = (PROYECTO_ROOT / "datos" / "torneo.bin").string();
+    inline const std::string NOMBRE_ARCHIVO_JUGADORES = (PROYECTO_ROOT / "datos" / "jugadores.bin").string();
+    inline const std::string NOMBRE_ARCHIVO_EQUIPOS = (PROYECTO_ROOT / "datos" / "equipos.bin").string();
+    inline const std::string NOMBRE_ARCHIVO_PARTIDOS = (PROYECTO_ROOT / "datos" / "partidos.bin").string();
+    inline const std::string RUTA_ARCHIVO_DEPORTES_CONFIG = (PROYECTO_ROOT / "config" / "deportes_config.csv").string();
+    inline const std::string RUTA_ARCHIVO_POSICIONES_DEPORTES = (PROYECTO_ROOT / "config" / "posiciones_deportes.csv").string();
+    inline const std::string RUTA_ARCHIVO_FORMATOS_CONFIG = (PROYECTO_ROOT / "config" / "formatos_config.csv").string();
+    inline const std::string RUTA_ARCHIVO_ESTADO_PARTIDOS_CONFIG = (PROYECTO_ROOT / "config" / "estado_partidos_config.csv").string();
 
     // Rutas de Backups
-    inline const std::string RUTA_BACKUPS = "datos/backups/";
-    inline const std::string NOMBRE_BACKUPS_TORNEO = "datos/backups/torneo.bin";
-    inline const std::string NOMBRE_BACKUPS_JUGADORES = "datos/backups/jugadores.bin";
-    inline const std::string NOMBRE_BACKUPS_EQUIPOS = "datos/backups/equipos.bin";
-    inline const std::string NOMBRE_BACKUPS_PARTIDOS = "datos/backups/partidos.bin";
+    inline const std::string RUTA_BACKUPS = (PROYECTO_ROOT / "datos" / "backups").string() + "/";
+    inline const std::string NOMBRE_BACKUPS_TORNEO = (PROYECTO_ROOT / "datos" / "backups" / "torneo.bin").string();
+    inline const std::string NOMBRE_BACKUPS_JUGADORES = (PROYECTO_ROOT / "datos" / "backups" / "jugadores.bin").string();
+    inline const std::string NOMBRE_BACKUPS_EQUIPOS = (PROYECTO_ROOT / "datos" / "backups" / "equipos.bin").string();
+    inline const std::string NOMBRE_BACKUPS_PARTIDOS = (PROYECTO_ROOT / "datos" / "backups" / "partidos.bin").string();
 
     // Límites de Valores
     constexpr int MAX_RESULTADOS = 100;
