@@ -145,7 +145,7 @@ float calcularPromedio(int *arrayDinamico, int tamanio) {
 
 void liberarMemoria(int *&arrayDinamico) {
     // limpiamos lo que hay en ArrayPtr
-    delete arrayDinamico;
+    delete[] arrayDinamico;
     // Hacemos que no apunte a ningun lado para evitar un puntero colgante
     arrayDinamico = nullptr;
 }

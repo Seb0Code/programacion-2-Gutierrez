@@ -1,0 +1,24 @@
+* ============================================================================
+ * DIRECTIVAS DE COMPILACIÓN CONDICIONAL Y LIBRERÍA <windows.h>
+ * ============================================================================
+ * * DIRECTIVAS #ifdef _WIN32 / #endif:
+ * El preprocesador de C++ utiliza estas líneas para evaluar en qué sistema 
+ * operativo se está compilando el programa. '_WIN32' es una macro definida 
+ * automáticamente por los compiladores cuando el entorno objetivo es Windows 
+ * (aplica tanto para arquitecturas de 32 como de 64 bits). 
+ * Si el programa se compila en Linux o macOS, todo el bloque interno es 
+ * completamente ignorado por el compilador, evitando errores de compatibilidad.
+ * * LIBRERÍA <windows.h>:
+ * Es la cabecera principal del SDK de Windows. Contiene las declaraciones de 
+ * las funciones de la API nativa del sistema operativo. En este código específico, 
+ * se incluye únicamente para tener acceso a:
+ * - 'SetConsoleOutputCP(CP_UTF8)': Cambia la codificación de salida de la terminal.
+ * - 'SetConsoleCP(CP_UTF8)': Cambia la codificación de entrada de la terminal.
+ * Ambas funciones configuran la consola de Windows para procesar texto en 
+ * UTF-8 (Code Page 65001), permitiendo que los caracteres especiales en español 
+ * no se rompan ni muestren símbolos extraños ("Símbolos extraños o Moibake").
+ */
+ 
+#ifdef _WIN32
+#include <windows.h>
+#endif
