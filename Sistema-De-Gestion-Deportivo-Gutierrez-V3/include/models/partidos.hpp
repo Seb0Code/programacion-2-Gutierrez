@@ -368,6 +368,15 @@ class Partido {
      */
     bool setFechaCreacion(const time_t fechaC);
 
+
+    /**
+     * @brief Restaura la fecha de un partido ya validado previamente (p. ej. al registrar el
+     * resultado de un partido programado), sin repetir la validación de rango del torneo.
+     * @param fechaP Fecha ya validada anteriormente, en formato YYYY-MM-DD.
+     * @return true si fechaP no es nulo y tiene formato válido, false en caso contrario.
+     */
+    bool restaurarFecha(const char *fechaP);
+
     /**
      * @brief Establece la fecha de la última modificación del registro.
      * @param fechaUM Marca de tiempo de tipo time_t que representa la modificación.

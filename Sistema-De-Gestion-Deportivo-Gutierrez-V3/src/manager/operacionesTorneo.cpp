@@ -1,6 +1,7 @@
 #include "../../include/manager/operacionesTorneo.hpp"
 #include "../../include/persistence/gestorArchivosTexto.hpp"
 #include "../../include/utils/constantes.hpp"
+#include "../../include/utils/formatos.hpp"
 #include "../../include/utils/validaciones.hpp"
 #include <cstddef>
 #include <cstring>
@@ -59,6 +60,77 @@ std::string OperacionesTorneo::buscarDeporteEnConfig(const int idBuscado) {
 
     // Si no lo encontro devolver error
     return constantes::ERROR_STRING;
+}
+
+ReglasTorneo OperacionesTorneo::buscarReglasDeporteEnConfig(const int idBuscado) {
+    ReglasTorneo reglas;
+
+    if (!GestorDeValidaciones::validarId(idBuscado)) {
+        return reglas;
+    }
+
+    if (GestorArchivosTexto::validarArchivoVacio(constantes::RUTA_ARCHIVO_DEPORTES_CONFIG) ||
+        !GestorArchivosTexto::validarExisteArchivo(constantes::RUTA_ARCHIVO_DEPORTES_CONFIG)) {
+        return reglas;
+    }
+
+    std::vector<std::vector<std::string>> listaDeDeportes;
+    listaDeDeportes = GestorArchivosTexto::leerCSV(constantes::RUTA_ARCHIVO_DEPORTES_CONFIG);
+
+    for (size_t e = 1; e < listaDeDeportes.size(); ++e) {
+        if (listaDeDeportes[e].size() < 8) {
+            continue;
+        }
+
+        int id = Formatos::parsearValor<int>(listaDeDeportes[e][0], constantes::ERROR_INT);
+        if (id == constantes::ERROR_INT) {
+            continue;
+        }
+
+        if (id == idBuscado) {
+            bool permiteEmpate = (listaDeDeportes[e][6] == "1" || listaDeDeportes[e][6] == "true" || listaDeDeportes[e][6] == "TRUE");
+            bool tarjetasHabilitadas = (listaDeDeportes[e][7] == "1" || listaDeDeportes[e][7] == "true" || listaDeDeportes[e][7] == "TRUE");
+            return ReglasTorneo(listaDeDeportes[e][1], Formatos::parsearValor<int>(listaDeDeportes[e][2], constantes::ERROR_INT),
+                                Formatos::parsearValor<int>(listaDeDeportes[e][3], constantes::ERROR_INT),
+                                Formatos::parsearValor<int>(listaDeDeportes[e][4], constantes::ERROR_INT),
+                                Formatos::parsearValor<int>(listaDeDeportes[e][5], constantes::ERROR_INT), permiteEmpate, tarjetasHabilitadas);
+        }
+    }
+
+    return reglas;
+}
+
+ReglasTorneo OperacionesTorneo::buscarReglasDeporteEnConfig(const std::string &nombreDeporte) {
+    ReglasTorneo reglas;
+
+    if (nombreDeporte.empty()) {
+        return reglas;
+    }
+
+    if (GestorArchivosTexto::validarArchivoVacio(constantes::RUTA_ARCHIVO_DEPORTES_CONFIG) ||
+        !GestorArchivosTexto::validarExisteArchivo(constantes::RUTA_ARCHIVO_DEPORTES_CONFIG)) {
+        return reglas;
+    }
+
+    std::vector<std::vector<std::string>> listaDeDeportes;
+    listaDeDeportes = GestorArchivosTexto::leerCSV(constantes::RUTA_ARCHIVO_DEPORTES_CONFIG);
+
+    for (size_t e = 1; e < listaDeDeportes.size(); ++e) {
+        if (listaDeDeportes[e].size() < 8) {
+            continue;
+        }
+
+        if (listaDeDeportes[e][1] == nombreDeporte) {
+            bool permiteEmpate = (listaDeDeportes[e][6] == "1" || listaDeDeportes[e][6] == "true" || listaDeDeportes[e][6] == "TRUE");
+            bool tarjetasHabilitadas = (listaDeDeportes[e][7] == "1" || listaDeDeportes[e][7] == "true" || listaDeDeportes[e][7] == "TRUE");
+            return ReglasTorneo(listaDeDeportes[e][1], Formatos::parsearValor<int>(listaDeDeportes[e][2], constantes::ERROR_INT),
+                                Formatos::parsearValor<int>(listaDeDeportes[e][3], constantes::ERROR_INT),
+                                Formatos::parsearValor<int>(listaDeDeportes[e][4], constantes::ERROR_INT),
+                                Formatos::parsearValor<int>(listaDeDeportes[e][5], constantes::ERROR_INT), permiteEmpate, tarjetasHabilitadas);
+        }
+    }
+
+    return reglas;
 }
 
 std::string OperacionesTorneo::buscarPosicionJugadorEnConfig(const int idPosicionBuscada, const int idDeporteBuscado) {

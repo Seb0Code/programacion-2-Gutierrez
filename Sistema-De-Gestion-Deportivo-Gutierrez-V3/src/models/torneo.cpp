@@ -78,6 +78,12 @@ bool Torneo::setDeporte(const int idDep) {
     // Convertimos el string a cadenas de c y copiamos el nuevo nombre del deporte
     const char *nombreDeporte_cstr = nombreDeporte.c_str();
     Formatos::copiarCadena(deporte, nombreDeporte_cstr, sizeof(deporte));
+
+    ReglasTorneo reglasDeporte = OperacionesTorneo::buscarReglasDeporteEnConfig(idDep);
+    if (reglasDeporte.getMinJugadores() == 0) {
+        return false;
+    }
+    reglas = reglasDeporte;
     return true;
 }
 
@@ -132,7 +138,15 @@ bool Torneo::setFechaFin(const char *fechaF) {
     return true;
 }
 
-ReglasTorneo Torneo::getReglasTorneo() const { return reglas; }
+ReglasTorneo Torneo::getReglasTorneo() const {
+    if (reglas.getMinJugadores() == 0 && deporte[0] != '\0') {
+        ReglasTorneo fallback = OperacionesTorneo::buscarReglasDeporteEnConfig(std::string(deporte));
+        if (fallback.getMinJugadores() != 0) {
+            return fallback;
+        }
+    }
+    return reglas;
+}
 
 bool Torneo::setFechaCreacion(const time_t fechaC) {
     // Si time_t es con signo negativo (antes de 1970) o excede rangos soportados

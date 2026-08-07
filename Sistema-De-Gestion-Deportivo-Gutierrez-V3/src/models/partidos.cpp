@@ -265,3 +265,11 @@ bool Partido::setFechaUltimaModificacion(const time_t fechaUM) {
     fechaUltimaModificacion = fechaUM;
     return true;
 }
+
+bool Partido::restaurarFecha(const char *fechaP) {
+    if (fechaP == nullptr || !GestorDeValidaciones::validarFecha(fechaP)) {
+        return false;
+    }
+    Formatos::copiarCadena(fecha, fechaP, constantes::TAMANO_FECHA);
+    return true;
+}

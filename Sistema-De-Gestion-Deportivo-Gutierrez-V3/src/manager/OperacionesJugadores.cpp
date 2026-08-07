@@ -277,8 +277,6 @@ bool OperacionesJugadores::modificarEstadisticas(Partido &registroPartido, const
         if (!GestorArchivosBinarios::guardarRegistro<Jugador>(constantes::NOMBRE_ARCHIVO_JUGADORES, jugadorAuxiliar, anotaciones[e].getIdJugador())) {
             return false;
         }
-
-        return true;
     }
 
     // Modificamos las tarjetas amarillas
@@ -345,6 +343,8 @@ bool OperacionesJugadores::modificarEstadisticas(Partido &registroPartido, const
             return false;
         }
     }
+
+    return true;
 }
 
 bool OperacionesJugadores::modificarAnotaciones(Jugador &jugadorAuxiliar, const bool disminuir) {

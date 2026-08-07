@@ -6,6 +6,7 @@
 #include "../../include/persistence/gestorArchivosTexto.hpp"
 #include "../../include/utils/constantes.hpp"
 #include "../../include/utils/formatos.hpp"
+#include <iostream>
 
 std::string OperacionesPartidos::obtenerEstadoPorId(const int idEstado) {
 
@@ -18,13 +19,20 @@ std::string OperacionesPartidos::obtenerEstadoPorId(const int idEstado) {
     for (size_t e = 0; e < listaEstadoPartidos.size(); ++e) {
 
         std::vector<std::string> linea = listaEstadoPartidos[e];
+        if (linea.size() < 2) {
+            std::cerr << "[DEBUG] obtenerEstadoPorId: linea invalida en csv, salto. indice=" << e << "\n";
+            continue;
+        }
+
         int idAuxiliar = Formatos::parsearValor<int>(linea[0], constantes::ERROR_INT);
 
         if (idAuxiliar == constantes::ERROR_INT) {
-            return constantes::ERROR_STRING;
+            std::cerr << "[DEBUG] obtenerEstadoPorId: id invalido en csv, salto. valor='" << linea[0] << "'\n";
+            continue;
         }
 
         if (idEstado == idAuxiliar) {
+            std::cerr << "[DEBUG] obtenerEstadoPorId: encontrado estado para id=" << idEstado << " => '" << linea[1] << "'\n";
             return linea[1];
         }
     }
@@ -234,13 +242,13 @@ bool OperacionesPartidos::programarPartido(Partido &nuevoPartido) {
 // TODO:   Victoria visit. → visit. +3 pts, +1 victoria  / local     +1 derrota
 bool OperacionesPartidos::registrarResultado(Partido registroPartido) {
 
-    Torneo torneo;
-    torneo = GestorArchivosBinarios::obtenerInformacionTorneo();
+    Torneo torneo = GestorArchivosBinarios::obtenerInformacionTorneo();
 
     // Si el tamano es 0 quiere decir que no se leyó nada
     if (torneo.getTamano() == 0) {
         return false;
     }
+
 
     // * Validaciones
 
@@ -301,7 +309,37 @@ bool OperacionesPartidos::registrarResultado(Partido registroPartido) {
     }
 
     // Si encontró el partido verificamos que esté en estado programado
-    if (std::strcmp(partidoProgramado.getEstado(), OperacionesPartidos::obtenerEstadoPorId(0).c_str()) != 0) {
+    const std::string estadoProgramado = OperacionesPartidos::obtenerEstadoPorId(0);
+    std::cerr << "[DEBUG] registrarResultado: ID=" << registroPartido.getId() << " estadoPartidoActual='" << partidoProgramado.getEstado() << "' estadoProgramado='"
+              << estadoProgramado << "'\n";
+    if (std::strcmp(partidoProgramado.getEstado(), estadoProgramado.c_str()) != 0) {
+        std::cerr << "[DEBUG] registrarResultado: partido no en estado PROGRAMADO\n";
+        return false;
+    }
+
+    // Aseguramos que el registro traiga los IDs correctos de los equipos
+    if (!registroPartido.setIdEquipoLocal(partidoProgramado.getIdEquipoLocal())) {
+        std::cerr << "[DEBUG] registrarResultado: fallo setIdEquipoLocal(" << partidoProgramado.getIdEquipoLocal() << ")\n";
+        return false;
+    }
+    if (!registroPartido.setIdEquipoVisitante(partidoProgramado.getIdEquipoVisitante())) {
+        std::cerr << "[DEBUG] registrarResultado: fallo setIdEquipoVisitante(" << partidoProgramado.getIdEquipoVisitante() << ")\n";
+        return false;
+    }
+    if (!registroPartido.restaurarFecha(partidoProgramado.getFecha())) {
+        std::cerr << "[DEBUG] registrarResultado: fallo restaurarFecha('" << partidoProgramado.getFecha() << "')\n";
+        return false;
+    }
+    if (!registroPartido.setDescripcion(partidoProgramado.getDescripcion())) {
+        std::cerr << "[DEBUG] registrarResultado: fallo setDescripcion('" << partidoProgramado.getDescripcion() << "')\n";
+        return false;
+    }
+    if (!registroPartido.setEliminado(partidoProgramado.getEliminado())) {
+        std::cerr << "[DEBUG] registrarResultado: fallo setEliminado(" << partidoProgramado.getEliminado() << ")\n";
+        return false;
+    }
+    if (!registroPartido.setFechaCreacion(partidoProgramado.getFechaCreacion())) {
+        std::cerr << "[DEBUG] registrarResultado: fallo setFechaCreacion(" << partidoProgramado.getFechaCreacion() << ")\n";
         return false;
     }
 
@@ -354,23 +392,35 @@ bool OperacionesPartidos::registrarResultado(Partido registroPartido) {
     partidoProgramado.setTarjetasAmaVisitante(registroPartido.getTarjetasAmaVisitante());
 
     partidoProgramado.setTarjetasRojasLocal(registroPartido.getTarjetasRojasLocal());
-    partidoProgramado.setAnotacionesVisitante(registroPartido.getTarjetasRojasVisitante());
+    partidoProgramado.setTarjetasRojasVisitante(registroPartido.getTarjetasRojasVisitante());
 
-    // Copiamos los datos de estadisticas
-    for (size_t e = 0; e < partidoProgramado.getNumAnotaciones(); ++e) {
-        const Anotacion *anotaciones = partidoProgramado.getAnotaciones();
-        partidoProgramado.setAnotacionPorIndice(e, anotaciones[e]);
+    // Copiamos los datos de estadisticas del registro recibido al partido programado
+    const Anotacion *anotaciones = registroPartido.getAnotaciones();
+    for (int e = 0; e < registroPartido.getNumAnotaciones(); ++e) {
+        if (!partidoProgramado.agregarAnotacion(anotaciones[e])) {
+            std::cerr << "[DEBUG] registrarResultado: fallo al agregar anotacion indice=" << e << "\n";
+            return false;
+        }
     }
 
-    for (size_t e = 0; e < partidoProgramado.getNumTarjetaAma(); ++e) {
-        const TarjetaAmarilla *tarjetasAma = partidoProgramado.getTarjetasAmarillas();
-        partidoProgramado.setTarjetaAmarillaPorIndice(e, tarjetasAma[e]);
+    const TarjetaAmarilla *tarjetasAma = registroPartido.getTarjetasAmarillas();
+    for (int e = 0; e < registroPartido.getNumTarjetaAma(); ++e) {
+        if (!partidoProgramado.agregarTarjetaAmarilla(tarjetasAma[e])) {
+            std::cerr << "[DEBUG] registrarResultado: fallo al agregar tarjeta amarilla indice=" << e << "\n";
+            return false;
+        }
     }
 
-    for (size_t e = 0; e < partidoProgramado.getNumTarjetasRojas(); ++e) {
-        const TarjetaRoja *tarjetasRoj = partidoProgramado.getTarjetasRojas();
-        partidoProgramado.setTarjetaRojaPorIndice(e, tarjetasRoj[e]);
+    const TarjetaRoja *tarjetasRoj = registroPartido.getTarjetasRojas();
+    for (int e = 0; e < registroPartido.getNumTarjetasRojas(); ++e) {
+        if (!partidoProgramado.agregarTarjetaRoja(tarjetasRoj[e])) {
+            std::cerr << "[DEBUG] registrarResultado: fallo al agregar tarjeta roja indice=" << e << "\n";
+            return false;
+        }
     }
+
+    std::cerr << "[DEBUG] registrarResultado: partido actualizado id=" << partidoProgramado.getId() << " anotaciones=" << partidoProgramado.getNumAnotaciones()
+              << " tarjetasAma=" << partidoProgramado.getNumTarjetaAma() << " tarjetasRojas=" << partidoProgramado.getNumTarjetasRojas() << "\n";
 
     // * 6. Actualizamos las estadisticas de los jugadores por cada gol / tarjeta
     OperacionesJugadores::modificarEstadisticas(registroPartido);

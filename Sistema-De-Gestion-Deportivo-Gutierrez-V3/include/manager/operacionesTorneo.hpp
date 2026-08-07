@@ -91,6 +91,10 @@ class OperacionesTorneo {
 
     // Buscar el tipo de Formatos por su id
     static std::string buscarFormatoEnConfig(const int idFormatoBuscado);
+
+    // Buscar las reglas del deporte por id o por nombre
+    static ReglasTorneo buscarReglasDeporteEnConfig(const int idBuscado);
+    static ReglasTorneo buscarReglasDeporteEnConfig(const std::string &nombreDeporte);
 };
 
 #endif // OPERACIONES_TORNEO_HPP
